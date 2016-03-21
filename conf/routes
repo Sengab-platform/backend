@@ -2,8 +2,74 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-GET     /                           controllers.Application.index
+### Home page ###
+GET           /                                        controllers.Application.index
+
+
+### Project Requests ###
+
+# list all projects (paginated)
+GET           /projects                                controllers.Application.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
+
+# get specific project
+GET           /projects/:project_id                    controllers.Application.getProject(project_id)
+
+# add project
+POST          /projects                                controllers.Application.addProject()
+
+# search in projects (paginated)
+GET           /projects/search/:keyword                controllers.Application.searchProjects(keyword,offset:Int?=0,limit:Int?=20)
+
+# list results of a project (paginated)
+GET           /projects/:project_id/results            controllers.Application.getProjectResults(project_id,offset:Int?=0,limit:Int?=20)
+
+# list stats of a project
+GET           /projects/:project_id/stats              controllers.Application.getProjectStats(project_id)
+
+
+#### User Requests ###
+
+# get user profile
+GET           /users/:user_id                          controllers.Application.getUSer(user_id)
+
+# list User’s Activity (paginated)
+GET           /users/:user_id/activities               controllers.Application.getUserActivities(user_id, offset:Int?=0,limit:Int?=20)
+
+# list all projects that the user enrolled in (paginated)
+GET           /users/:user_id/enrolled_projects        controllers.Application.getUserEnrolledProjects(user_id, offset:Int?=0,limit:Int?=20)
+
+# list projects created by a specific user (paginated)
+GET           /users/:user_id/created-projects         controllers.Application.getUserCreatedProjects(user_id, offset:Int?=0,limit:Int?=20)
+
+
+### Category Requests ###
+
+# list all categories
+GET           /categtories                             controllers.Application.getCategories(offset:Int?=0,limit:Int?=20)
+
+# list projects of a category (paginated)
+GET           /categtories/:category_id                controllers.Application.getProjectsForCategory(category_id,offset:Int?=0,limit:Int?=20)
+
+
+### Enrollment Requests ###
+
+# enroll in a project
+POST          /me/enrollments/                         controllers.Application.enrollInProject()
+
+# withdraw from project
+DELETE        /me/enrollments/                         controllers.Application.WithdrawFromProject()
+
+
+### Contribution && Requests ###
+
+# submit a contribution in a project
+POST          /me/enrollments/submissions              controllers.Application.contributeInProject()
+
+### Individuals Requests ###
+
+# get more feed
+GET           /projects/:project_id/feed               controllers.Application.getMoreFeed(project_id)
+
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET           /assets/*file                            controllers.Assets.versioned(path="/public", file: Asset)
