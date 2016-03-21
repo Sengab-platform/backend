@@ -40,8 +40,9 @@ GET         /users/:user_id/created-projects     controllers.Application.getUser
 
 ### Category Requests ###
 # list all categories
+GET         /categtories                          controllers.Application.getCategories(offset:Int?=0,limit:Int?=20)
 # list projects of a category (paginated)
-
+GET         /categtories/:category_id             controllers.Application.getCategories(category_id)
 
 ### Enrollment Requests ###
 # enroll in a project
