@@ -27,34 +27,46 @@ GET           /projects/:project_id/results            controllers.Application.g
 GET           /projects/:project_id/stats              controllers.Application.getProjectStats(project_id)
 
 
-
 #### User Requests ###
+
 # get user profile
 GET           /users/:user_id                          controllers.Application.getUSer(user_id)
+
 # list User’s Activity (paginated)
 GET           /users/:user_id/activities               controllers.Application.getUserActivities(user_id, offset:Int?=0,limit:Int?=20)
+
 # list all projects that the user enrolled in (paginated)
 GET           /users/:user_id/enrolled_projects        controllers.Application.getUserEnrolledProjects(user_id, offset:Int?=0,limit:Int?=20)
+
 # list projects created by a specific user (paginated)
 GET           /users/:user_id/created-projects         controllers.Application.getUserCreatedProjects(user_id, offset:Int?=0,limit:Int?=20)
 
+
 ### Category Requests ###
+
 # list all categories
 GET           /categtories                             controllers.Application.getCategories(offset:Int?=0,limit:Int?=20)
+
 # list projects of a category (paginated)
-GET           /categtories/:category_id                controllers.Application.getProjectsForCategory(category_id)
+GET           /categtories/:category_id                controllers.Application.getProjectsForCategory(category_id,offset:Int?=0,limit:Int?=20)
+
 
 ### Enrollment Requests ###
+
 # enroll in a project
-POST          /users/:user_id/enrolled_projects        controllers.Application.enrollInProject()
+POST          /me/enrollments/                         controllers.Application.enrollInProject()
+
 # withdraw from project
-DELETE        /users/:user_id/enrolled_projects        controllers.Application.WithdrawFromProject()
+DELETE        /me/enrollments/                         controllers.Application.WithdrawFromProject()
+
 
 ### Contribution && Requests ###
+
 # submit a contribution in a project
-POST          /projects/:project_id/results            controllers.Application.contributeInProject()
+POST          /me/enrollments/submissions              controllers.Application.contributeInProject()
 
 ### Individuals Requests ###
+
 # get more feed
 GET           /projects/:project_id/feed               controllers.Application.getMoreFeed(project_id)
 
