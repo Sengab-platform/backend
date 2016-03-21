@@ -3,61 +3,61 @@
 # ~~~~
 
 ### Home page ###
-GET         /                                    controllers.Application.index
+GET           /                                        controllers.Application.index
 
 
 ### Project Requests ###
 
 # list all projects (paginated)
-GET         /projects                            controllers.Application.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
+GET           /projects                                controllers.Application.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
 
 # get specific project
-GET         /projects/:project_id                controllers.Application.getProject(project_id)
+GET           /projects/:project_id                    controllers.Application.getProject(project_id)
 
 # add project
-POST        /projects                            controllers.Application.addProject()
+POST          /projects                                controllers.Application.addProject()
 
 # search in projects (paginated)
-GET         /projects/search/:keyword            controllers.Application.searchProjects(keyword,offset:Int?=0,limit:Int?=20)
+GET           /projects/search/:keyword                controllers.Application.searchProjects(keyword,offset:Int?=0,limit:Int?=20)
 
 # list results of a project (paginated)
-GET         /projects/:project_id/results        controllers.Application.getProjectResults(project_id,offset:Int?=0,limit:Int?=20)
+GET           /projects/:project_id/results            controllers.Application.getProjectResults(project_id,offset:Int?=0,limit:Int?=20)
 
 # list stats of a project
-GET         /projects/:project_id/stats          controllers.Application.getProjectStats(project_id)
+GET           /projects/:project_id/stats              controllers.Application.getProjectStats(project_id)
 
 
 
 #### User Requests ###
 # get user profile
-GET         /users/:user_id                      controllers.Application.getUSer(user_id)
+GET           /users/:user_id                          controllers.Application.getUSer(user_id)
 # list User’s Activity (paginated)
-GET         /users/:user_id/activities           controllers.Application.getUserActivities(user_id, offset:Int?=0,limit:Int?=20)
+GET           /users/:user_id/activities               controllers.Application.getUserActivities(user_id, offset:Int?=0,limit:Int?=20)
 # list all projects that the user enrolled in (paginated)
-GET         /users/:user_id/enrolled_projects    controllers.Application.getUserEnrolledProjects(user_id, offset:Int?=0,limit:Int?=20)
+GET           /users/:user_id/enrolled_projects        controllers.Application.getUserEnrolledProjects(user_id, offset:Int?=0,limit:Int?=20)
 # list projects created by a specific user (paginated)
-GET         /users/:user_id/created-projects     controllers.Application.getUserCreatedProjects(user_id, offset:Int?=0,limit:Int?=20)
+GET           /users/:user_id/created-projects         controllers.Application.getUserCreatedProjects(user_id, offset:Int?=0,limit:Int?=20)
 
 ### Category Requests ###
 # list all categories
-GET         /categtories                          controllers.Application.getCategories(offset:Int?=0,limit:Int?=20)
+GET           /categtories                             controllers.Application.getCategories(offset:Int?=0,limit:Int?=20)
 # list projects of a category (paginated)
-GET         /categtories/:category_id             controllers.Application.getCategory(category_id)
+GET           /categtories/:category_id                controllers.Application.getProjectsForCategory(category_id)
 
 ### Enrollment Requests ###
 # enroll in a project
-POST        /users/:user_id/enrolled-projects     controllers.Application.enrollInProject()
+POST          /users/:user_id/enrolled_projects        controllers.Application.enrollInProject()
 # withdraw from project
-DELETE      /users/:user_id/enrolled-projects     controllers.Application.WithdrawFromProject()
+DELETE        /users/:user_id/enrolled_projects        controllers.Application.WithdrawFromProject()
 
 ### Contribution Requests ###
 # submit a contribution in a project
-POST        /projects/:project_id/results         controllers.Application.contributeInProject()
+POST          /projects/:project_id/results            controllers.Application.contributeInProject()
 
 ### Individuls Requests ###
 # get more feed
-GET         /projects/:project_id/feed            controllers.Application.getMoreFeed(project_id)
+GET           /projects/:project_id/feed               controllers.Application.getMoreFeed(project_id)
 
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                        controllers.Assets.versioned(path="/public", file: Asset)
+GET           /assets/*file                            controllers.Assets.versioned(path="/public", file: Asset)
