@@ -8,4 +8,15 @@ class Application extends Controller {
     Ok("Welcome to Sengab")
   }
 
+  def addProject() = TODO
+
+  def listProjects(filter: String, offset: Int, limit: Int) = TODO
+
+  def searchProjects(keyword: String, offset: Int, limit: Int) = TODO
+
+  def getProject(projectId: String) = TODO
+
+  def getProjectStats(projectId: String) = TODO
+
+  def getProjectResults(project_id: String, offset: Int, limit: Int) = TODO
 }

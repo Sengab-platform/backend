@@ -2,8 +2,56 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-GET     /                           controllers.Application.index
+### Home page ###
+GET         /                                    controllers.Application.index
+
+
+### Project Requests ###
+
+# list all projects (paginated)
+GET         /projects                            controllers.Application.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
+
+# get specific project
+GET         /projects/:project_id                controllers.Application.getProject(project_id)
+
+# add project
+POST        /projects                            controllers.Application.addProject()
+
+# search in projects (paginated)
+GET         /projects/search/:keyword            controllers.Application.searchProjects(keyword,offset:Int?=0,limit:Int?=20)
+
+# list results of a project (paginated)
+GET         /projects/:project_id/results        controllers.Application.getProjectResults(project_id,offset:Int?=0,limit:Int?=20)
+
+# list stats of a project
+GET         /projects/:project_id/stats          controllers.Application.getProjectStats(project_id)
+
+
+
+#### User Requests ###
+# get user profile
+# list User’s Activity (paginated)
+# list all projects that the user enrolled in (paginated)
+# list projects created by a specific user (paginated)
+
+
+### Category Requests ###
+# list all categories
+# list projects of a category (paginated)
+
+
+### Enrollment Requests ###
+# enroll in a project
+# withdraw from project
+
+### Contribution Requests ###
+# submit a contribution in a project
+
+
+### Individuls Requests ###
+# get more feed
+
+
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET         /assets/*file                        controllers.Assets.versioned(path="/public", file: Asset)
