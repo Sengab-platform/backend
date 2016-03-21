@@ -50,11 +50,11 @@ POST          /users/:user_id/enrolled_projects        controllers.Application.e
 # withdraw from project
 DELETE        /users/:user_id/enrolled_projects        controllers.Application.WithdrawFromProject()
 
-### Contribution Requests ###
+### Contribution && Requests ###
 # submit a contribution in a project
 POST          /projects/:project_id/results            controllers.Application.contributeInProject()
 
-### Individuls Requests ###
+### Individuals Requests ###
 # get more feed
 GET           /projects/:project_id/feed               controllers.Application.getMoreFeed(project_id)
 
