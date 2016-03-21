@@ -31,4 +31,8 @@ class Application extends Controller {
   def getCategories(offset : Int ,limit : Int) = TODO
 
   def getCategory(category_id : String) = TODO
+
+  def enrollInProject() = TODO
+
+  def WithdrawFromProject() = TODO
 }
