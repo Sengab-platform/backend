@@ -30,10 +30,13 @@ GET         /projects/:project_id/stats          controllers.Application.getProj
 
 #### User Requests ###
 # get user profile
+GET         /users/:user_id                      controllers.Application.getUSer(user_id)
 # list User’s Activity (paginated)
+GET         /users/:user_id/activities           controllers.Application.getUserActivities(user_id, offset:Int?=0,limit:Int?=20)
 # list all projects that the user enrolled in (paginated)
+GET         /users/:user_id/enrolled_projects    controllers.Application.getUserEnrolledProjects(user_id, offset:Int?=0,limit:Int?=20)
 # list projects created by a specific user (paginated)
-
+GET         /users/:user_id/created-projects     controllers.Application.getUserCreatedProjects(user_id, offset:Int?=0,limit:Int?=20)
 
 ### Category Requests ###
 # list all categories

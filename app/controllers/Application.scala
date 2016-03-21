@@ -19,4 +19,13 @@ class Application extends Controller {
   def getProjectStats(projectId: String) = TODO
 
   def getProjectResults(project_id: String, offset: Int, limit: Int) = TODO
+
+  def getUSer(user_id: String) = TODO
+
+  def getUserActivities(user_id: String,offset:Int ,limit:Int) = TODO
+
+  def getUserEnrolledProjects(user_id: String,offset:Int ,limit:Int) = TODO
+
+  def getUserCreatedProjects(user_id: String,offset:Int ,limit:Int) = TODO
+
 }
