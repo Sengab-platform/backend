@@ -30,5 +30,5 @@ class Application extends Controller {
 
   def getCategories(offset : Int ,limit : Int) = TODO
 
-  def getCategories(category_id : String) = TODO
+  def getCategory(category_id : String) = TODO
 }
