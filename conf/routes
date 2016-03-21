@@ -52,11 +52,11 @@ DELETE      /users/:user_id/enrolled-projects     controllers.Application.Withdr
 
 ### Contribution Requests ###
 # submit a contribution in a project
-
+POST        /projects/:project_id/results         controllers.Application.contributeInProject()
 
 ### Individuls Requests ###
 # get more feed
-
+GET         /projects/:project_id/feed            controllers.Application.getMoreFeed(project_id)
 
 
 # Map static resources from the /public folder to the /assets URL path

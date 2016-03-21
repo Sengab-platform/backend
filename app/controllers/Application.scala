@@ -35,4 +35,8 @@ class Application extends Controller {
   def enrollInProject() = TODO
 
   def WithdrawFromProject() = TODO
+
+  def contributeInProject() = TODO
+
+  def getMoreFeed(projectId: String) = TODO
 }
