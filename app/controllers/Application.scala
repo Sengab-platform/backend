@@ -49,7 +49,7 @@ class Application extends Controller {
   def getCategories(offset: Int, limit: Int) = TODO
 
   //  list projects of a category (paginated)
-  def getProjectsForCategory(categoryId: String) = TODO
+  def getProjectsForCategory(categoryId: String, offset: Int, limit: Int) = TODO
 
   //  Enrollment Requests
 
