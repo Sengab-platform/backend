@@ -101,9 +101,9 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : GetUserProfile(userId) |
-msg : ListUserActivity(userId, offset, limit) |
-msg : ListProjectsOfUer(userId, type=enrolled,created, offset, limit) |
+GetUserProfile(userId) |
+ListUserActivity(userId, offset, limit) |
+ListProjectsOfUer(userId, type=enrolled,created, offset, limit) |
 
 ## 9. User Retriever
 
@@ -114,9 +114,9 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : GetUserProfile(userId) |
-msg : ListUserActivity(userId, offset, limit) |
-msg : ListProjectsOfUer(userId, type=enrolled,created, offset, limit) |
+GetUserProfile(userId) |
+ListUserActivity(userId, offset, limit) |
+ListProjectsOfUer(userId, type=enrolled,created, offset, limit) |
 
 ## 9. Contribution Manager
 
@@ -127,7 +127,7 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : SubmitContribution(projectId, c: contribution) |
+SubmitContribution(projectId, c: contribution) |
 
 ## 10. Contribution Validator
 
@@ -138,7 +138,7 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : ValidateContribution(projectId, c: contribution) |
+ValidateContribution(projectId, c: contribution) |
 
 ## 11. Contribution Creator
 
@@ -149,7 +149,7 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : CreateContribution(projectId, c: contribution) |
+CreateContribution(projectId, c: contribution) |
 
 
 ## 11. Enrollment Manager
