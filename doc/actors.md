@@ -24,15 +24,12 @@ TODO
 
 Message | Description
 ------- | -----------
-CreateProject(p:Project) | 
+CreateProject(p:Project) |
 ListProjects(filter,offest,limit) |
 GetProjectDetails(projectID) |
 GetProjectResults(projectID,offset,limit) |
 GetProjectStats(projectID) |
-SearchProjects(keyword)
-
-
-
+SearchProjects(keyword) |
 
 ## 3. Project Validator
 
@@ -45,8 +42,6 @@ Message | Description
 ------- | -----------
 ValidateProject(p:Project) |
 
-
-
 ## 4. Project Creator
 
 ### Description
@@ -56,8 +51,7 @@ TODO
 
 Message | Description
 ------- | -----------
-CreateProject(p:Project) | 
-
+CreateProject(p:Project) |
 
 ## 5. Details Retriever
 
@@ -107,9 +101,24 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : RetrieveInfo | 
-msg : RetrieveProjects | 
-msg : RetrieveActivities | 
+msg : GetUserProfile(userId) |
+msg : ListUserActivity(userId) |
+msg : ListProjectsUserEnrolledIn(userId) |
+msg : ListProjectsUserCreated(userId) |
+
+## 9. User Retriever
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+msg : GetUserProfile(userId) |
+msg : ListUserActivity(userId) |
+msg : ListProjectsOfUer(userId, type=enrolled,created) |
+msg : ListProjectsUserCreated(userId) |
 
 ## 9. Contribution Manager
 
@@ -120,9 +129,9 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : ValidateContribution | 
+msg : SubmitContribution(projectId, c: contribution) |
 
-## 10. Contribution Creator
+## 10. Contribution Validator
 
 ### Description
 TODO
@@ -131,7 +140,19 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : CreateContribution | 
+msg : ValidateContribution(projectId, c: contribution) |
+
+## 11. Contribution Creator
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+msg : CreateContribution(projectId, c: contribution) |
+
 
 ## 11. Enrollment Manager
 
@@ -156,7 +177,3 @@ Message | Description
 ------- | -----------
 msg : RetrieveCategories |
 msg : RetrieveCategoryProjects |
-
-
-
-
