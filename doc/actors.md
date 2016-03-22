@@ -102,9 +102,8 @@ TODO
 Message | Description
 ------- | -----------
 msg : GetUserProfile(userId) |
-msg : ListUserActivity(userId) |
-msg : ListProjectsUserEnrolledIn(userId) |
-msg : ListProjectsUserCreated(userId) |
+msg : ListUserActivity(userId, offest, limit) |
+msg : ListProjectsOfUer(userId, type=enrolled,created, offest, limit) |
 
 ## 9. User Retriever
 
@@ -117,8 +116,7 @@ Message | Description
 ------- | -----------
 msg : GetUserProfile(userId) |
 msg : ListUserActivity(userId) |
-msg : ListProjectsOfUer(userId, type=enrolled,created) |
-msg : ListProjectsUserCreated(userId) |
+msg : ListProjectsOfUer(userId, type=enrolled,created, offest, limit) |
 
 ## 9. Contribution Manager
 
