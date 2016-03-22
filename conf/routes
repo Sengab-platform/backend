@@ -63,7 +63,7 @@ DELETE        /me/enrollments/                         controllers.Application.W
 ### Contribution && Requests ###
 
 # submit a contribution in a project
-POST          /me/enrollments/submissions              controllers.Application.contributeInProject()
+POST          /me/submissions              	       controllers.Application.contributeInProject()
 
 ### Individuals Requests ###
 
