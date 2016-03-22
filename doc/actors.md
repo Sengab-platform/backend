@@ -25,7 +25,7 @@ TODO
 Message | Description
 ------- | -----------
 CreateProject(p:Project) |
-ListProjects(filter,offest,limit) |
+ListProjects(filter,offset,limit) |
 GetProjectDetails(projectID) |
 GetProjectResults(projectID,offset,limit) |
 GetProjectStats(projectID) |
@@ -62,7 +62,7 @@ TODO
 
 Message | Description
 ------- | -----------
-ListProjects(filter,offest,limit) |
+ListProjects(filter,offset,limit) |
 GetProjectDetails(projectID) |
 SearchProjects(keyword) |
 
@@ -102,8 +102,8 @@ TODO
 Message | Description
 ------- | -----------
 msg : GetUserProfile(userId) |
-msg : ListUserActivity(userId, offest, limit) |
-msg : ListProjectsOfUer(userId, type=enrolled,created, offest, limit) |
+msg : ListUserActivity(userId, offset, limit) |
+msg : ListProjectsOfUer(userId, type=enrolled,created, offset, limit) |
 
 ## 9. User Retriever
 
@@ -115,8 +115,8 @@ TODO
 Message | Description
 ------- | -----------
 msg : GetUserProfile(userId) |
-msg : ListUserActivity(userId) |
-msg : ListProjectsOfUer(userId, type=enrolled,created, offest, limit) |
+msg : ListUserActivity(userId, offset, limit) |
+msg : ListProjectsOfUer(userId, type=enrolled,created, offset, limit) |
 
 ## 9. Contribution Manager
 
