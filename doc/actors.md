@@ -103,7 +103,7 @@ Message | Description
 ------- | -----------
 GetUserProfile(userId) |
 ListUserActivity(userId, offset, limit) |
-ListProjectsOfUser(userId, type=enrolled,created, offset, limit) |
+ListProjectsOfUser(userId, type, offset, limit) | type could be enrolled or created
 
 ## 9. User Retriever
 
@@ -116,7 +116,49 @@ Message | Description
 ------- | -----------
 GetUserProfile(userId) |
 ListUserActivity(userId, offset, limit) |
-ListProjectsOfUer(userId, type=enrolled,created, offset, limit) |
+ListProjectsOfUer(userId, type,created, offset, limit) | type could be enrolled or created
+
+
+## 9. Info Retriever
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+GetUserProfile(userId) |
+
+
+
+## 9. Projects Retriever
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+ListProjectsOfUer(userId, type,created, offset, limit) | type could be enrolled or created
+
+
+
+## 9. Activity Retriever
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+ListUserActivity(userId, offset, limit) |
+
+
+
+
 
 ## 9. Contribution Manager
 
@@ -127,7 +169,7 @@ TODO
 
 Message | Description
 ------- | -----------
-SubmitContribution(projectId, c: contribution) |
+SubmitContribution(c: contribution) |
 
 ## 10. Contribution Validator
 
@@ -138,7 +180,7 @@ TODO
 
 Message | Description
 ------- | -----------
-ValidateContribution(projectId, c: contribution) |
+ValidateContribution(c: contribution) |
 
 ## 11. Contribution Creator
 
@@ -149,7 +191,7 @@ TODO
 
 Message | Description
 ------- | -----------
-CreateContribution(projectId, c: contribution) |
+CreateContribution(c: contribution) |
 
 
 ## 11. Enrollment Manager
@@ -161,8 +203,32 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : Enroll |
-msg : Withdraw |
+Enroll(projectId,userId) |
+Withdraw(projectId,userId) |
+
+
+## 11. Enrollment Handler
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+Enroll(projectId,userId) |
+
+
+## 11. Withdraw Manager
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+Withdraw(projectId,userId) |
 
 ## 11. Category Manager
 
@@ -173,5 +239,32 @@ TODO
 
 Message | Description
 ------- | -----------
-msg : RetrieveCategories |
-msg : RetrieveCategoryProjects |
+RetrieveCategories(offset, limit)) |
+RetrieveCategoryProjects(categoryId,offset, limit)) |
+
+
+
+## 11. Categories Retriever
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+RetrieveCategories(offset, limit)) |
+
+
+
+
+## 11. Category Projects Retriever
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+RetrieveCategoryProjects(categoryId,offset, limit)) |
