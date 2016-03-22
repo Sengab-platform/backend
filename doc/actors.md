@@ -119,7 +119,7 @@ ListUserActivity(userId, offset, limit) |
 ListProjectsOfUer(userId, type,created, offset, limit) | type could be enrolled or created
 
 
-## 9. Info Retriever
+## 10. Info Retriever
 
 ### Description
 TODO
@@ -132,7 +132,7 @@ GetUserProfile(userId) |
 
 
 
-## 9. Projects Retriever
+## 11. Projects Retriever
 
 ### Description
 TODO
@@ -145,7 +145,7 @@ ListProjectsOfUer(userId, type,created, offset, limit) | type could be enrolled 
 
 
 
-## 9. Activity Retriever
+## 12. Activity Retriever
 
 ### Description
 TODO
@@ -160,7 +160,7 @@ ListUserActivity(userId, offset, limit) |
 
 
 
-## 9. Contribution Manager
+## 13. Contribution Manager
 
 ### Description
 TODO
@@ -171,7 +171,7 @@ Message | Description
 ------- | -----------
 SubmitContribution(c: contribution) |
 
-## 10. Contribution Validator
+## 14. Contribution Validator
 
 ### Description
 TODO
@@ -182,7 +182,7 @@ Message | Description
 ------- | -----------
 ValidateContribution(c: contribution) |
 
-## 11. Contribution Creator
+## 15. Contribution Creator
 
 ### Description
 TODO
@@ -194,7 +194,7 @@ Message | Description
 CreateContribution(c: contribution) |
 
 
-## 11. Enrollment Manager
+## 16. Enrollment Manager
 
 ### Description
 TODO
@@ -203,23 +203,11 @@ TODO
 
 Message | Description
 ------- | -----------
-Enroll(projectId,userId) |
-Withdraw(projectId,userId) |
+Enroll(projectId, userId) |
+Withdraw(projectId, userId) |
 
 
-## 11. Enrollment Handler
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-Enroll(projectId,userId) |
-
-
-## 11. Withdraw Manager
+## 17. Enrollment Handler
 
 ### Description
 TODO
@@ -228,23 +216,10 @@ TODO
 
 Message | Description
 ------- | -----------
-Withdraw(projectId,userId) |
-
-## 11. Category Manager
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-RetrieveCategories(offset, limit)) |
-RetrieveCategoryProjects(categoryId,offset, limit)) |
+Enroll(projectId, userId) |
 
 
-
-## 11. Categories Retriever
+## 18. Withdraw Manager
 
 ### Description
 TODO
@@ -253,12 +228,9 @@ TODO
 
 Message | Description
 ------- | -----------
-RetrieveCategories(offset, limit)) |
+Withdraw(projectId, userId) |
 
-
-
-
-## 11. Category Projects Retriever
+## 19. Category Manager
 
 ### Description
 TODO
@@ -267,4 +239,32 @@ TODO
 
 Message | Description
 ------- | -----------
-RetrieveCategoryProjects(categoryId,offset, limit)) |
+RetrieveCategories(offset, limit) |
+RetrieveCategoryProjects(categoryId, offset, limit) |
+
+
+
+## 20. Categories Retriever
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+RetrieveCategories(offset, limit) |
+
+
+
+
+## 21. Category Projects Retriever
+
+### Description
+TODO
+
+### Accept Messages
+
+Message | Description
+------- | -----------
+RetrieveCategoryProjects(categoryId, offset, limit) |
