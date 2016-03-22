@@ -44,7 +44,7 @@ GET           /users/:user_id/created-projects         controllers.Application.g
 
 ### Category Requests ###
 
-# list all categories
+# list all categories (paginated)
 GET           /categtories                             controllers.Application.getCategories(offset:Int?=0,limit:Int?=20)
 
 # list projects of a category (paginated)
