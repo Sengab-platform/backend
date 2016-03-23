@@ -18,8 +18,8 @@
      17. [Enrollment Handler](#17-enrollment-handler)
      18. [Withdraw Manager](#18-withdraw-manager)
   19. [Category Manager](#19-category-manager)
-     20. [Categories Retriever](#20-Categories Retriever)
-     21. [Category Projects Retriever](#20-category-projects-retriever)
+     20. [Categories Retriever](#20-categories-retriever)
+     21. [Category Projects Retriever](#21-category-projects-retriever)
 
 # Actors
 
