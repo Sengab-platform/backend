@@ -1,4 +1,4 @@
-package actors
+package actors.project
 
 import akka.actor.{Actor, Props}
 import messages.ProjectMangerMessages.{GetProjectDetails, ListProjects, SearchProjects}
