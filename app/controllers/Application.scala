@@ -1,17 +1,33 @@
 package controllers
 
+import actors.Receptionist
+import akka.actor.ActorSystem
 import play.api.mvc._
+import akka.pattern.ask
 
 class Application extends Controller {
 
+  val system = ActorSystem("system")
+  val receptionist = system.actorOf(Receptionist.props(), "receptionist")
+
   def index = Action {
+
     Ok("Welcome to Sengab")
   }
 
   //  Project Requests
 
   //  list all projects (paginated)
-  def listProjects(filter: String, offset: Int, limit: Int) = TODO
+  def listProjects(filter: String, offset: Int, limit: Int) = Action.async {
+    val future = receptionist ? "Run" map {
+      case "Success" =>
+        Ok("listed")
+      case "Failed" =>
+        BadRequest("")
+    }
+    future
+  }
+
 
   //  get specific project
   def getProject(projectId: String) = TODO
