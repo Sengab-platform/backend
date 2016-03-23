@@ -1,3 +1,26 @@
+# Table of Contents
+1. [Receptionist](#1-receptionist)
+ 2. [Project Manager](#2-project-manager)
+     3. [Project Validator](#3-project-validator)
+     4. [Project Creator](#4-project-creator)
+     5. [Details Retriever](#5-details-retriever)
+     6. [Stats Retriever](#6-stats-retriever)
+     7. [Results Retriever](#7-results-retriever)
+  8. [User Manager](#8-user-manager)
+     9. [User Retriever](#9-user-retriever)
+     10. [Info Retriever](#10-info-retriever)
+     11. [Projects Retriever](#11-projects-retriever)
+     12. [Activity Retriever](#12-activity-retriever)
+  13. [Contribution Manager](#13-contribution-manager)
+     14. [Contribution Validator](#14-contribution-validator)
+     15. [Contribution Creator](#15-contribution-creator)
+ 16. [Enrollment Manager](#16-enrollment-manager)
+     17. [Enrollment Handler](#17-enrollment-handler)
+     18. [Withdraw Manager](#18-withdraw-manager)
+  19. [Category Manager](#19-category-manager)
+     20. [Categories Retriever](#20-Categories Retriever)
+     21. [Category Projects Retriever](#20-category-projects-retriever)
+
 # Actors
 
 ## 1. Receptionist
