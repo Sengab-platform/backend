@@ -2,7 +2,7 @@ package messages
 
 import models.models.Project
 
-object ProjectMangerMessages {
+object ProjectManagerMessages {
 
   trait ProjectMessage
 

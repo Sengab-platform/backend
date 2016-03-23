@@ -1,7 +1,7 @@
 package actors.enrollment
 
 import akka.actor.{Actor, Props}
-import messages.EnrollmentMangerMessages.Withdraw
+import messages.EnrollmentManagerMessages.Withdraw
 
 class WithdrawHandler extends Actor {
   override def receive = {

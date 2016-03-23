@@ -1,7 +1,7 @@
 package actors.enrollment
 
 import akka.actor.{Actor, Props}
-import messages.EnrollmentMangerMessages.Enroll
+import messages.EnrollmentManagerMessages.Enroll
 
 class EnrollmentHandler extends Actor {
   override def receive = {

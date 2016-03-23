@@ -1,7 +1,7 @@
 package actors
 
-import akka.actor.{Props, Actor}
-import messages.ProjectMangerMessages.ProjectMessage
+import akka.actor.{Actor, Props}
+import messages.ProjectManagerMessages.ProjectMessage
 
 
 class Receptionist extends Actor {

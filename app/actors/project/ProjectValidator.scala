@@ -1,7 +1,7 @@
 package actors.project
 
 import akka.actor.{Actor, Props}
-import messages.ProjectMangerMessages.ValidateProject
+import messages.ProjectManagerMessages.ValidateProject
 
 class ProjectValidator extends Actor {
   override def receive = {

@@ -1,7 +1,7 @@
 package actors.project
 
 import akka.actor.{Actor, Props}
-import messages.ProjectMangerMessages._
+import messages.ProjectManagerMessages._
 
 class ProjectManager extends Actor {
   override def receive = {

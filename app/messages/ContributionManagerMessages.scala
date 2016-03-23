@@ -2,7 +2,7 @@ package messages
 
 import models.models.Contribution
 
-object ContributionMangerMessages {
+object ContributionManagerMessages {
 
   trait ContributionMessage
 

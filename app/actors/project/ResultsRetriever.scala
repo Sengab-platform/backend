@@ -1,7 +1,7 @@
 package actors.project
 
 import akka.actor.{Actor, Props}
-import messages.ProjectMangerMessages.GetProjectResults
+import messages.ProjectManagerMessages.GetProjectResults
 
 class ResultsRetriever extends Actor {
   override def receive = {

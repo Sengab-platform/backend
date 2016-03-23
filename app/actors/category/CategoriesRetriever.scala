@@ -1,7 +1,7 @@
 package actors.category
 
 import akka.actor.{Actor, Props}
-import messages.CategoryMangerMessages.RetrieveCategories
+import messages.CategoryManagerMessages.RetrieveCategories
 
 class CategoriesRetriever extends Actor {
   override def receive = {

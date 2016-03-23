@@ -1,7 +1,7 @@
 package actors.contribution
 
 import akka.actor.{Actor, Props}
-import messages.ContributionMangerMessages.CreateContribution
+import messages.ContributionManagerMessages.CreateContribution
 
 class ContributionCreator extends Actor {
   override def receive = {

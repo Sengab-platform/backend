@@ -1,7 +1,7 @@
 package actors.project
 
 import akka.actor.{Actor, Props}
-import messages.ProjectMangerMessages.CreateProject
+import messages.ProjectManagerMessages.CreateProject
 
 class ProjectCreator extends Actor {
   override def receive = {

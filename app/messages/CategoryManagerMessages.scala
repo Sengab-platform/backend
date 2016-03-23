@@ -1,6 +1,6 @@
 package messages
 
-object CategoryMangerMessages {
+object CategoryManagerMessages {
 
   trait CategoryMessage
 
