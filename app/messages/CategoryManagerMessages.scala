@@ -6,6 +6,6 @@ object CategoryManagerMessages {
 
   case class RetrieveCategories(offset: Integer, limit: Integer) extends CategoryMessage
 
-  case class RetrieveCategoryProjects(categoryId: Integer, offset: Integer, limit: Integer) extends CategoryMessage
+  case class RetrieveCategoryProjects(categoryId: String, offset: Integer, limit: Integer) extends CategoryMessage
 
 }

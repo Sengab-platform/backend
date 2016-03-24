@@ -10,11 +10,11 @@ object ProjectManagerMessages {
 
   case class ListProjects(filter: String, offset: Integer, limit: Integer) extends ProjectMessage
 
-  case class GetProjectDetails(projectID: Integer) extends ProjectMessage
+  case class GetProjectDetails(projectID: String) extends ProjectMessage
 
-  case class GetProjectResults(projectID: Integer, offset: Integer, limit: Integer) extends ProjectMessage
+  case class GetProjectResults(projectID: String, offset: Integer, limit: Integer) extends ProjectMessage
 
-  case class GetProjectStats(projectID: Integer) extends ProjectMessage
+  case class GetProjectStats(projectID: String) extends ProjectMessage
 
   case class SearchProjects(keyword: String) extends ProjectMessage
 
