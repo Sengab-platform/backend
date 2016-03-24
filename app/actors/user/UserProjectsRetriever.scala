@@ -5,7 +5,7 @@ import messages.UserManagerMessages.ListProjectsOfUser
 
 class ProjectsRetriever extends Actor {
   override def receive = {
-    case ListProjectsOfUser(userId, sort, offset, limit) => ???
+    case ListProjectsOfUser(userID, sort, offset, limit) => ???
   }
 }
 
