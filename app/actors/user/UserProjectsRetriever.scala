@@ -3,12 +3,12 @@ package actors.user
 import akka.actor.{Actor, Props}
 import messages.UserManagerMessages.ListProjectsOfUser
 
-class ProjectsRetriever extends Actor {
+class UserProjectsRetriever extends Actor {
   override def receive = {
     case ListProjectsOfUser(userID, sort, offset, limit) => ???
   }
 }
 
-object ProjectsRetriever {
-  def props(): Props = Props(new ProjectsRetriever)
+object UserProjectsRetriever {
+  def props(): Props = Props(new UserProjectsRetriever)
 }

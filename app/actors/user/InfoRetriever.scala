@@ -5,7 +5,7 @@ import messages.UserManagerMessages.GetUserProfile
 
 class InfoRetriever extends Actor {
   override def receive = {
-    case GetUserProfile(userId) => ???
+    case GetUserProfile(userID) => ???
   }
 }
 

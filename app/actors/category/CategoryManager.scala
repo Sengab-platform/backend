@@ -7,7 +7,7 @@ class CategoryManager extends Actor {
   override def receive = {
     case RetrieveCategories(offset, limit) => ???
 
-    case RetrieveCategoryProjects(categoryId, offset, limit) => ???
+    case RetrieveCategoryProjects(categoryID, offset, limit) => ???
   }
 }
 

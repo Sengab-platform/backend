@@ -5,11 +5,11 @@ import messages.UserManagerMessages.{GetUserProfile, ListProjectsOfUser, ListUse
 
 class UserRetriever extends Actor {
   override def receive = {
-    case GetUserProfile(userId) => ???
+    case GetUserProfile(userID) => ???
 
-    case ListUserActivity(userId, offset, limit) => ???
+    case ListUserActivity(userID, offset, limit) => ???
 
-    case ListProjectsOfUser(userId, sort, offset, limit) => ???
+    case ListProjectsOfUser(userID, sort, offset, limit) => ???
 
   }
 }

@@ -5,7 +5,7 @@ import messages.UserManagerMessages.ListUserActivity
 
 class ActivityRetriever extends Actor {
   override def receive = {
-    case ListUserActivity(userId, offset, limit) => ???
+    case ListUserActivity(userID, offset, limit) => ???
   }
 }
 

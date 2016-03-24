@@ -5,7 +5,7 @@ import messages.EnrollmentManagerMessages.Withdraw
 
 class WithdrawHandler extends Actor {
   override def receive = {
-    case Withdraw(projectId, userId) => ???
+    case Withdraw(projectID, userID) => ???
   }
 }
 
