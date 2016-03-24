@@ -5,7 +5,7 @@ import messages.ProjectManagerMessages._
 
 class ProjectManager extends Actor {
   override def receive = {
-    case CreateProject(project) => ???
+    case CreateProject(project, userID) => ???
 
     case ListProjects(filter, offset, limit) => ???
 

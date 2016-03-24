@@ -5,7 +5,7 @@ import messages.ContributionManagerMessages.ValidateContribution
 
 class ContributionValidator extends Actor {
   override def receive = {
-    case ValidateContribution(contribution) => ???
+    case ValidateContribution(contribution, userID) => ???
   }
 }
 

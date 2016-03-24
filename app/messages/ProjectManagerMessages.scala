@@ -18,6 +18,6 @@ object ProjectManagerMessages {
 
   case class SearchProjects(keyword: String) extends ProjectMessage
 
-  case class ValidateProject(project: Project) extends ProjectMessage
+  case class ValidateProject(project: Project, userID: String) extends ProjectMessage
 
 }

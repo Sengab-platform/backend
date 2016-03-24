@@ -5,7 +5,7 @@ import messages.ContributionManagerMessages.CreateContribution
 
 class ContributionCreator extends Actor {
   override def receive = {
-    case CreateContribution(contribution) => ???
+    case CreateContribution(contribution, userID) => ???
   }
 }
 

@@ -5,7 +5,7 @@ import messages.ProjectManagerMessages.CreateProject
 
 class ProjectCreator extends Actor {
   override def receive = {
-    case CreateProject(project) => ???
+    case CreateProject(project, userID) => ???
   }
 }
 
