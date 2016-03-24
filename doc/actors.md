@@ -47,7 +47,7 @@ TODO
 
 Message | Description
 ------- | -----------
-CreateProject(p:Project) |
+CreateProject(p:Project,userID) |
 ListProjects(filter, offset,limit) |
 GetProjectDetails(projectID) |
 GetProjectResults(projectID, offset, limit) |
@@ -63,7 +63,7 @@ TODO
 
 Message | Description
 ------- | -----------
-ValidateProject(p:Project) |
+ValidateProject(p:Project,userID) |
 
 <br>
 
@@ -76,7 +76,7 @@ TODO
 
 Message | Description
 ------- | -----------
-CreateProject(p:Project) |
+CreateProject(p:Project,userID) |
 
 <br>
 
@@ -213,7 +213,7 @@ TODO
 
 Message | Description
 ------- | -----------
-SubmitContribution(c: contribution) |
+SubmitContribution(c: contribution,userID) |
 
 ### 1. Contribution Validator
 
@@ -224,7 +224,7 @@ TODO
 
 Message | Description
 ------- | -----------
-ValidateContribution(c: contribution) |
+ValidateContribution(c: contribution,userID) |
 
 <br>
 
@@ -237,7 +237,7 @@ TODO
 
 Message | Description
 ------- | -----------
-CreateContribution(c: contribution) |
+CreateContribution(c: contribution,userID) |
 
 <br><hr>
 

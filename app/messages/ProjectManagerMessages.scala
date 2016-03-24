@@ -6,7 +6,7 @@ object ProjectManagerMessages {
 
   trait ProjectMessage
 
-  case class CreateProject(project: Project) extends ProjectMessage
+  case class CreateProject(project: Project, userID: String) extends ProjectMessage
 
   case class ListProjects(filter: String, offset: Integer, limit: Integer) extends ProjectMessage
 
