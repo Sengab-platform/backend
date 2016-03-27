@@ -14,6 +14,6 @@ class UserRetriever extends Actor {
   }
 }
 
-object UserManager {
+object UserRetriever {
   def props(): Props = Props(new UserManager)
 }

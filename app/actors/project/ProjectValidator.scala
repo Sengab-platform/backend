@@ -5,7 +5,7 @@ import messages.ProjectManagerMessages.ValidateProject
 
 class ProjectValidator extends Actor {
   override def receive = {
-    case ValidateProject(project) => ???
+    case ValidateProject(project, userID) => ???
   }
 }
 
