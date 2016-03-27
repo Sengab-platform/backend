@@ -4,6 +4,9 @@ import akka.actor.{Actor, Props}
 import messages.ProjectManagerMessages._
 
 class ProjectManager extends Actor {
+
+  val validator = context.actorOf(ProjectValidator.props(), "assa")
+
   override def receive = {
     case CreateProject(project, userID) => ???
 

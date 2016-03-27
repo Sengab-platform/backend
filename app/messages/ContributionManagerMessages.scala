@@ -1,6 +1,7 @@
 package messages
 
-import models.models.Contribution
+import models.Contribution
+
 
 object ContributionManagerMessages {
 

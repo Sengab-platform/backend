@@ -6,6 +6,10 @@ import javax.inject.{Inject, Named}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
+import models.project.Project
+import models.project.Templates.TemplateFour
+import models.responses.{Error, Response}
+import play.api.libs.json.Json
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext
@@ -20,15 +24,14 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
     Ok("Welcome to Sengab")
   }
 
-  //  Project Requests
 
   //  list all projects (paginated)
   def listProjects(filter: String, offset: Int, limit: Int) = Action.async {
     val future = receptionist ? "Run" map {
-      case "Success" =>
-        Ok("listed")
-      case "Failed" =>
-        BadRequest("")
+      case Response(feed) =>
+        BadRequest(feed)
+      case Error(res) =>
+        res
     }
     future
   }
@@ -38,7 +41,18 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   def getProject(projectId: String) = TODO
 
   //  add project
-  def addProject() = TODO
+  def addProject() = Action(BodyParsers.parse.json) { request => {
+
+    val project = request.body.asOpt[Project]
+    project match {
+      case Some(project) =>
+        Ok(s"added ${project.name}")
+      case None =>
+        val p = Project("Reco", "short", "long", 500, 4, TemplateFour("Take a photo of road accidents you witness"))
+        BadRequest(Json.toJson(p))
+    }
+  }
+  }
 
   //  search in projects (paginated)
   def searchProjects(keyword: String, offset: Int, limit: Int) = TODO
