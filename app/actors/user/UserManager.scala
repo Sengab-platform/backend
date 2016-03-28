@@ -20,7 +20,11 @@ class UserManager extends Actor {
       // forward message to UserRetriever
       userRetriever forward ListUserActivity(userID, offset, limit)
 
-    case ListProjectsOfUser(userID, sort, offset, limit) => ???
+    case ListProjectsOfUser(userID, sort, offset, limit) =>
+      Logger.info(s"actor ${self.path} - received msg : ${ListProjectsOfUser(userID, sort, offset, limit)} ")
+      // forward message to UserRetriever
+      userRetriever forward ListProjectsOfUser(userID, sort, offset, limit)
+
   }
 }
 

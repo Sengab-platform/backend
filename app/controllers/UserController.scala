@@ -6,7 +6,7 @@ import javax.inject.{Inject, Named}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import messages.UserManagerMessages.{GetUserProfile, ListUserActivity}
+import messages.UserManagerMessages.{GetUserProfile, ListProjectsOfUser, ListUserActivity}
 import models.responses._
 import play.api.mvc.{Action, Controller}
 
@@ -60,7 +60,24 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
   }
 
   //  list all projects that the user enrolled in (paginated)
-  def getUserEnrolledProjects(userId: String, offset: Int, limit: Int) = TODO
+  def getUserEnrolledProjects(userId: String, offset: Int, limit: Int) = Action.async {
+    request => {
+      val ENROLLED_SORT = "enrolled"
+      // Ask receptionist to get user enrolled projects
+      receptionist ? ListProjectsOfUser(userId, ENROLLED_SORT, offset, limit) map {
+        // The receptionist got the activates
+        case Response(feed) =>
+          Ok(feed)
+        // The receptionist failed to get user enrolled projects
+        case Error(result) =>
+          result
+      } recover {
+        // timeout exception
+        case e: TimeoutException =>
+          BadRequest(ErrorMsg("user enrolled projects retirement failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+      }
+    }
+  }
 
   //  list projects created by a specific user (paginated)
   def getUserCreatedProjects(userId: String, offset: Int, limit: Int) = TODO
