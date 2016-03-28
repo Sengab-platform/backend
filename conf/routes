@@ -30,7 +30,7 @@ GET           /projects/:project_id/stats              controllers.ProjectContro
 #### User Requests ###
 
 # get user profile
-GET           /users/:user_id                          controllers.UserController.getUSer(user_id)
+GET           /users/:user_id                          controllers.UserController.getUser(user_id)
 
 # list User’s Activity (paginated)
 GET           /users/:user_id/activities               controllers.UserController.getUserActivities(user_id, offset:Int?=0,limit:Int?=20)
