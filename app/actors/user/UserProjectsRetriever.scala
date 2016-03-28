@@ -12,7 +12,7 @@ class UserProjectsRetriever extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${ListProjectsOfUser(userID, sort, offset, limit)} ")
 
       // Here we will send the result
-      sender() ! Response(Json.toJson("user enrolled projects retrieved successfully"))
+      sender() ! Response(Json.toJson("user " + sort + " projects retrieved successfully"))
 
       // Kill userProjectsRetriever
       context stop self

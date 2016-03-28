@@ -80,6 +80,22 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
   }
 
   //  list projects created by a specific user (paginated)
-  def getUserCreatedProjects(userId: String, offset: Int, limit: Int) = TODO
-
+  def getUserCreatedProjects(userId: String, offset: Int, limit: Int) = Action.async {
+    request => {
+      val CREATED_SORT = "created"
+      // Ask receptionist to get user created projects
+      receptionist ? ListProjectsOfUser(userId, CREATED_SORT, offset, limit) map {
+        // The receptionist got the activates
+        case Response(feed) =>
+          Ok(feed)
+        // The receptionist failed to get user created projects
+        case Error(result) =>
+          result
+      } recover {
+        // timeout exception
+        case e: TimeoutException =>
+          BadRequest(ErrorMsg("user created projects retirement failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+      }
+    }
+  }
 }
