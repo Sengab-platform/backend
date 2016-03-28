@@ -62,9 +62,9 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
   //  list all projects that the user enrolled in (paginated)
   def getUserEnrolledProjects(userId: String, offset: Int, limit: Int) = Action.async {
     request => {
-      val ENROLLED_SORT = "enrolled"
+      val EnrolledSort = "enrolled"
       // Ask receptionist to get user enrolled projects
-      receptionist ? ListProjectsOfUser(userId, ENROLLED_SORT, offset, limit) map {
+      receptionist ? ListProjectsOfUser(userId, EnrolledSort, offset, limit) map {
         // The receptionist got the activates
         case Response(feed) =>
           Ok(feed)
@@ -82,9 +82,9 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
   //  list projects created by a specific user (paginated)
   def getUserCreatedProjects(userId: String, offset: Int, limit: Int) = Action.async {
     request => {
-      val CREATED_SORT = "created"
+      val CreatedSort = "created"
       // Ask receptionist to get user created projects
-      receptionist ? ListProjectsOfUser(userId, CREATED_SORT, offset, limit) map {
+      receptionist ? ListProjectsOfUser(userId, CreatedSort, offset, limit) map {
         // The receptionist got the activates
         case Response(feed) =>
           Ok(feed)
