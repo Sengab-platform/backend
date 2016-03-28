@@ -4,10 +4,13 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Named}
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.pattern.ask
 import akka.util.Timeout
-import play.api.mvc.Controller
+import messages.UserManagerMessages.GetUserProfile
+import models.responses._
+import play.api.mvc.{Action, Controller}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, TimeoutException}
 
 class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
                               (actorSystem: ActorSystem)
@@ -18,7 +21,24 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
   //  User Requests
 
   //  get user profile
-  def getUSer(userId: String) = TODO
+  def getUser(userId: String) = Action.async {
+    request => {
+      // Ask receptionist to get user info
+      receptionist ? GetUserProfile(userId) map {
+        // The receptionist got the info
+        case Response(feed) =>
+          Ok(feed)
+        // The receptionist failed to get user info
+        case Error(result) =>
+          result
+      } recover {
+        // timeout exception
+        case e: TimeoutException =>
+          BadRequest(ErrorMsg("user info retirement failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+      }
+    }
+  }
+
 
   //  list User’s Activity (paginated)
   def getUserActivities(userId: String, offset: Int, limit: Int) = TODO

@@ -1,6 +1,6 @@
 package messages
 
-import models.models.Project
+import models.project.Project
 
 object ProjectManagerMessages {
 
