@@ -12,7 +12,8 @@ import messages.EnrollmentManagerMessages.EnrollmentMessage
 import messages.ProjectManagerMessages.ProjectMessage
 import messages.UserManagerMessages.UserMessage
 import play.api.Logger
-
+import play.api.Play.current
+import play.api.libs.concurrent.Akka
 
 class Receptionist extends Actor {
 
@@ -51,10 +52,12 @@ class Receptionist extends Actor {
 
   override def preStart = {
     Logger.info(s"actor ${self.path} is starting - Initializing DB")
-    if (DBUtilities.DBConfig.initDB() == 0)
+    if (DBUtilities.DBConfig.initDB() == DBUtilities.DBConfig.OPEN_BUCKET_OK)
       Logger.info(s"actor ${self.path} is starting - DB Initialized Successfully")
-    else
-      Logger.error(s"actor ${self.path} is starting - DB failed to be Initialized")
+    else {
+      Logger.error(s"actor ${self.path} is starting - DB failed to be Initialized, system is shutting down")
+      Akka.system.shutdown()
+    }
   }
 
 

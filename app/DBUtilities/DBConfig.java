@@ -6,27 +6,26 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.json.JsonObject;
 
-import java.util.concurrent.TimeUnit;
-
 
 public class DBConfig {
 
     public static final int OPEN_BUCKET_OK = 0;
     public static final int OPEN_BUCKET_ERROR = -1;
     private static final String ID_JSON_KEY = "id";
-
+    public static AsyncBucket bucket;
     private static Cluster cluster;
-    static AsyncBucket bucket;
 
     public static int initDB(){
         if (bucket != null && !bucket.isClosed ()){
             return OPEN_BUCKET_OK;
         }
-        cluster = CouchbaseCluster.create ();
         try{
-            bucket = cluster.openBucket (1, TimeUnit.SECONDS).async ();
+            cluster = CouchbaseCluster.create();
+            bucket = cluster.openBucket().async();
             return OPEN_BUCKET_OK;
         }catch (CouchbaseException e){
+            return OPEN_BUCKET_ERROR;
+        } catch (Exception e) {
             return OPEN_BUCKET_ERROR;
         }
     }

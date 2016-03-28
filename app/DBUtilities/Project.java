@@ -22,7 +22,11 @@ public class Project {
     private static AsyncBucket mBucket;
 
     public static Observable<JsonDocument> createProject(JsonObject projectJsonObject){
-        checkDBStatus ();
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
 
 
         String projectId = "project::" + UUID.randomUUID ();
@@ -44,7 +48,11 @@ public class Project {
     }
 
     public static Observable<JsonDocument> getProjectWithId(String projectId){
-        checkDBStatus ();
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
 
         return mBucket.get (projectId).single ().timeout (500,TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
@@ -54,7 +62,11 @@ public class Project {
     }
 
     public static Observable<JsonDocument> updateProjectWithId(String projectId, JsonObject projectJsonObject){
-        checkDBStatus ();
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
 
         JsonDocument projectDocument = JsonDocument.create (projectId,DBConfig.removeIdFromJson (projectJsonObject));
 
@@ -78,7 +90,11 @@ public class Project {
 
 
     public static Observable<JsonDocument> deleteProject(String projectId) {
-        checkDBStatus ();
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
 
         return mBucket.remove (projectId).timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
@@ -96,10 +112,11 @@ public class Project {
 
     private static void checkDBStatus () {
         if (DBConfig.bucket.isClosed ()){
-            if(DBConfig.initDB () == DBConfig.OPEN_BUCKET_OK){
+            if (DBConfig.initDB() == DBConfig.OPEN_BUCKET_ERROR) {
                 mBucket = DBConfig.bucket;
             }else{
                 throw new BucketClosedException ("Failed to open bucket due to timeout or backpressure");
+
             }
         }else {
             mBucket = DBConfig.bucket;
