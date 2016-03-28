@@ -20,21 +20,17 @@ class AuthUserService extends UserService[UserAuth] {
 
   // to be implemented
   def save(user: BasicProfile, mode: SaveMode): Future[UserAuth] = {
-    mode match {
-      case SaveMode.SignUp => ???
-      case SaveMode.LoggedIn =>
-        // first see if there is a user with this BasicProfile already.
-        findProfile(user) match {
-          case Some(existingUser) => ???
-          case None => ???
-        }
-
-      case SaveMode.PasswordChange => ???
-    }
-  }
-
-  private def findProfile(p: BasicProfile) = {
     ???
+    //    mode match {
+    //      case SaveMode.SignUp => ???
+    //      case SaveMode.LoggedIn =>
+    //        // first see if there is a user with this BasicProfile already.
+    //        findProfile(user) match {
+    //          case Some(existingUser) => ???
+    //          case None => ???
+    //        }
+    //
+    //      case SaveMode.PasswordChange => ???
   }
 
   def link(current: UserAuth, to: BasicProfile): Future[UserAuth] = {
@@ -62,6 +58,10 @@ class AuthUserService extends UserService[UserAuth] {
   }
 
   override def passwordInfoFor(user: UserAuth): Future[Option[PasswordInfo]] = {
+    ???
+  }
+
+  private def findProfile(p: BasicProfile) = {
     ???
   }
 
