@@ -22,6 +22,7 @@ class Receptionist extends Actor {
   val enrollmentManager = context.actorOf(EnrollmentManager.props(), "enrollmentManager")
   val contributionManager = context.actorOf(ContributionManager.props(), "contributionManager")
 
+
   override def receive = {
     case msg: ProjectMessage =>
       Logger.info(s"actor ${self.path} - received msg : $msg ")
@@ -47,6 +48,16 @@ class Receptionist extends Actor {
 
 
   }
+
+  override def preStart = {
+    Logger.info(s"actor ${self.path} is starting - Initializing DB")
+    if (DBUtilities.DBConfig.initDB() == 0)
+      Logger.info(s"actor ${self.path} is starting - DB Initialized Successfully")
+    else
+      Logger.error(s"actor ${self.path} is starting - DB failed to be Initialized")
+  }
+
+
 }
 
 object Receptionist {

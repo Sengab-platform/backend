@@ -1,5 +1,13 @@
 package models.responses
 
-import play.api.libs.json.JsValue
+trait Response
 
-case class Response(feed: JsValue)
+trait ProjectResponse extends Response
+
+trait UserResponse extends Response
+
+trait CategoryResponse extends Response
+
+trait EnrollmentResponse extends Response
+
+trait ContributionResponse extends Response

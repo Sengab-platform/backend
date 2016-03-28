@@ -8,7 +8,9 @@ import akka.pattern.ask
 import akka.util.Timeout
 import messages.ProjectManagerMessages.CreateProject
 import models.project.Project
-import models.responses.{Error, ErrorMsg, Response}
+import models.responses.ProjectResponses.CreateProjectResponse
+import models.responses.{Error, ErrorMsg}
+import play.api.libs.json.Json
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,11 +46,12 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
       case Some(project) =>
         receptionist ? CreateProject(project, "user::567878") map {
           // project created successfully
-          case Response(feed) =>
-            Created(feed)
+          case msg: CreateProjectResponse =>
+            Created(Json.toJson(msg))
           // failed to create project
           case Error(result) =>
             result
+
         } recover {
           // timeout exception
           case e: TimeoutException =>
