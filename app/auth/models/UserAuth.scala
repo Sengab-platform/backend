@@ -1,4 +1,4 @@
-package auth
+package auth.models
 
 import models.User
 import org.joda.time.DateTime
