@@ -1,6 +1,7 @@
 package actors.project
 
 import akka.actor.{Actor, ActorRef, Props}
+import com.couchbase.client.core.BucketClosedException
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import messages.ProjectManagerMessages.CreateProject
@@ -17,6 +18,7 @@ class ProjectCreator(out: ActorRef) extends Actor {
   override def receive = {
 
     case CreateProject(project, userID) => {
+      Logger.info(s"actor ${self.path} - received msg : ${CreateProject(project, userID)}")
 
       // construct Json Object to be inserted into DB
       val obj = JsonObject.fromJson(Json.stringify(Json.toJson(project)))
@@ -67,7 +69,7 @@ class ProjectCreator(out: ActorRef) extends Actor {
     try {
       val name = (parsedJson \ "name").as[String]
       val createdAt = (parsedJson \ "created_at").as[String]
-      val url = "sengab.com/projects/454" // place holder
+      val url = s"sengab.com/projects/${doc.id()}" // place holder
       val image = "sengab.com/images/s45454" // place holder
       Option(CreateProjectResponse(doc.id(), url, name, image, createdAt))
 
@@ -84,7 +86,12 @@ class ProjectCreator(out: ActorRef) extends Actor {
   def myError = { e: Throwable =>
 
     e match {
+      case ex: BucketClosedException =>
+        self ! Error(Results.ServiceUnavailable(
+          ErrorMsg("project creation failed", ex.getMessage).toJson))
+
       case _: Exception =>
+
         self ! Error(Results.ServiceUnavailable(
           ErrorMsg("project creation failed", "couldn't insert project into DB").toJson))
     }
