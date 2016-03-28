@@ -1,18 +1,17 @@
 package controllers
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{TimeUnit, TimeoutException}
 import javax.inject.{Inject, Named}
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
+import messages.ProjectManagerMessages.CreateProject
 import models.project.Project
-import models.project.Templates.TemplateFour
-import models.responses.{Error, Response}
-import play.api.libs.json.Json
+import models.responses.{Error, ErrorMsg, Response}
 import play.api.mvc._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
                                  (actorSystem: ActorSystem)
@@ -26,30 +25,38 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
 
 
   //  list all projects (paginated)
-  def listProjects(filter: String, offset: Int, limit: Int) = Action.async {
-    val future = receptionist ? "Run" map {
-      case Response(feed) =>
-        BadRequest(feed)
-      case Error(res) =>
-        res
-    }
-    future
+  def listProjects(filter: String, offset: Int, limit: Int) = Action {
+    Ok
   }
-
 
   //  get specific project
   def getProject(projectId: String) = TODO
 
   //  add project
-  def addProject() = Action(BodyParsers.parse.json) { request => {
+  def addProject() = Action.async(BodyParsers.parse.json) { request => {
 
+    // try to extract project item from request
     val project = request.body.asOpt[Project]
+
+    // try to extract project item from request
     project match {
+      //got Project Item
       case Some(project) =>
-        Ok(s"added ${project.name}")
+        receptionist ? CreateProject(project, "user::567878") map {
+          // project created successfully
+          case Response(feed) =>
+            Created(feed)
+          // failed to create project
+          case Error(result) =>
+            result
+        } recover {
+          // timeout exception
+          case e: TimeoutException =>
+            BadRequest(ErrorMsg("project creation failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+        }
+      // could't parse Json and get Project Item
       case None =>
-        val p = Project("Reco", "short", "long", 500, 4, TemplateFour("Take a photo of road accidents you witness"))
-        BadRequest(Json.toJson(p))
+        Future(BadRequest(ErrorMsg("project creation failed", "wrong JSON").toJson))
     }
   }
   }
