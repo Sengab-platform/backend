@@ -6,7 +6,7 @@ import javax.inject.{Inject, Named}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import messages.UserManagerMessages.GetUserProfile
+import messages.UserManagerMessages.{GetUserProfile, ListUserActivity}
 import models.responses._
 import play.api.mvc.{Action, Controller}
 
@@ -41,7 +41,23 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
 
 
   //  list User’s Activity (paginated)
-  def getUserActivities(userId: String, offset: Int, limit: Int) = TODO
+  def getUserActivities(userId: String, offset: Int, limit: Int) = Action.async {
+    request => {
+      // Ask receptionist to get user activates
+      receptionist ? ListUserActivity(userId, offset, limit) map {
+        // The receptionist got the activates
+        case Response(feed) =>
+          Ok(feed)
+        // The receptionist failed to get user activates
+        case Error(result) =>
+          result
+      } recover {
+        // timeout exception
+        case e: TimeoutException =>
+          BadRequest(ErrorMsg("user activates retirement failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+      }
+    }
+  }
 
   //  list all projects that the user enrolled in (paginated)
   def getUserEnrolledProjects(userId: String, offset: Int, limit: Int) = TODO
