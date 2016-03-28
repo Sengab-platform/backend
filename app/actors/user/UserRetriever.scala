@@ -21,7 +21,7 @@ class UserRetriever extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${ListUserActivity(userID, offset, limit)} ")
 
       // Create ActivityRetriever Actor
-      val activityRetriever = context.actorOf(ActivityRetriever.props())
+      val activityRetriever = context.actorOf(ActivityRetriever.props(), "activityRetriever")
       // Forward ListUserActivity message to ActivityRetriever actor
       activityRetriever forward ListUserActivity(userID, offset, limit)
 
@@ -29,7 +29,7 @@ class UserRetriever extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${ListProjectsOfUser(userID, sort, offset, limit)} ")
 
       // Create ActivityRetriever Actor
-      val userProjectsRetriever = context.actorOf(UserProjectsRetriever.props())
+      val userProjectsRetriever = context.actorOf(UserProjectsRetriever.props(), "userProjectsRetriever")
       // Forward ListUserActivity message to ActivityRetriever actor
       userProjectsRetriever forward ListProjectsOfUser(userID, sort, offset, limit)
 
