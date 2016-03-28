@@ -17,7 +17,7 @@ class InfoRetriever extends Actor {
       sender() ! Response(Json.toJson("user info retrieved successfully"))
 
       // Kill infoRetriever
-      context stop sender()
+      context stop self
 
   }
 }
