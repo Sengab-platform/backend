@@ -5,9 +5,9 @@ import messages.EnrollmentManagerMessages.{Enroll, Withdraw}
 
 class EnrollmentManager extends Actor {
   override def receive = {
-    case Enroll(projectID, userID) => ???
+    case Enroll(enrollment) => ???
 
-    case Withdraw(projectID, userID) => ???
+    case Withdraw(enrollment) => ???
   }
 }
 
