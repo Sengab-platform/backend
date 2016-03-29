@@ -63,15 +63,16 @@ public class Project {
             return Observable.error(e);
         }
 
-        return mBucket.get (projectId).single ().timeout (500,TimeUnit.MILLISECONDS)
+        return mBucket.get (projectId).timeout (500,TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                 .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
+                throwable.printStackTrace ();
                 return Observable.error (new CouchbaseException ("Failed to get project, General DB exception"));
-            })
-            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC));
+         }).defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC))
+        ;
     }
 
     /**
