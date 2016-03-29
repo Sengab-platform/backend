@@ -8,20 +8,20 @@ import securesocial.core._
 import securesocial.core.providers.MailToken
 import securesocial.core.services.{SaveMode, UserService}
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
 class AuthUserService extends UserService[UserAuth] {
 
 
   // to be implemented
   def find(providerId: String, userId: String): Future[Option[BasicProfile]] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val promise = Promise[Option[BasicProfile]]
 
-    var user: Option[BasicProfile] = None
-    Logger.info(userId)
     toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
       .subscribe(doc => {
         val json = Json.parse(doc.content().toString)
-        user = Some(BasicProfile(
+        val user = Some(BasicProfile(
           "google",
           doc.id,
           (json \ "first_name").asOpt[String],
@@ -31,8 +31,15 @@ class AuthUserService extends UserService[UserAuth] {
           (json \ "image").asOpt[String],
           AuthenticationMethod.OAuth2
         ))
+        promise.success(user)
       })
-    Future.successful(user)
+
+    promise.future.map {
+      case Some(basic) =>
+        Some(basic)
+      case None =>
+        None
+    }
   }
 
   def findByEmailAndProvider(email: String, providerId: String): Future[Option[BasicProfile]] = {
@@ -51,7 +58,6 @@ class AuthUserService extends UserService[UserAuth] {
         val json_response = Json.parse(response)
         val gender = (json_response \ "gender").asOpt[String]
         val bio = (json_response \ "tagline").asOpt[String]
-
         val newUser = UserAuth(user, gender, bio, List(user))
         Logger.info("SIGNUP")
         Future.successful(newUser)
@@ -101,14 +107,6 @@ class AuthUserService extends UserService[UserAuth] {
   }
 
   override def passwordInfoFor(user: UserAuth): Future[Option[PasswordInfo]] = {
-    ???
-  }
-
-  private def findProfile(p: BasicProfile) = {
-    ???
-  }
-
-  private def updateProfile(user: BasicProfile, entry: ((String, String), UserAuth)): Future[UserAuth] = {
     ???
   }
 }
