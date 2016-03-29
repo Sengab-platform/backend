@@ -67,7 +67,7 @@ public class Category {
             return Observable.error(e);
         }
 
-        return mBucket.get (categoryId).single ().timeout (500,TimeUnit.MILLISECONDS)
+        return mBucket.get (categoryId).timeout (500,TimeUnit.MILLISECONDS)
                 .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                         .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
                 .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
