@@ -1,14 +1,14 @@
 package actors.enrollment
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import messages.EnrollmentManagerMessages.Withdraw
 
-class WithdrawHandler extends Actor {
+class WithdrawHandler(out: ActorRef) extends Actor {
   override def receive = {
-    case Withdraw(projectID, userID) => ???
+    case Withdraw(enrollment) => ???
   }
 }
 
 object WithdrawHandler {
-  def props(): Props = Props(new WithdrawHandler)
+  def props(out: ActorRef): Props = Props(new WithdrawHandler(out: ActorRef))
 }
