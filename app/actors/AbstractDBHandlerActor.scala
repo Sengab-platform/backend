@@ -84,8 +84,8 @@ object AbstractDBHandlerActor {
 
   /**
     * this message should be sent to self when the db query successes to get data which is wrapped
-    * by this messsage as @param jsonDocument
-
+    * by this message as @param jsonDocument
+    *
     */
   case class QueryResult(jsonDocument: JsonDocument)
 
