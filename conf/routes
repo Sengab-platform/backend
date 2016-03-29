@@ -3,30 +3,30 @@
 # ~~~~
 
 ### Home page ###
-GET           /                                        controllers.ProjectController.index
+GET         /                                    controllers.ProjectController.index
 
 ### Authentication
-POST          /authenticate/:provider                  @securesocial.controllers.LoginApi.authenticate(provider:String, builder:String = "token")
+POST        /authenticate/:provider              @securesocial.controllers.LoginApi.authenticate(provider:String, builder:String = "token")
 
 ### Project Requests ###
 
 # list all projects (paginated)
-GET           /projects                                controllers.ProjectController.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
+GET         /projects                            controllers.ProjectController.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
 
 # get specific project
-GET           /projects/:project_id                    controllers.ProjectController.getProject(project_id)
+GET         /projects/:project_id                controllers.ProjectController.getProjectDetails(project_id)
 
 # add project
-POST          /projects                                controllers.ProjectController.addProject()
+POST        /projects                            controllers.ProjectController.addProject()
 
 # search in projects (paginated)
-GET           /projects/search/:keyword                controllers.ProjectController.searchProjects(keyword,offset:Int?=0,limit:Int?=20)
+GET         /projects/search/:keyword            controllers.ProjectController.searchProjects(keyword,offset:Int?=0,limit:Int?=20)
 
 # list results of a project (paginated)
-GET           /projects/:project_id/results            controllers.ProjectController.getProjectResults(project_id,offset:Int?=0,limit:Int?=20)
+GET         /projects/:project_id/results        controllers.ProjectController.getProjectResults(project_id,offset:Int?=0,limit:Int?=20)
 
 # list stats of a project
-GET           /projects/:project_id/stats              controllers.ProjectController.getProjectStats(project_id)
+GET         /projects/:project_id/stats          controllers.ProjectController.getProjectStats(project_id)
 
 
 #### User Requests ###

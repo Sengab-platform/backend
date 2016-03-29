@@ -18,7 +18,7 @@ class CategoryController @Inject()(@Named("receptionist") receptionist: ActorRef
 
   //  list all categories
   def getCategories(offset: Int, limit: Int) = TODO
-  DBUtilities.Project.
+
   //  list projects of a category (paginated)
   def getProjectsForCategory(categoryId: String, offset: Int, limit: Int) = TODO
 

@@ -6,10 +6,11 @@ import javax.inject.{Inject, Named}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import messages.ProjectManagerMessages.CreateProject
+import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails}
+import models.errors.Error
+import models.errors.GeneralErrors.{AskTimeoutError, BadJSONError}
 import models.project.Project
-import models.responses.ProjectResponses.CreateProjectResponse
-import models.responses.{Error, ErrorMsg}
+import models.responses.ProjectResponses.{CreateProjectResponse, ProjectDetailsResponse}
 import play.api.libs.json.Json
 import play.api.mvc._
 
@@ -32,7 +33,20 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   }
 
   //  get specific project
-  def getProject(projectId: String) = TODO
+  def getProjectDetails(projectId: String) = Action.async {
+    receptionist ? GetProjectDetails(projectId) map {
+      case msg: ProjectDetailsResponse =>
+        Ok(Json.toJson(msg))
+      case error: Error =>
+        error.result
+    } recover {
+      case e: TimeoutException =>
+        AskTimeoutError("Failed to get project details",
+          "Ask Timeout Exception on Actor Receptionist",
+          this.getClass.toString).result
+
+    }
+  }
 
   //  add project
   def addProject() = Action.async(BodyParsers.parse.json) { request => {
@@ -49,17 +63,20 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
           case msg: CreateProjectResponse =>
             Created(Json.toJson(msg))
           // failed to create project
-          case Error(result) =>
-            result
+          case error: Error =>
+            error.result
 
         } recover {
           // timeout exception
           case e: TimeoutException =>
-            BadRequest(ErrorMsg("project creation failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+            AskTimeoutError("project creation failed",
+              "Ask Timeout Exception on Actor Receptionist",
+              this.getClass.toString).result
+
         }
       // could't parse Json and get Project Item
       case None =>
-        Future(BadRequest(ErrorMsg("project creation failed", "wrong JSON").toJson))
+        Future(BadJSONError("project creation failed", "wrong JSON", this.getClass.toString).result)
     }
   }
   }

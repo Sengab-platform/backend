@@ -3,12 +3,12 @@ package actors.project
 import akka.actor.{Actor, Props}
 import messages.ProjectManagerMessages.GetProjectStats
 
-class StatsRetriever extends Actor {
+class ProjectStatsRetriever extends Actor {
   override def receive = {
     case GetProjectStats(projectID) => ???
   }
 }
 
-object StatsRetriever {
-  def props(): Props = Props(new StatsRetriever)
+object ProjectStatsRetriever {
+  def props(): Props = Props(new ProjectStatsRetriever)
 }

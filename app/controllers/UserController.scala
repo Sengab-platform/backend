@@ -7,7 +7,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import messages.UserManagerMessages.{GetUserProfile, ListProjectsOfUser, ListUserActivity}
-import models.responses._
+import models.errors.Error
+import models.errors.GeneralErrors.AskTimeoutError
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.{ExecutionContext, TimeoutException}
@@ -29,12 +30,13 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
         //        case Response(feed) =>
         //          Ok(feed)
         // The receptionist failed to get user info
-        case Error(result) =>
-          result
+        case error: Error =>
+          error.result
       } recover {
         // timeout exception
         case e: TimeoutException =>
-          BadRequest(ErrorMsg("user info retirement failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+          AskTimeoutError("user info projects retirement failed",
+            "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
       }
     }
   }
@@ -49,12 +51,14 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
         //        case Response(feed) =>
         //          Ok(feed)
         // The receptionist failed to get user activates
-        case Error(result) =>
-          result
+        case error: Error =>
+          error.result
+
       } recover {
         // timeout exception
         case e: TimeoutException =>
-          BadRequest(ErrorMsg("user activates retirement failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+          AskTimeoutError("user activity retirement failed",
+            "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
       }
     }
   }
@@ -69,12 +73,14 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
         //        case Response(feed) =>
         //          Ok(feed)
         // The receptionist failed to get user enrolled projects
-        case Error(result) =>
-          result
+        case error: Error =>
+          error.result
+
       } recover {
         // timeout exception
         case e: TimeoutException =>
-          BadRequest(ErrorMsg("user enrolled projects retirement failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+          AskTimeoutError("user enrolled projects retirement failed",
+            "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
       }
     }
   }
@@ -89,12 +95,14 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
         //        case Response(feed) =>
         //          Ok(feed)
         // The receptionist failed to get user created projects
-        case Error(result) =>
-          result
+        case error: Error =>
+          error.result
+
       } recover {
         // timeout exception
         case e: TimeoutException =>
-          BadRequest(ErrorMsg("user created projects retirement failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+          AskTimeoutError("user created projects retirement failed",
+            "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
       }
     }
   }
