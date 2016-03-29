@@ -11,10 +11,15 @@ public class DBConfig {
 
     public static final int OPEN_BUCKET_OK = 0;
     public static final int OPEN_BUCKET_ERROR = -1;
+    public static final String EMPTY_JSON_DOC = "empty_doc";
     private static final String ID_JSON_KEY = "id";
     public static AsyncBucket bucket;
     private static Cluster cluster;
 
+    /**
+     * Initialize the Couchbase cluster and open the app's bucket.
+     * @return DBConfig.OPEN_BUCKET_OK . if it succeeds and DBConfig.OPEN_BUCKET_ERROR} if it fails.
+     */
     public static int initDB(){
         if (bucket != null && !bucket.isClosed ()){
             return OPEN_BUCKET_OK;
@@ -30,11 +35,11 @@ public class DBConfig {
         }
     }
 
-    public static String getIdFromJson(JsonObject object){
+     static String getIdFromJson(JsonObject object){
         return object.getString (ID_JSON_KEY);
     }
 
-    public static JsonObject removeIdFromJson(JsonObject object){
+     static JsonObject removeIdFromJson(JsonObject object){
         return  object.removeKey (ID_JSON_KEY);
     }
 }

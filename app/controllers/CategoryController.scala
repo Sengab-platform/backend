@@ -14,12 +14,11 @@ class CategoryController @Inject()(@Named("receptionist") receptionist: ActorRef
                                   (implicit exec: ExecutionContext) extends Controller {
   implicit val timeout = Timeout(5, TimeUnit.SECONDS)
 
-
   // Category Requests
 
   //  list all categories
   def getCategories(offset: Int, limit: Int) = TODO
-
+  DBUtilities.Project.
   //  list projects of a category (paginated)
   def getProjectsForCategory(categoryId: String, offset: Int, limit: Int) = TODO
 
