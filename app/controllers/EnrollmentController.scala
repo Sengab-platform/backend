@@ -8,8 +8,9 @@ import akka.pattern.ask
 import akka.util.Timeout
 import messages.EnrollmentManagerMessages.{Enroll, Withdraw}
 import models.enrollment.Enrollment
+import models.errors.Error
+import models.errors.GeneralErrors.{AskTimeoutError, CouldNotParseJSON}
 import models.responses.EnrollmentResponses.{EnrollResponse, WithdrawResponse}
-import models.responses.{Error, ErrorMsg}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, BodyParsers, Controller}
 
@@ -39,17 +40,17 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
             Created(Json.toJson(msg))
 
           // failed to enroll
-          case Error(result) =>
-            result
+          case err: Error =>
+            err.result
 
         } recover {
           // timeout exception
           case e: TimeoutException =>
-            BadRequest(ErrorMsg("Enroll to project process failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+            AskTimeoutError("Enroll to project process failed", "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
         }
       // could't parse Json and get enrollment keys/values
       case None =>
-        Future(BadRequest(ErrorMsg("Enroll to project process failed", "wrong JSON").toJson))
+        Future(CouldNotParseJSON("Enroll to project process failed", "wrong JSON", this.getClass.toString).result)
     }
   }
   }
@@ -72,17 +73,18 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
             Ok(Json.toJson(msg))
 
           // failed to withdraw
-          case Error(result) =>
-            result
+          case err: Error =>
+            err.result
 
         } recover {
           // timeout exception
           case e: TimeoutException =>
-            BadRequest(ErrorMsg("Withdraw from project process failed", "Ask Timeout Exception on Actor Receptionist").toJson)
+            AskTimeoutError("Withdraw from project process failed", "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
         }
       // could't parse Json and get withdraw keys/values
       case None =>
-        Future(BadRequest(ErrorMsg("Withdraw from project failed", "wrong JSON").toJson))
+        Future(CouldNotParseJSON("Withdraw from project failed", "wrong JSON", this.getClass.toString).result)
+
     }
   }
   }
