@@ -1,6 +1,6 @@
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 
 case class User(
                  id: String,
@@ -8,7 +8,7 @@ case class User(
                  first_name: Option[String],
                  last_name: Option[String],
                  image: Option[String],
-                 //about: Option[JsObject],
+                 about: Option[JsObject],
                  stats: Map[String, Int],
                  created_at: String
                )
