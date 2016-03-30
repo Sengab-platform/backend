@@ -8,7 +8,7 @@ import securesocial.core._
 import securesocial.core.providers.MailToken
 import securesocial.core.services.{SaveMode, UserService}
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
 class AuthUserService extends UserService[UserAuth] {
 
@@ -16,23 +16,37 @@ class AuthUserService extends UserService[UserAuth] {
   // to be implemented
   def find(providerId: String, userId: String): Future[Option[BasicProfile]] = {
 
-    var user: Option[BasicProfile] = None
+    val promise = Promise[Option[BasicProfile]]
+    import scala.concurrent.ExecutionContext.Implicits.global
+
     Logger.info(userId)
+
     toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
       .subscribe(doc => {
-        val json = Json.parse(doc.content().toString)
-        user = Some(BasicProfile(
-          "google",
-          doc.id,
-          (json \ "first_name").asOpt[String],
-          (json \ "last_name").asOpt[String],
-          None,
-          None,
-          (json \ "image").asOpt[String],
-          AuthenticationMethod.OAuth2
-        ))
-      })
-    Future.successful(user)
+        if (!(doc.content() == null)) {
+          val json = Json.parse(doc.content().toString)
+          val user = Some(BasicProfile(
+            "google",
+            doc.id,
+            (json \ "first_name").asOpt[String],
+            (json \ "last_name").asOpt[String],
+            None,
+            None,
+            (json \ "image").asOpt[String],
+            AuthenticationMethod.OAuth2
+          ))
+
+          promise.success(user)
+        }
+        else promise.success(None)
+      }, error => promise.success(None))
+
+    promise.future.map {
+      case Some(basic) =>
+        Some(basic)
+      case None =>
+        None
+    }
   }
 
   def findByEmailAndProvider(email: String, providerId: String): Future[Option[BasicProfile]] = {
