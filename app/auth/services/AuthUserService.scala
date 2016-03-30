@@ -13,26 +13,30 @@ import scala.concurrent.{Future, Promise}
 class AuthUserService extends UserService[UserAuth] {
 
 
-  // to be implemented
   def find(providerId: String, userId: String): Future[Option[BasicProfile]] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
+
     val promise = Promise[Option[BasicProfile]]
+    import scala.concurrent.ExecutionContext.Implicits.global
 
     toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
       .subscribe(doc => {
-        val json = Json.parse(doc.content().toString)
-        val user = Some(BasicProfile(
-          "google",
-          doc.id,
-          (json \ "first_name").asOpt[String],
-          (json \ "last_name").asOpt[String],
-          None,
-          None,
-          (json \ "image").asOpt[String],
-          AuthenticationMethod.OAuth2
-        ))
-        promise.success(user)
-      })
+        if (!(doc.content() == null)) {
+          val json = Json.parse(doc.content().toString)
+          val user = Some(BasicProfile(
+            "google",
+            doc.id,
+            (json \ "first_name").asOpt[String],
+            (json \ "last_name").asOpt[String],
+            None,
+            None,
+            (json \ "image").asOpt[String],
+            AuthenticationMethod.OAuth2
+          ))
+
+          promise.success(user)
+        }
+        else promise.success(None)
+      }, error => promise.success(None))
 
     promise.future.map {
       case Some(basic) =>
@@ -59,7 +63,6 @@ class AuthUserService extends UserService[UserAuth] {
         val gender = (json_response \ "gender").asOpt[String]
         val bio = (json_response \ "tagline").asOpt[String]
         val newUser = UserAuth(user, gender, bio, List(user))
-        Logger.info("SIGNUP")
         Future.successful(newUser)
 
       case SaveMode.LoggedIn =>
@@ -77,8 +80,8 @@ class AuthUserService extends UserService[UserAuth] {
       //
       //                case None =>
       //              }
-
-      case SaveMode.PasswordChange => ???
+      //
+      //      case SaveMode.PasswordChange => ???
     }
   }
 
