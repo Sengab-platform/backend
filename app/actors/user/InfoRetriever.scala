@@ -60,8 +60,8 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
       val first_name = (parsedJson \ "first_name").asOpt[String]
       val last_name = (parsedJson \ "last_name").asOpt[String]
       val image = (parsedJson \ "image").asOpt[String]
-      val about = (parsedJson \ "about").as[about]
-      val stats = (parsedJson \ "stats").as[stats]
+      val about = (parsedJson \ "about").as[About]
+      val stats = (parsedJson \ "stats").as[Stats]
       val url = s"api.sengab.com/v1/users/${doc.id()}"
       val projects = s"api.sengab.com/v1/users/${doc.id()}/contributions"
       val contributions = s"api.sengab.com/v1/users/${doc.id()}/contributions"
