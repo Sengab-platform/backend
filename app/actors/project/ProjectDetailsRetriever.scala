@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
 import messages.ProjectManagerMessages.GetProjectDetails
 import models.errors.Error
-import models.errors.GeneralErrors.CouldNotParseJSON
+import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import models.responses.ProjectResponses.ProjectDetailsResponse
 import models.responses.Response
 import play.api.Logger
@@ -45,22 +45,28 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
     case QueryResult(doc) =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)} ")
 
-      val response = constructResponse(doc)
-      response match {
-        case Some(response) =>
-          out ! response
+      if (doc.content() != null) {
+        val response = constructResponse(doc)
+        response match {
+          case Some(response) =>
+            out ! response
 
-        case None =>
-          CouldNotParseJSON("failed to get project details",
-            "couldn't parse json retrieved from the db ", this.getClass.toString)
+          case None =>
+            self ! CouldNotParseJSON("failed to get project details",
+              "couldn't parse json retrieved from the db ", this.getClass.toString)
 
+        }
+      } else {
+        out ! NotFoundError("no such project", "received null content document from DB", this.getClass.toString)
       }
+
 
   }
 
   override def constructResponse(doc: JsonDocument): Option[Response] = {
-    val parsedJson: JsValue = Json.parse(doc.content().toString)
+
     try {
+      val parsedJson: JsValue = Json.parse(doc.content().toString)
       val name = (parsedJson \ "name").as[String]
       val createdAt = (parsedJson \ "created_at").as[String]
       val briefDescription = (parsedJson \ "brief_description").as[String]
