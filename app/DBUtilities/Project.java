@@ -20,35 +20,58 @@ import java.util.concurrent.TimeUnit;
 
 public class Project {
     private static AsyncBucket mBucket;
+    private static String userIdKey = "id";
+    private static String userUrlKey = "url";
+    private static String userNameKey = "name";
+    private static String ownerKey = "owner";
+    private static String resultsKey = "results";
+    private static String statsKey = "stats";
+
 
     /**
      * Create and save a project. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
      * @param projectJsonObject The Json object to be the value of the document.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createProject(JsonObject projectJsonObject){
+    public static Observable<JsonDocument> createProject(String userId, JsonObject projectJsonObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
+        UUID projectUUID = UUID.randomUUID ();
+        String projectId = "project::" + projectUUID;
+        String resultsId = "result::" + projectUUID;
+        String statsID = "stats::" + projectUUID;
 
-        String projectId = "project::" + UUID.randomUUID ();
-        JsonDocument projectDocument = JsonDocument.create (projectId,projectJsonObject);
+        return User.getUserWithId (userId).flatMap (userDocument -> {
 
-        return mBucket.insert (projectDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
-            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-            .onErrorResumeNext (throwable -> {
-                if (throwable instanceof DocumentAlreadyExistsException){
-                    String newUserId = "project::"+ UUID.randomUUID ();
-                    JsonDocument newUserDocument = JsonDocument.create (newUserId,DBConfig.removeIdFromJson (projectJsonObject));
-                    return mBucket.insert (newUserDocument);
-                }
-                return Observable.error (new CouchbaseException ("Failed to insert project, General DB exception"));
-            });
+            JsonObject owner = JsonObject.create ().put (userIdKey, userId)
+                    .put (userUrlKey, userDocument.content ().get (userUrlKey))
+                    .put (userNameKey, userDocument.content ().get (userNameKey));
+            projectJsonObject.put (ownerKey, owner).put (statsKey, statsID).put (resultsKey, resultsId);
+
+            return Observable.just (JsonDocument.create (projectId, projectJsonObject));})
+
+        .flatMap (doc -> mBucket.insert (doc).single ().timeout (500, TimeUnit.MILLISECONDS)
+           .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                   .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+           .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                   .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+           .onErrorResumeNext (throwable -> {
+               if (throwable instanceof DocumentAlreadyExistsException){
+                   UUID newProjectUUID = UUID.randomUUID ();
+                   String newProjectId = "project::"+ newProjectUUID;
+                   String newStatsId = "stats::" + newProjectUUID;
+                   String newResultsId = "results::" + newProjectUUID;
+                   projectJsonObject.put (statsKey,newStatsId).put (resultsKey,newResultsId);
+                   JsonDocument newProjectDocument = JsonDocument.create (newProjectId,projectJsonObject);
+
+                   return mBucket.insert (newProjectDocument);
+               }
+               return Observable.error (new CouchbaseException ("Failed to insert project, General DB exception"));
+           }));
+
     }
 
     /**
@@ -147,4 +170,5 @@ public class Project {
             mBucket = DBConfig.bucket;
         }
     }
+
 }

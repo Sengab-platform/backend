@@ -38,7 +38,7 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
       // construct Json Object to be inserted into DB
       val obj = toJsonObject(Json.toJson(project))
-      executeQuery(DBUtilities.Project.createProject(obj))
+      executeQuery(DBUtilities.Project.createProject("user::5",obj))
 
 
     // terminate self
