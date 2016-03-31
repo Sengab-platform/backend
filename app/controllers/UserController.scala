@@ -9,6 +9,7 @@ import akka.util.Timeout
 import messages.UserManagerMessages.{GetUserProfile, ListProjectsOfUser, ListUserActivity}
 import models.errors.Error
 import models.errors.GeneralErrors.AskTimeoutError
+import models.responses.ActivityResults.UserActivityResponse
 import models.responses.UserResponses.UserInfoResponse
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
@@ -53,8 +54,8 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
       // Ask receptionist to get user activates
       receptionist ? ListUserActivity(userId, offset, limit) map {
         // The receptionist got the activates
-        //        case Response(feed) =>
-        //          Ok(feed)
+        case msg: UserActivityResponse =>
+          Ok(Json.toJson(msg))
         // The receptionist failed to get user activates
         case error: Error =>
           error.result
