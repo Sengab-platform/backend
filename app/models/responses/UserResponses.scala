@@ -26,6 +26,8 @@ object UserResponses {
 
 
   object UserInfoResponse {
+    implicit val f2 = Json.format[about]
+    implicit val f1 = Json.format[stats]
     implicit val f = Json.format[UserInfoResponse]
   }
 
