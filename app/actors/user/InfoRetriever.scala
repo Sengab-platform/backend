@@ -7,9 +7,9 @@ import com.couchbase.client.java.document.JsonDocument
 import messages.UserManagerMessages.GetUserProfile
 import models.errors.GeneralErrors.CouldNotParseJSON
 import models.responses.Response
-import models.responses.UserResponses.UserInfoResponse
+import models.responses.UserResponses.{UserInfoResponse, about, stats}
 import play.Logger
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 
 class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
@@ -43,7 +43,7 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
       if (doc.content() != null) {
         val response = constructResponse(doc)
         response match {
-          case Some(`response`) =>
+          case Some(response) =>
             out ! response
 
           case None =>
@@ -60,10 +60,10 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
       val first_name = (parsedJson \ "first_name").asOpt[String]
       val last_name = (parsedJson \ "last_name").asOpt[String]
       val image = (parsedJson \ "image").asOpt[String]
-      val about = (parsedJson \ "about").as[JsObject]
-      val stats = (parsedJson \ "stats").as[JsObject]
+      val about = (parsedJson \ "about").as[about]
+      val stats = (parsedJson \ "stats").as[stats]
       val url = s"api.sengab.com/v1/users/${doc.id()}"
-      val projects = s"api.sengab.com/v1/users/${doc.id()}/projects"
+      val projects = s"api.sengab.com/v1/users/${doc.id()}/contributions"
       val contributions = s"api.sengab.com/v1/users/${doc.id()}/contributions"
 
       Some(UserInfoResponse(
