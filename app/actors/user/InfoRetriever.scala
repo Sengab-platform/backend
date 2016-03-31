@@ -5,7 +5,7 @@ import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
 import messages.UserManagerMessages.GetUserProfile
-import models.errors.GeneralErrors.CouldNotParseJSON
+import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import models.responses.Response
 import models.responses.UserResponses._
 import play.Logger
@@ -51,7 +51,10 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
               "couldn't parse json retrieved from the db ", this.getClass.toString)
 
         }
+      } else {
+        out ! NotFoundError("no such user", "received null content document from DB", this.getClass.toString)
       }
+
   }
 
   override def constructResponse(doc: JsonDocument): Option[Response] =
