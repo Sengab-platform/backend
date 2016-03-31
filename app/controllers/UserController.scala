@@ -9,6 +9,9 @@ import akka.util.Timeout
 import messages.UserManagerMessages.{GetUserProfile, ListProjectsOfUser, ListUserActivity}
 import models.errors.Error
 import models.errors.GeneralErrors.AskTimeoutError
+import models.responses.ActivityResults.UserActivityResponse
+import models.responses.UserResponses.UserInfoResponse
+import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.{ExecutionContext, TimeoutException}
@@ -26,16 +29,19 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
     request => {
       // Ask receptionist to get user info
       receptionist ? GetUserProfile(userId) map {
+
         // The receptionist got the info
-        //        case Response(feed) =>
-        //          Ok(feed)
+        case msg: UserInfoResponse =>
+          Ok(Json.toJson(msg))
+
         // The receptionist failed to get user info
         case error: Error =>
           error.result
+
       } recover {
         // timeout exception
         case e: TimeoutException =>
-          AskTimeoutError("user info projects retirement failed",
+          AskTimeoutError("user info retrievement failed",
             "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
       }
     }
@@ -48,8 +54,8 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
       // Ask receptionist to get user activates
       receptionist ? ListUserActivity(userId, offset, limit) map {
         // The receptionist got the activates
-        //        case Response(feed) =>
-        //          Ok(feed)
+        case msg: UserActivityResponse =>
+          Ok(Json.toJson(msg))
         // The receptionist failed to get user activates
         case error: Error =>
           error.result
