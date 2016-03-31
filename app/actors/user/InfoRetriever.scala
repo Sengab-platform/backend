@@ -7,7 +7,7 @@ import com.couchbase.client.java.document.JsonDocument
 import messages.UserManagerMessages.GetUserProfile
 import models.errors.GeneralErrors.CouldNotParseJSON
 import models.responses.Response
-import models.responses.UserResponses.{UserInfoResponse, about, stats}
+import models.responses.UserResponses._
 import play.Logger
 import play.api.libs.json.{JsValue, Json}
 
