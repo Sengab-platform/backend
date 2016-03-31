@@ -64,6 +64,15 @@ abstract class AbstractDBHandlerActor(out: ActorRef) extends Actor {
   }
 
   /**
+    * this methods takes any number of observables and subscribe for it
+    *
+    * @param observables any number of observables to subscribe on
+    */
+  def executeSideEffectsQueries(observables: rx.Observable[JsonDocument]*): Unit = {
+    observables.foreach(o => o.subscribe())
+  }
+
+  /**
     * called when the db query completes and all Json Documents retrieved
     */
   def onComplete: () => Unit
