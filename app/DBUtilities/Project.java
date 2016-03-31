@@ -7,16 +7,24 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.handler.timeout.TimeoutException;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.AsyncN1qlQueryRow;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.util.retry.RetryBuilder;
+import play.Logger;
 import rx.Observable;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.query.Select.select;
 
 public class Project {
     private static AsyncBucket mBucket;
@@ -44,6 +52,8 @@ public class Project {
         String resultsId = "result::" + projectUUID;
         String statsID = "stats::" + projectUUID;
 
+        Logger.info ("DB: Creating project with ID: " + projectId);
+
         return User.getUserWithId (userId).flatMap (userDocument -> {
 
             JsonObject owner = JsonObject.create ().put (userIdKey, userId)
@@ -64,11 +74,17 @@ public class Project {
                    String newProjectId = "project::"+ newProjectUUID;
                    String newStatsId = "stats::" + newProjectUUID;
                    String newResultsId = "results::" + newProjectUUID;
+
+                   Logger.info ("DB: Another project with same id exists, creating a project with another ID: " + projectId);
+
+
                    projectJsonObject.put (statsKey,newStatsId).put (resultsKey,newResultsId);
                    JsonDocument newProjectDocument = JsonDocument.create (newProjectId,projectJsonObject);
 
                    return mBucket.insert (newProjectDocument);
                }
+
+               Logger.info ("DB: Failed to insert project with ID: " + projectId + "General DB exception");
                return Observable.error (new CouchbaseException ("Failed to insert project, General DB exception"));
            }));
 
@@ -79,24 +95,33 @@ public class Project {
      * @param projectId the id of the project to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonDocument> getProjectWithId(String projectId){
+    public static Observable<JsonObject> getProjectWithId(String projectId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        return mBucket.get (projectId).timeout (500,TimeUnit.MILLISECONDS)
+        Logger.info ("DB: Getting project with ID: " + projectId);
+
+        return mBucket.query (N1qlQuery.parameterized (select("*").from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+            .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
+            .where (Expression.x ("meta(project).id").eq (Expression.x ("$1")))
+            ,JsonArray.create ().add (projectId))).timeout (500,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedCategoryintoProject (projectId, queryRow))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                throwable.printStackTrace ();
+
+                Logger.info ("DB: Failed to Get project with ID: " + projectId + ", General DB exception");
+
                 return Observable.error (new CouchbaseException ("Failed to get project, General DB exception"));
-         }).defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC))
-        ;
+            }).defaultIfEmpty (JsonObject.create ());
     }
+
+
 
     /**
      * Update a project. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
@@ -171,4 +196,10 @@ public class Project {
         }
     }
 
+    private static Observable<JsonObject> embedCategoryintoProject (String projectId, AsyncN1qlQueryRow queryRow) {
+        String categoryId = queryRow.value ().getObject ("project").getString ("category_id");
+        JsonObject categoryObject = queryRow.value ().getObject ("category").put ("category_id",categoryId);
+        JsonObject projectObject = queryRow.value ().getObject ("project").removeKey ("category_id");
+        return Observable.just (projectObject.put ("id",projectId).put ("category",categoryObject));
+    }
 }

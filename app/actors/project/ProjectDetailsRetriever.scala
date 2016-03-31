@@ -32,7 +32,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
   override def receive: Receive = {
     case GetProjectDetails(projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetails(projectID)} ")
-      executeQuery(DBUtilities.Project.getProjectWithId(projectID))
+//      executeQuery(DBUtilities.Project.getProjectWithId(projectID))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")

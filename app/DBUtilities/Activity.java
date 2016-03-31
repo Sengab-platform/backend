@@ -121,7 +121,6 @@ public class Activity {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-
         return mBucket.remove (activityId).timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                 .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
