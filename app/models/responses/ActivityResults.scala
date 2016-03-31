@@ -15,7 +15,7 @@ object ActivityResults {
                          id: String,
                          project: Project,
                          created_at: String,
-                         kind: String
+                         activity_type: String
                        )
 
   case class UserActivityResponse(
