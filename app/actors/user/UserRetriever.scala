@@ -12,7 +12,7 @@ class UserRetriever extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${GetUserProfile(userID)} ")
 
       // Create InfoRetriever Actor
-      val infoRetriever = context.actorOf(InfoRetriever.props(), "infoRetriever")
+      val infoRetriever = context.actorOf(InfoRetriever.props(sender()), "infoRetriever")
 
       // Forward GetUserProfile message to InfoRetriever actor
       infoRetriever forward GetUserProfile(userID)
