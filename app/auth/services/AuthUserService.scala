@@ -13,13 +13,10 @@ import scala.concurrent.{Future, Promise}
 class AuthUserService extends UserService[UserAuth] {
 
 
-  // to be implemented
   def find(providerId: String, userId: String): Future[Option[BasicProfile]] = {
 
     val promise = Promise[Option[BasicProfile]]
     import scala.concurrent.ExecutionContext.Implicits.global
-
-    Logger.info(userId)
 
     toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
       .subscribe(doc => {
@@ -65,9 +62,7 @@ class AuthUserService extends UserService[UserAuth] {
         val json_response = Json.parse(response)
         val gender = (json_response \ "gender").asOpt[String]
         val bio = (json_response \ "tagline").asOpt[String]
-
         val newUser = UserAuth(user, gender, bio, List(user))
-        Logger.info("SIGNUP")
         Future.successful(newUser)
 
       case SaveMode.LoggedIn =>
@@ -85,8 +80,8 @@ class AuthUserService extends UserService[UserAuth] {
       //
       //                case None =>
       //              }
-
-      case SaveMode.PasswordChange => ???
+      //
+      //      case SaveMode.PasswordChange => ???
     }
   }
 
@@ -115,14 +110,6 @@ class AuthUserService extends UserService[UserAuth] {
   }
 
   override def passwordInfoFor(user: UserAuth): Future[Option[PasswordInfo]] = {
-    ???
-  }
-
-  private def findProfile(p: BasicProfile) = {
-    ???
-  }
-
-  private def updateProfile(user: BasicProfile, entry: ((String, String), UserAuth)): Future[UserAuth] = {
     ???
   }
 }

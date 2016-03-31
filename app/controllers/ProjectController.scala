@@ -6,6 +6,7 @@ import javax.inject.{Inject, Named}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
+import auth.services.AuthEnvironment
 import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails}
 import models.errors.Error
 import models.errors.GeneralErrors.{AskTimeoutError, BadJSONError}
@@ -17,8 +18,9 @@ import play.api.mvc._
 import scala.concurrent.{ExecutionContext, Future}
 
 class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
+                                 (override implicit val env: AuthEnvironment)
                                  (actorSystem: ActorSystem)
-                                 (implicit exec: ExecutionContext) extends Controller {
+                                 (implicit exec: ExecutionContext) extends securesocial.core.SecureSocial {
 
   implicit val timeout = Timeout(5, TimeUnit.SECONDS)
 
@@ -49,36 +51,37 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   }
 
   //  add project
-  def addProject() = Action.async(BodyParsers.parse.json) { request => {
+  def addProject() = SecuredAction.async(BodyParsers.parse.json) {
 
-    // try to extract project item from request
-    val project = request.body.asOpt[Project]
+    request => {
+      // extract project item and the user ID from request
+      val project = request.body.asOpt[Project]
+      val userID = request.user.main.userId
 
-    // try to extract project item from request
-    project match {
-      //got Project Item
-      case Some(project) =>
-        receptionist ? CreateProject(project, "user::567878") map {
-          // project created successfully
-          case msg: CreateProjectResponse =>
-            Created(Json.toJson(msg))
-          // failed to create project
-          case error: Error =>
-            error.result
+      project match {
+        //got Project Item
+        case Some(project) =>
+          receptionist ? CreateProject(project, s"user::$userID") map {
+            // project created successfully
+            case msg: CreateProjectResponse =>
+              Created(Json.toJson(msg))
+            // failed to create project
+            case error: Error =>
+              error.result
 
-        } recover {
-          // timeout exception
-          case e: TimeoutException =>
-            AskTimeoutError("project creation failed",
-              "Ask Timeout Exception on Actor Receptionist",
-              this.getClass.toString).result
+          } recover {
+            // timeout exception
+            case e: TimeoutException =>
+              AskTimeoutError("project creation failed",
+                "Ask Timeout Exception on Actor Receptionist",
+                this.getClass.toString).result
 
-        }
-      // could't parse Json and get Project Item
-      case None =>
-        Future(BadJSONError("project creation failed", "wrong JSON", this.getClass.toString).result)
+          }
+        // could't parse Json and get Project Item
+        case None =>
+          Future(BadJSONError("project creation failed", "wrong JSON", this.getClass.toString).result)
+      }
     }
-  }
   }
 
   //  search in projects (paginated)

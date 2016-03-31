@@ -81,7 +81,7 @@ public class User {
      * @param userJsonObject The updated Json object to be used as the value of updated document.
      * @return an observable of the updated Json document .
      */
-    public static Observable<JsonDocument> updateProjectWithId(String userId,JsonObject userJsonObject){
+    public static Observable<JsonDocument> updateUserWithId(String userId, JsonObject userJsonObject) {
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
