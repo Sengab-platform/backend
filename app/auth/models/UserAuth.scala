@@ -23,7 +23,7 @@ case class UserAuth(main: BasicProfile, gender: Option[String], bio: Option[Stri
     val dateTime: DateTime = DateTime.now
     val created_at = dateTime.toString
 
-    val user = User(userID, entity_type, first_name, last_name, image, about, stats, created_at)
+    val user = User(userID, entity_type, first_name, last_name, image, about, stats, None, created_at)
     DBUtilities.User.createUser(
       JsonObject.fromJson(
         Json.stringify(

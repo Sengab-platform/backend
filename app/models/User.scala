@@ -10,6 +10,7 @@ case class User(
                  image: Option[String],
                  about: Option[JsObject],
                  stats: Map[String, Int],
+                 enrolled_projects: Option[List[String]] = None,
                  created_at: String
                )
 
