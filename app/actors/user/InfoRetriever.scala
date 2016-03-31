@@ -63,7 +63,7 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
       val about = (parsedJson \ "about").as[JsObject]
       val stats = (parsedJson \ "stats").as[JsObject]
       val url = s"api.sengab.com/v1/users/${doc.id()}"
-      val projects = s"api.sengab.com/v1/users/${doc.id()}/contributions"
+      val projects = s"api.sengab.com/v1/users/${doc.id()}/projects"
       val contributions = s"api.sengab.com/v1/users/${doc.id()}/contributions"
 
       Some(UserInfoResponse(
@@ -77,7 +77,6 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
         projects,
         contributions
       ))
-
 
     } catch {
       case e: Exception => None
