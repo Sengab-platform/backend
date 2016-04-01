@@ -5,7 +5,7 @@ import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
 import messages.UserManagerMessages.ListUserActivity
-import models.errors.GeneralErrors.CouldNotParseJSON
+import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import models.responses.Response
 import play.Logger
 import play.api.libs.json.{JsArray, JsValue, Json}
@@ -57,6 +57,8 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
               "couldn't parse json retrieved from the db ", this.getClass.toString)
 
         }
+      } else {
+        out ! NotFoundError("no such activity", "received null content document from DB", this.getClass.toString)
       }
   }
 
