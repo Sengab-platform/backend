@@ -93,7 +93,7 @@ class AuthUserService extends UserService[UserAuth] {
 
   def saveToken(token: MailToken): Future[MailToken] = {
     // Dummy implementation
-    val dateTime = DateTime
+    val dateTime = DateTime.now()
     Future.successful(MailToken("uuid", "email", dateTime, dateTime, isSignUp = false))
   }
 
