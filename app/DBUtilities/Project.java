@@ -7,7 +7,6 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.handler.timeout.TimeoutException;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
@@ -17,6 +16,7 @@ import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.dsl.Expression;
+import com.couchbase.client.java.query.dsl.Sort;
 import com.couchbase.client.java.util.retry.RetryBuilder;
 import play.Logger;
 import rx.Observable;
@@ -24,6 +24,7 @@ import rx.Observable;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static DBUtilities.DBConfig.bucket;
 import static com.couchbase.client.java.query.Select.select;
 
 public class Project {
@@ -104,10 +105,10 @@ public class Project {
 
         Logger.info ("DB: Getting project with ID: " + projectId);
 
-        return mBucket.query (N1qlQuery.parameterized (select("*").from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+        return mBucket.query (N1qlQuery.simple (select("*").from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
-            .where (Expression.x ("meta(project).id").eq (Expression.x ("$1")))
-            ,JsonArray.create ().add (projectId))).timeout (500,TimeUnit.MILLISECONDS)
+            .where (Expression.x ("meta(project).id").eq (Expression.x (projectId)))))
+            .timeout (500,TimeUnit.MILLISECONDS)
             .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedCategoryintoProject (projectId, queryRow))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
             .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
@@ -120,6 +121,32 @@ public class Project {
                 return Observable.error (new CouchbaseException ("Failed to get project, General DB exception"));
             }).defaultIfEmpty (JsonObject.create ());
     }
+
+    public static Observable<JsonObject> bulkGetProjects(String sortBy, int offset, int limit){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        return bucket.query (N1qlQuery.simple (select("*").from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+            .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
+            .orderBy (Sort.desc (Expression.x ("project." + Expression.x (sortBy))))
+            .limit (limit).offset (offset)))
+            .timeout (1000,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedCategoryintoProject (queryRow.value ().getString ("id"), queryRow))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                     .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                Logger.info ("DB: Failed to bulk get projects, General DB exception");
+
+                return Observable.error (new CouchbaseException ("DB: Failed to bulk get projects, General DB exception"));})
+            .defaultIfEmpty (JsonObject.create ());
+    }
+
+
 
 
     /**
@@ -183,15 +210,15 @@ public class Project {
     }
 
     private static void checkDBStatus () {
-        if (DBConfig.bucket.isClosed ()){
+        if (bucket.isClosed ()){
             if (DBConfig.initDB() == DBConfig.OPEN_BUCKET_OK) {
-                mBucket = DBConfig.bucket;
+                mBucket = bucket;
             }else{
                 throw new BucketClosedException ("Failed to open bucket due to timeout or backpressure");
 
             }
         }else {
-            mBucket = DBConfig.bucket;
+            mBucket = bucket;
         }
     }
 
