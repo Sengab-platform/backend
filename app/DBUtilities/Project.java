@@ -122,7 +122,6 @@ public class Project {
     }
 
 
-
     /**
      * Update a project. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
      * @param projectId The id of the project to be updated .
