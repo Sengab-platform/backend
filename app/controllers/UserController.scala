@@ -9,7 +9,7 @@ import akka.util.Timeout
 import messages.UserManagerMessages.{GetUserProfile, ListProjectsOfUser, ListUserActivity}
 import models.errors.Error
 import models.errors.GeneralErrors.AskTimeoutError
-import models.responses.ActivityResults.UserActivityResponse
+import models.responses.ActivityResponse.UserActivityResponse
 import models.responses.UserResponses.UserInfoResponse
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
