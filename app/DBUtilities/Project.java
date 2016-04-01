@@ -94,7 +94,7 @@ public class Project {
     /**
      * Get a project using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param projectId the id of the project to get.
-     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
+     * @return an observable of json object the resulted project merged with its category and with the id field added, if the document was not found returns an empty json object.
      */
     public static Observable<JsonObject> getProjectWithId(String projectId){
         try {
@@ -122,14 +122,24 @@ public class Project {
             }).defaultIfEmpty (JsonObject.create ());
     }
 
-    public static Observable<JsonObject> bulkGetProjects(String sortBy, int offset, int limit){
+    /**
+     * Bulk gets projects sorts them using any document field and sets a limit and offset for the results.
+     * @param sortBy A Json field in the project document to sort the results with.
+     * @param limit the maximum number of document returned.
+     * @param offset an index to determine where to start form when getting results.
+     * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
+     */
+
+    public static Observable<JsonObject> bulkGetProjects(String sortBy, int limit, int offset){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        return bucket.query (N1qlQuery.simple (select("*").from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+        Logger.info (String.format ("DB: bulk getting projects sorted by: $1 and with limit: $2 and offset: $3"),sortBy,limit,offset);
+
+        return bucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
             .orderBy (Sort.desc (Expression.x ("project." + Expression.x (sortBy))))
             .limit (limit).offset (offset)))
@@ -140,14 +150,46 @@ public class Project {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                      .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                Logger.info ("DB: Failed to bulk get projects, General DB exception");
+                Logger.info (String.format ("DB: failed to bulk get projects sorted by: $1 and with limit: $2 and offset: $3"),sortBy,limit,offset);
 
-                return Observable.error (new CouchbaseException ("DB: Failed to bulk get projects, General DB exception"));})
+                return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects sorted by: $1 and with limit: $2 and offset: $3",sortBy,limit,offset)));
+            })
             .defaultIfEmpty (JsonObject.create ());
     }
 
+    /**
+     * Bulk gets projects sorts them by popularity and sets a limit and offset for the results.
+     * @param limit the maximum number of document returned.
+     * @param offset an index to determine where to start form when getting results.
+     * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
+     */
 
+    public static Observable<JsonObject> getFeaturedProjets(int limit,int offset){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
 
+        Logger.info (String.format ("DB: bulk getting featured projects with limit: $1 and offset: $2"),limit,offset);
+
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+                .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
+                .where(Expression.x ("project.us_featured")).orderBy (Sort.desc (Expression.x ("project.enrollments_count")))
+                .limit (limit).offset (offset)))
+                .timeout (1000,TimeUnit.MILLISECONDS)
+                .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedCategoryintoProject (queryRow.value ().getString ("id"), queryRow))
+                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+                .onErrorResumeNext (throwable -> {
+                    Logger.info (String.format ("DB: failed to bulk get featured projects with limit: $1 and offset: $2"),limit,offset);
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get featured projects with limit: $1 and offset: $2",limit,offset)));
+                })
+                .defaultIfEmpty (JsonObject.create ());
+    }
 
     /**
      * Update a project. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
