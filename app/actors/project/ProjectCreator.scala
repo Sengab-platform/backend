@@ -3,7 +3,7 @@ package actors.project
 import actors.AbstractDBHandlerActor
 import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
-import com.couchbase.client.java.document.JsonDocument
+import com.couchbase.client.java.document.json.JsonObject
 import messages.ProjectManagerMessages.CreateProject
 import models.Response
 import models.errors.Error
@@ -24,8 +24,8 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
   }
 
   // send the retrieved JsonDocument to self wrapped in QueryResult message to be handled
-  override def onNext(): (JsonDocument) => Unit = {
-    doc: JsonDocument => {
+  override def onNext(): (JsonObject) => Unit = {
+    doc: JsonObject => {
       self ! QueryResult(doc)
     }
   }
@@ -39,8 +39,8 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
       // construct Json Object to be inserted into DB
       // TODO
 
-      val obj = toJsonObject(Json.toJson(project))
-      executeQuery(DBUtilities.Project.createProject(userID, obj))
+      val projectObj = toJsonObject(Json.toJson(project))
+      executeQuery(DBUtilities.Project.createProject(userID, projectObj))
 
 
     // terminate self
@@ -57,7 +57,7 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
     // got a document , construct proper response from it and send the response to out
     case QueryResult(doc) =>
-      Logger.info(s"actor ${self.path} - received msg : $doc")
+      Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)}")
 
       val response = constructResponse(doc)
       response match {
@@ -72,25 +72,12 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
   }
 
   // try to convert the retrieved JsonDocument from db to a CreateProjectResponse
-  override def constructResponse(doc: JsonDocument): Option[Response] = {
+  override def constructResponse(doc: JsonObject): Option[Response] = {
 
     // TODO implement this
-    val parsedJson: JsValue = Json.parse(doc.content().toString)
+    val parsedJson: JsValue = Json.parse(doc.toString)
     val createdProject = parsedJson.as[DetailedProject]
-    Some(Response(Json.parse(doc.content().toString)))
-    //    try {
-    //      val name = (parsedJson \ "name").as[String]
-    //      val createdAt = (parsedJson \ "created_at").as[String]
-    //      val url = s"sengab.com/projects/${doc.id()}" // place holder
-    //
-    //      // deserializing succeeded, return the response object
-    //      Some(CreateProjectResponse(doc.id(), url, name, createdAt))
-    //
-    //    } catch {
-    //      // deserializing failed, return None
-    //      case e: Exception => None
-    //    }
-    //  }
+    Some(Response(parsedJson))
   }
 }
 

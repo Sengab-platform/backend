@@ -4,7 +4,6 @@ import auth.models.UserAuth
 import org.joda.time.DateTime
 import play.Logger
 import play.api.libs.json.Json
-import rx.lang.scala.JavaConversions.toScalaObservable
 import securesocial.core._
 import securesocial.core.providers.MailToken
 import securesocial.core.services.{SaveMode, UserService}
@@ -19,25 +18,27 @@ class AuthUserService extends UserService[UserAuth] {
     val promise = Promise[Option[BasicProfile]]
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
-      .subscribe(doc => {
-        if (!(doc.content() == null)) {
-          val json = Json.parse(doc.content().toString)
-          val user = Some(BasicProfile(
-            "google",
-            doc.id,
-            (json \ "first_name").asOpt[String],
-            (json \ "last_name").asOpt[String],
-            None,
-            None,
-            (json \ "image").asOpt[String],
-            AuthenticationMethod.OAuth2
-          ))
+    // TODO fix this
+    //    toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
+    //      .subscribe(doc => {
 
-          promise.success(user)
-        }
-        else promise.success(None)
-      }, error => promise.success(None))
+    //        if (!(doc.content() == null)) {
+    //          val json = Json.parse(doc.content().toString)
+    //          val user = Some(BasicProfile(
+    //            "google",
+    //            doc.id,
+    //            (json \ "first_name").asOpt[String],
+    //            (json \ "last_name").asOpt[String],
+    //            None,
+    //            None,
+    //            (json \ "image").asOpt[String],
+    //            AuthenticationMethod.OAuth2
+    //          ))
+    //
+    //          promise.success(user)
+    //        }
+    //        else promise.success(None)
+    //      }, error => promise.success(None))
 
     promise.future.map {
       case Some(basic) =>
@@ -45,6 +46,7 @@ class AuthUserService extends UserService[UserAuth] {
       case None =>
         None
     }
+    ???
   }
 
   def findByEmailAndProvider(email: String, providerId: String): Future[Option[BasicProfile]] = {

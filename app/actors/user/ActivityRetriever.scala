@@ -3,10 +3,9 @@ package actors.user
 import actors.AbstractDBHandlerActor
 import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
-import com.couchbase.client.java.document.JsonDocument
+import com.couchbase.client.java.document.json.JsonObject
 import messages.UserManagerMessages.ListUserActivity
 import models.Response
-import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import play.Logger
 
 class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
@@ -23,10 +22,10 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
   }
 
   /**
-    * called when the db query get data back as JsonDocument
+    * called when the db query get data back as JsonObject
     */
-  override def onNext(): (JsonDocument) => Unit = {
-    doc: JsonDocument => {
+  override def onNext(): (JsonObject) => Unit = {
+    doc: JsonObject => {
       self ! QueryResult(doc)
     }
   }
@@ -45,20 +44,21 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
     case QueryResult(doc) =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)} ")
 
-      if (doc.content() != null) {
-        val response = constructResponse(doc)
-        response match {
-          case Some(response) =>
-            out ! response
-
-          case None =>
-            self ! CouldNotParseJSON("failed to get user activity",
-              "couldn't parse json retrieved from the db ", this.getClass.toString)
-
-        }
-      } else {
-        out ! NotFoundError("no such activity", "received null content document from DB", this.getClass.toString)
-      }
+    //
+    //      if (doc.content() != null) {
+    //        val response = constructResponse(doc)
+    //        response match {
+    //          case Some(response) =>
+    //            out ! response
+    //
+    //          case None =>
+    //            self ! CouldNotParseJSON("failed to get user activity",
+    //              "couldn't parse json retrieved from the db ", this.getClass.toString)
+    //
+    //        }
+    //      } else {
+    //        out ! NotFoundError("no such activity", "received null content document from DB", this.getClass.toString)
+    //      }
   }
 
   /**
@@ -67,7 +67,7 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
   // TODO reimplement this method
 
-  override def constructResponse(doc: JsonDocument): Option[Response] = {
+  override def constructResponse(doc: JsonObject): Option[Response] = {
     ???
     //    try {
     //      val parsedJson: JsValue = Json.parse(doc.content().toString)

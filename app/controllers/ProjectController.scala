@@ -65,7 +65,6 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
         case Some(project) =>
           receptionist ? CreateProject(project, s"user::117521628211683444029") map {
             // project created successfully
-
             case Response(json) =>
               Created(json)
             // failed to create project
