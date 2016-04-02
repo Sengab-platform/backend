@@ -12,11 +12,18 @@ import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.dsl.Expression;
+import com.couchbase.client.java.query.dsl.Sort;
 import com.couchbase.client.java.util.retry.RetryBuilder;
+import play.Logger;
 import rx.Observable;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.query.Select.select;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -78,6 +85,40 @@ public class Category {
                 .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
                 .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
+
+    /**
+     * Bulk gets all categories with limit and offset. can error with {@link CouchbaseException} and {@link BucketClosedException}.
+     * @param limit the maximum number of document returned.
+     * @param offset an index to determine where to start form when getting results.
+     * @return an observable of json object that contains all the resulted categories with id field added.
+     */
+    public static Observable<JsonObject> bulkGetCategories(int limit,int offset){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Bulk getting categories with limit: $1 and offset: $2",limit,offset);
+
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(category).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " category"))
+        .where (Expression.x ("meta(category).id").like (Expression.s ("%category%")))
+        .orderBy (Sort.asc (Expression.x ("category.name"))).limit (limit).offset (offset)))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> {
+                String id = queryRow.value ().getString ("id");
+                return Observable.just (queryRow.value ().getObject ("category").put ("id",id));
+            }).timeout (1000,TimeUnit.MILLISECONDS)
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+            .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+            .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            Logger.info ("DB: failed to bulk get categories with limit: $1 and offset: $2",limit,offset);
+
+            return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get categories with limit: $1 and offset: $2",limit,offset)));
+        });
+    }
+
 
     /**
      * Update a category. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
