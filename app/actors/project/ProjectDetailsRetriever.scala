@@ -8,7 +8,7 @@ import messages.ProjectManagerMessages.GetProjectDetails
 import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
-import models.project.NewProject
+import models.project.Project.DetailedProject
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 
@@ -69,13 +69,15 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
 
     try {
       val parsedJson: JsValue = Json.parse(doc.content().toString)
-      val project = parsedJson.as[NewProject]
+      val project = parsedJson.as[DetailedProject]
       Some(Response(Json.toJson(project)))
-
+      ???
     } catch {
       case e: Exception => None
     }
   }
+
+  ???
 }
 
 

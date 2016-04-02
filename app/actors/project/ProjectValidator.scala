@@ -2,7 +2,7 @@ package actors.project
 
 import akka.actor.{Actor, Props}
 import messages.ProjectManagerMessages.{CreateProject, ValidateProject}
-import models.project.NewProject
+import models.project.Project.NewProject
 import play.api.Logger
 
 class ProjectValidator extends Actor {

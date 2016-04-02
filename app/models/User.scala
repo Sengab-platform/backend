@@ -51,6 +51,12 @@ object NewUser {
   implicit val NewUserF = Json.format[NewUser]
 }
 
+case class EmbeddedOwner(id: String, first_name: String, image: String)
+
+object EmbeddedOwner {
+  implicit val embeddedOwnerF = Json.format[EmbeddedOwner]
+}
+
 case class UserInfo(
                      id: String,
                      first_name: Option[String],
