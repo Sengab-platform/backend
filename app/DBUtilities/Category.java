@@ -30,7 +30,7 @@ public class Category {
      * @param categoryJsonObject The Json object to be the value of the document.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createCategory(JsonObject categoryJsonObject){
+    public static Observable<JsonObject> createCategory(JsonObject categoryJsonObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -41,18 +41,18 @@ public class Category {
         JsonDocument categoryDocument = JsonDocument.create (categoryId,categoryJsonObject);
 
         return mBucket.insert (categoryDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
-                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-                .onErrorResumeNext (throwable -> {
-                    if (throwable instanceof DocumentAlreadyExistsException){
-                        String newUserId = "category::"+ UUID.randomUUID ();
-                        JsonDocument newCategoryDocument = JsonDocument.create (newUserId,DBConfig.removeIdFromJson (categoryJsonObject));
-                        return mBucket.insert (newCategoryDocument);
-                    }
-                    return Observable.error (new CouchbaseException ("Failed to insert category, General DB exception"));
-                });
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof DocumentAlreadyExistsException){
+                    String newUserId = "category::"+ UUID.randomUUID ();
+                    JsonDocument newCategoryDocument = JsonDocument.create (newUserId,DBConfig.removeIdFromJson (categoryJsonObject));
+                    return mBucket.insert (newCategoryDocument);
+                }
+                return Observable.error (new CouchbaseException ("Failed to insert category, General DB exception"));
+            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
     /**
@@ -60,7 +60,7 @@ public class Category {
      * @param categoryId the id of the category to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonDocument> getCategoryWithId(String categoryId){
+    public static Observable<JsonObject> getCategoryWithId(String categoryId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -75,7 +75,8 @@ public class Category {
                 .onErrorResumeNext (throwable -> {
                     return Observable.error (new CouchbaseException ("Failed to get category, General DB exception"));
                 })
-                .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC));
+                .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+                .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
     /**

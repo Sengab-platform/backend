@@ -28,7 +28,7 @@ public class Contribution {
      * @param contributionJsonObject The Json object to be the value of the document , it also has an Id field to use as the document key.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createContribution(JsonObject contributionJsonObject){
+    public static Observable<JsonObject> createContribution(JsonObject contributionJsonObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -39,17 +39,17 @@ public class Contribution {
         JsonDocument contributionDocument = JsonDocument.create (contributionId,DBConfig.removeIdFromJson (contributionJsonObject));
 
         return mBucket.insert (contributionDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
-                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-                .onErrorResumeNext (throwable -> {
-                    if (throwable instanceof DocumentAlreadyExistsException) {
-                        return Observable.error (new DocumentAlreadyExistsException ("Failed to create contribution, ID already exists"));
-                    } else {
-                        return Observable.error (new CouchbaseException ("Failed to create contribution, General DB exception "));
-                    }
-                });
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof DocumentAlreadyExistsException) {
+                    return Observable.error (new DocumentAlreadyExistsException ("Failed to create contribution, ID already exists"));
+                } else {
+                    return Observable.error (new CouchbaseException ("Failed to create contribution, General DB exception "));
+                }
+            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
 
     }
 
@@ -58,7 +58,7 @@ public class Contribution {
      * @param contributionId the id of the contribution to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonDocument> getContributionWithId(String contributionId){
+    public static Observable<JsonObject> getContributionWithId(String contributionId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -66,14 +66,15 @@ public class Contribution {
         }
 
         return mBucket.get (contributionId).timeout (500,TimeUnit.MILLISECONDS)
-                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-                .onErrorResumeNext (throwable -> {
-                    return Observable.error (new CouchbaseException ("Failed to get contribution, General DB exception"));
-                })
-                .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC));
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                return Observable.error (new CouchbaseException ("Failed to get contribution, General DB exception"));
+            })
+            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC))
+            .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
     /**

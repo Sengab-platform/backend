@@ -28,7 +28,7 @@ public class Stats {
      * @param statsId the id of the stats document to create.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createStats(String statsId){
+    public static Observable<JsonObject> createStats(String statsId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -48,7 +48,7 @@ public class Stats {
                 } else {
                     return Observable.error (new CouchbaseException ("Failed to create stats, General DB exception "));
                 }
-            });
+            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
 
     }
 
@@ -57,7 +57,7 @@ public class Stats {
      * @param statsId the id of the stats document to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonDocument> getStatsWithId(String statsId){
+    public static Observable<JsonObject> getStatsWithId(String statsId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -72,7 +72,8 @@ public class Stats {
             .onErrorResumeNext (throwable -> {
                 return Observable.error (new CouchbaseException ("Failed to get stats, General DB exception"));
             })
-            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC));
+            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+            .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
     /**

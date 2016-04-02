@@ -36,7 +36,7 @@ public class User {
      * @param userJsonObject The Json object to be the value of the document , it also has an Id field to use as the document key.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createUser(JsonObject userJsonObject){
+    public static Observable<JsonObject> createUser(JsonObject userJsonObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -57,14 +57,14 @@ public class User {
                 } else {
                     return Observable.error (new CouchbaseException ("Failed to create user, General DB exception "));
                 }
-            });
+            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
     /**
      * Get a user using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param userId the id of the user to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonDocument> getUserWithId(String userId){
+    public static Observable<JsonObject> getUserWithId(String userId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -80,7 +80,8 @@ public class User {
             .onErrorResumeNext (throwable -> {
                 return Observable.error (new CouchbaseException ("Failed to get user, General DB exception"));
             })
-            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC));
+            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+            .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
     /**

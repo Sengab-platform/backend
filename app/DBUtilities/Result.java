@@ -28,7 +28,7 @@ public class Result {
      * @param resultId The Json object to be the value of the document , it also has an Id field to use as the document key.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createResult(String resultId){
+    public static Observable<JsonObject> createResult(String resultId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -48,7 +48,7 @@ public class Result {
                 } else {
                     return Observable.error (new CouchbaseException ("Failed to create result, General DB exception "));
                 }
-            });
+            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
     /**
@@ -56,7 +56,7 @@ public class Result {
      * @param resultId the id of the results document to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonDocument> getResultWithId(String resultId){
+    public static Observable<JsonObject> getResultWithId(String resultId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -64,14 +64,15 @@ public class Result {
         }
 
         return mBucket.get (resultId).timeout (500,TimeUnit.MILLISECONDS)
-                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-                .onErrorResumeNext (throwable -> {
-                    return Observable.error (new CouchbaseException ("Failed to get result, General DB exception"));
-                })
-                .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC));
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                return Observable.error (new CouchbaseException ("Failed to get result, General DB exception"));
+            })
+            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+            .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
     /**

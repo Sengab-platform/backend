@@ -29,9 +29,12 @@ import static com.couchbase.client.java.query.Select.select;
 
 public class Project {
     private static AsyncBucket mBucket;
-    private static String userIdKey = "id";
-    private static String userUrlKey = "url";
-    private static String userNameKey = "name";
+    private static String ownerIdKey = "id";
+    private static String ownerImageKey = "image";
+    private static String ownerNameKey = "name";
+    private static String userImageKey = "image";
+    private static String userFirstNameKey = "first_name";
+    private static String userLastNameKey = "last_name";
     private static String ownerKey = "owner";
     private static String resultsKey = "results";
     private static String statsKey = "stats";
@@ -42,7 +45,7 @@ public class Project {
      * @param projectJsonObject The Json object to be the value of the document.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createProject(String userId, JsonObject projectJsonObject){
+    public static Observable<JsonObject> createProject(String userId, JsonObject projectJsonObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -55,16 +58,17 @@ public class Project {
 
         Logger.info ("DB: Creating project with ID: " + projectId);
 
-        return User.getUserWithId (userId).flatMap (userDocument -> {
+        return User.getUserWithId (userId).flatMap (userJsonObject -> {
 
-            JsonObject owner = JsonObject.create ().put (userIdKey, userId)
-                    .put (userUrlKey, userDocument.content ().get (userUrlKey))
-                    .put (userNameKey, userDocument.content ().get (userNameKey));
+            JsonObject owner = JsonObject.create ().put (ownerIdKey, userId)
+                .put (ownerImageKey, userJsonObject.getString (userImageKey))
+                .put (ownerNameKey, userJsonObject.getString (userFirstNameKey) + " " + userJsonObject.getString (userLastNameKey));
             projectJsonObject.put (ownerKey, owner).put (statsKey, statsID).put (resultsKey, resultsId);
 
             return Observable.just (JsonDocument.create (projectId, projectJsonObject));})
 
-        .flatMap (doc -> mBucket.insert (doc).single ().timeout (500, TimeUnit.MILLISECONDS)
+        .flatMap (doc -> mBucket.insert (doc)
+        ).single ().timeout (500, TimeUnit.MILLISECONDS)
            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -78,7 +82,6 @@ public class Project {
 
                    Logger.info ("DB: Another project with same id exists, creating a project with another ID: " + projectId);
 
-
                    projectJsonObject.put (statsKey,newStatsId).put (resultsKey,newResultsId);
                    JsonDocument newProjectDocument = JsonDocument.create (newProjectId,projectJsonObject);
 
@@ -87,7 +90,7 @@ public class Project {
 
                Logger.info ("DB: Failed to insert project with ID: " + projectId + "General DB exception");
                return Observable.error (new CouchbaseException ("Failed to insert project, General DB exception"));
-           }));
+           }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
 
     }
 

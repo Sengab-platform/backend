@@ -29,7 +29,7 @@ public class Activity {
      * @param activityId The id for the activity document to be created.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createActivity(String activityId){
+    public static Observable<JsonObject> createActivity(String activityId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -48,7 +48,7 @@ public class Activity {
                 } else {
                     return Observable.error (new CouchbaseException ("Failed to create activity, General DB exception "));
                 }
-            });
+            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
 
     }
 
@@ -57,7 +57,7 @@ public class Activity {
      * @param activityId the id of the activities document to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonDocument> getActivityWithId(String activityId){
+    public static Observable<JsonObject> getActivityWithId(String activityId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -65,14 +65,15 @@ public class Activity {
         }
 
         return mBucket.get (activityId).timeout (500,TimeUnit.MILLISECONDS)
-                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-                .onErrorResumeNext (throwable -> {
-                    return Observable.error (new CouchbaseException ("Failed to get activity, General DB exception"));
-                })
-                .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC));
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                return Observable.error (new CouchbaseException ("Failed to get activity, General DB exception"));
+            })
+            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+            .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
     /**
