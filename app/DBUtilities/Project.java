@@ -111,7 +111,7 @@ public class Project {
 
         return mBucket.query (N1qlQuery.simple (select("*").from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
-            .where (Expression.x ("meta(project).id").eq (Expression.x (projectId)))))
+            .where (Expression.x ("meta(project).id").eq (Expression.s (projectId)))))
             .timeout (500,TimeUnit.MILLISECONDS)
             .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryintoProject (projectId, queryRow))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
