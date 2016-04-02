@@ -27,9 +27,14 @@ case class User(id: String,
                 image: Option[String],
                 about: Option[About],
                 stats: Option[Stats],
-                projects: String,
-                contributions: String)
+                projects: Option[String], // the User created projects url
+                contributions: Option[String])
+
+// the User contributions url
 
 object User {
   implicit val UserF = Json.format[User]
+
+  def generateEmbeddedOwner(id: String, first_name: String, image: String) =
+    new User(id, helpers.Helper.USER_PATH + id, Some(first_name), None, Some(image), None, None, None, None)
 }

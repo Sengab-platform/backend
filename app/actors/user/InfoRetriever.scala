@@ -5,11 +5,9 @@ import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
 import messages.UserManagerMessages.GetUserProfile
+import models.Response
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
-import models.responses.Response
-import models.responses.UserResponses._
 import play.Logger
-import play.api.libs.json.{JsValue, Json}
 
 class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
@@ -57,33 +55,41 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
   }
 
-  override def constructResponse(doc: JsonDocument): Option[Response] =
-    try {
-      val parsedJson: JsValue = Json.parse(doc.content().toString)
-      val first_name = (parsedJson \ "first_name").asOpt[String]
-      val last_name = (parsedJson \ "last_name").asOpt[String]
-      val image = (parsedJson \ "image").asOpt[String]
-      val about = (parsedJson \ "about").as[About]
-      val stats = (parsedJson \ "stats").as[Stats]
-      val url = s"api.sengab.com/v1/users/${doc.id()}"
-      val projects = s"api.sengab.com/v1/users/${doc.id()}/projects"
-      val contributions = s"api.sengab.com/v1/users/${doc.id()}/contributions"
+  // TODO - Implement the new method :
 
-      Some(UserInfoResponse(
-        doc.id,
-        url,
-        first_name,
-        last_name,
-        image,
-        about,
-        stats,
-        projects,
-        contributions
-      ))
+  override def constructResponse(doc: JsonDocument): Option[Response] = ???
 
-    } catch {
-      case e: Exception => None
-    }
+
+  //  override def constructResponse(doc: JsonDocument): Option[Response] =
+  //    try {
+  //      val parsedJson: JsValue = Json.parse(doc.content().toString)
+  //      val first_name = (parsedJson \ "first_name").asOpt[String]
+  //      val last_name = (parsedJson \ "last_name").asOpt[String]
+  //      val image = (parsedJson \ "image").asOpt[String]
+  //      val about = (parsedJson \ "about").as[About]
+  //      val stats = (parsedJson \ "stats").as[Stats]
+  //      val url = s"api.sengab.com/v1/users/${doc.id()}"
+  //      val projects = s"api.sengab.com/v1/users/${doc.id()}/projects"
+  //      val contributions = s"api.sengab.com/v1/users/${doc.id()}/contributions"
+  //
+  //      Some(UserInfoResponse(
+  //        doc.id,
+  //        url,
+  //        first_name,
+  //        last_name,
+  //        image,
+  //        about,
+  //        stats,
+  //        projects,
+  //        contributions
+  //      ))
+  //
+  //    } catch {
+  //      case e: Exception => None
+  //    }
+  /**
+    * convert Json Document got from DB to a proper Response
+    */
 }
 
 object InfoRetriever {

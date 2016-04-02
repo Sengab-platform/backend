@@ -5,12 +5,10 @@ import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
 import messages.ProjectManagerMessages.GetProjectDetails
+import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
-import models.responses.ProjectResponses.ProjectDetailsResponse
-import models.responses.Response
 import play.api.Logger
-import play.api.libs.json.{JsValue, Json}
 
 
 class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
@@ -32,7 +30,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
   override def receive: Receive = {
     case GetProjectDetails(projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetails(projectID)} ")
-//      executeQuery(DBUtilities.Project.getProjectWithId(projectID))
+    //      executeQuery(DBUtilities.Project.getProjectWithId(projectID))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")
@@ -63,32 +61,33 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
 
   }
 
+  // TODO reimplement
   override def constructResponse(doc: JsonDocument): Option[Response] = {
-
-    try {
-      val parsedJson: JsValue = Json.parse(doc.content().toString)
-      val name = (parsedJson \ "name").as[String]
-      val createdAt = (parsedJson \ "created_at").as[String]
-      val briefDescription = (parsedJson \ "brief_description").as[String]
-      val detailedDescription = (parsedJson \ "detailed_description").as[String]
-      val isFeatured = (parsedJson \ "is_featured").as[Boolean]
-      val url = s"sengab.com/projects/${doc.id()}" // place holder
-      val stats = s"sengab.com/projects/${doc.id()}/stats" // place holder
-      val results = s"sengab.com/projects/${doc.id()}/results" // place holder
-      Option(ProjectDetailsResponse(doc.id,
-        url,
-        name,
-        createdAt,
-        briefDescription,
-        detailedDescription,
-        isFeatured,
-        results,
-        stats
-      ))
-
-    } catch {
-      case e: Exception => None
-    }
+    ???
+    //    try {
+    //      val parsedJson: JsValue = Json.parse(doc.content().toString)
+    //      val name = (parsedJson \ "name").as[String]
+    //      val createdAt = (parsedJson \ "created_at").as[String]
+    //      val briefDescription = (parsedJson \ "brief_description").as[String]
+    //      val detailedDescription = (parsedJson \ "detailed_description").as[String]
+    //      val isFeatured = (parsedJson \ "is_featured").as[Boolean]
+    //      val url = s"sengab.com/projects/${doc.id()}" // place holder
+    //      val stats = s"sengab.com/projects/${doc.id()}/stats" // place holder
+    //      val results = s"sengab.com/projects/${doc.id()}/results" // place holder
+    //      Option(ProjectDetailsResponse(doc.id,
+    //        url,
+    //        name,
+    //        createdAt,
+    //        briefDescription,
+    //        detailedDescription,
+    //        isFeatured,
+    //        results,
+    //        stats
+    //      ))
+    //
+    //    } catch {
+    //      case e: Exception => None
+    //    }
   }
 }
 

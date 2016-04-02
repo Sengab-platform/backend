@@ -13,4 +13,20 @@ case class Category(
 object Category {
   implicit val CategoryF = Json.format[Category]
 
+
+  /**
+    * Use when getting the category embedded in a project
+    *
+    * @return
+    */
+  def generateEmbeddedCategory(id: String,
+                               name: String) = Category(id, name, helpers.Helper.CATEGORY_PATH + id, None, None)
+
+
+  def generateDetailedCategory(
+                                id: String,
+                                name: String,
+                                image: String,
+                                description: String
+                              ) = Category(id, name, helpers.Helper.CATEGORY_PATH + id, Some(image), Some(description))
 }

@@ -11,8 +11,6 @@ import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails}
 import models.errors.Error
 import models.errors.GeneralErrors.{AskTimeoutError, BadJSONError}
 import models.project.Project
-import models.responses.ProjectResponses.{CreateProjectResponse, ProjectDetailsResponse}
-import play.api.libs.json.Json
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,8 +35,10 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   //  get specific project
   def getProjectDetails(projectId: String) = Action.async {
     receptionist ? GetProjectDetails(projectId) map {
-      case msg: ProjectDetailsResponse =>
-        Ok(Json.toJson(msg))
+      // TODO fix this :
+
+      //      case msg: ProjectDetailsResponse =>
+      //        Ok(Json.toJson(msg))
       case error: Error =>
         error.result
     } recover {
@@ -63,8 +63,10 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
         case Some(project) =>
           receptionist ? CreateProject(project, s"user::$userID") map {
             // project created successfully
-            case msg: CreateProjectResponse =>
-              Created(Json.toJson(msg))
+            // TODO fix this :
+
+            //            case msg: CreateProjectResponse =>
+            //              Created(Json.toJson(msg))
             // failed to create project
             case error: Error =>
               error.result

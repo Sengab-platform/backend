@@ -1,7 +1,5 @@
 package auth.models
 
-import com.couchbase.client.java.document.json.JsonObject
-import models.User
 import org.joda.time.DateTime
 import play.api.libs.json.{JsObject, Json}
 import securesocial.core._
@@ -23,15 +21,17 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
     val dateTime: DateTime = DateTime.now
     val created_at = dateTime.toString
 
-    val user = User(userID, entity_type, first_name, last_name, image, about, stats, None, created_at)
-    DBUtilities.User.createUser(
-      JsonObject.fromJson(
-        Json.stringify(
-          Json.toJson(
-            user
-          )
-        )
-      )
-    ).subscribe()
+    // TODO fix this :
+
+    //    val user = User(userID, entity_type, first_name, last_name, image, about, stats, None, created_at)/
+    //    DBUtilities.User.createUser(
+    //      JsonObject.fromJson(
+    //        Json.stringify(
+    //          Json.toJson(
+    //            user
+    //          )
+    //        )
+    //      )
+    //    ).subscribe()
   }
 }
