@@ -25,18 +25,17 @@ public class Stats {
 
     /**
      * Create and save a project's stats. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
-     * @param statsJsonObject The Json object to be the value of the document , it also has an Id field to use as the document key.
+     * @param statsId the id of the stats document to create.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createStats(JsonObject statsJsonObject){
+    public static Observable<JsonDocument> createStats(String statsId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        String statsId = DBConfig.getIdFromJson (statsJsonObject);
-        JsonDocument statsDocument = JsonDocument.create (statsId,DBConfig.removeIdFromJson (statsJsonObject));
+        JsonDocument statsDocument = JsonDocument.create (statsId,JsonObject.create ());
 
         return mBucket.insert (statsDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)

@@ -7,6 +7,7 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.handler.timeout.TimeoutException;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
@@ -25,18 +26,16 @@ public class Activity {
 
     /**
      * Create and save a user's activities . can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
-     * @param activityJsonObject The Json object to be the value of the document , it also has an Id field to use as the document key.
+     * @param activityId The id for the activity document to be created.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createActivity(JsonObject activityJsonObject){
+    public static Observable<JsonDocument> createActivity(String activityId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-
-        String activityId = DBConfig.getIdFromJson (activityJsonObject);
-        JsonDocument activityDocument = JsonDocument.create (activityId,DBConfig.removeIdFromJson (activityJsonObject));
+        JsonDocument activityDocument = JsonDocument.create (activityId,JsonObject.create ().put ("activities", JsonArray.create ()));
 
         return mBucket.insert (activityDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)

@@ -197,7 +197,6 @@ public class Project {
      * @param limit the maximum number of document returned.
      * @param offset an index to determine where to start form when getting results.
      * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
-     * @return
      */
 
     public static Observable<JsonObject> searchForProjectsByName(String searchText,int limit,int offset){
