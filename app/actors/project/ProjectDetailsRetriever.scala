@@ -3,14 +3,11 @@ package actors.project
 import actors.AbstractDBHandlerActor
 import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
-import com.couchbase.client.java.document.JsonDocument
+import com.couchbase.client.java.document.json.JsonObject
 import messages.ProjectManagerMessages.GetProjectDetails
 import models.Response
 import models.errors.Error
-import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
-import models.project.Project.DetailedProject
 import play.api.Logger
-import play.api.libs.json.{JsValue, Json}
 
 
 class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
@@ -24,7 +21,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
   }
   }
 
-  override def onNext(): (JsonDocument) => Unit = { doc: JsonDocument => {
+  override def onNext(): (JsonObject) => Unit = { doc: JsonObject => {
     self ! QueryResult(doc)
   }
   }
@@ -46,38 +43,39 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
     case QueryResult(doc) =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)} ")
 
-      if (doc.content() != null) {
-        val response = constructResponse(doc)
-        response match {
-          case Some(response) =>
-            out ! response
-
-          // TODO self or out? hmm.
-          case None =>
-            out ! CouldNotParseJSON("failed to get project details",
-              "couldn't parse json retrieved from the db ", this.getClass.toString)
-
-        }
-      } else {
-        out ! NotFoundError("no such project", "received null content document from DB", this.getClass.toString)
-      }
+    //      if (doc.content() != null) {
+    //        val response = constructResponse(doc)
+    //        response match {
+    //          case Some(response) =>
+    //            out ! response
+    //
+    //          // TODO self or out? hmm.
+    //          case None =>
+    //            out ! CouldNotParseJSON("failed to get project details",
+    //              "couldn't parse json retrieved from the db ", this.getClass.toString)
+    //
+    //        }
+    //      } else {
+    //        out ! NotFoundError("no such project", "received null content document from DB", this.getClass.toString)
+    //      }
 
 
   }
 
-  override def constructResponse(doc: JsonDocument): Option[Response] = {
-
-    try {
-      val parsedJson: JsValue = Json.parse(doc.content().toString)
-      val project = parsedJson.as[DetailedProject]
-      Some(Response(Json.toJson(project)))
-      ???
-    } catch {
-      case e: Exception => None
-    }
+  override def constructResponse(doc: JsonObject): Option[Response] = {
+    //
+    //    try {
+    //      val parsedJson: JsValue = Json.parse(doc.content().toString)
+    //      val project = parsedJson.as[DetailedProject]
+    //      Some(Response(Json.toJson(project)))
+    //      ???
+    //    } catch {
+    //      case e: Exception => None
+    //    }
+    ???
   }
 
-  ???
+
 }
 
 
