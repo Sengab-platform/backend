@@ -13,10 +13,17 @@ import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.util.retry.RetryBuilder;
+import play.Logger;
 import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
+
+import static DBUtilities.DBConfig.EMPTY_JSON_DOC;
+import static com.couchbase.client.java.query.Select.select;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -57,23 +64,30 @@ public class Activity {
      * @param activityId the id of the activities document to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonObject> getActivityWithId(String activityId){
+    public static Observable<JsonObject> getActivityWithId(String activityId,int limit,int offset){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
+        Logger.info ("DB: Getting activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset);
 
-        return mBucket.get (activityId).timeout (500,TimeUnit.MILLISECONDS)
-            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-            .onErrorResumeNext (throwable -> {
-                return Observable.error (new CouchbaseException ("Failed to get activity, General DB exception"));
-            })
-            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
-            .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
+        int endIndex = offset + limit ;
+
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("activities[" + offset + ":" + endIndex + "] activities"))
+        .from (DBConfig.BUCKET_NAME).useKeys (Expression.s (activityId)))).timeout (1000,TimeUnit.MILLISECONDS)
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            Logger.info ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset);
+
+            return Observable.error (new CouchbaseException (String.format ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset)));
+        })
+        .defaultIfEmpty (JsonObject.create ().put ("id",EMPTY_JSON_DOC));
+
     }
 
     /**
