@@ -9,7 +9,6 @@ import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.CouldNotParseJSON
 import play.api.Logger
-import play.api.libs.json.Json
 
 class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
@@ -36,8 +35,9 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
       Logger.info(s"actor ${self.path} - received msg : ${CreateProject(project, userID)}")
 
       // construct Json Object to be inserted into DB
-      val obj = toJsonObject(Json.toJson(project))
-      executeQuery(DBUtilities.Project.createProject("user::5", obj))
+    // TODO
+    //      val obj = toJsonObject(Json.toJson(NewProject))
+    //      executeQuery(DBUtilities.Project.createProject("user::5", obj))
 
 
     // terminate self

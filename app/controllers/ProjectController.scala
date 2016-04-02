@@ -8,9 +8,10 @@ import akka.pattern.ask
 import akka.util.Timeout
 import auth.services.AuthEnvironment
 import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails}
+import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{AskTimeoutError, BadJSONError}
-import models.project.Project
+import models.project.NewProject
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,7 +56,7 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
 
     request => {
       // extract project item and the user ID from request
-      val project = request.body.asOpt[Project]
+      val project = request.body.asOpt[NewProject]
       val userID = request.user.main.userId
 
       project match {
@@ -63,10 +64,9 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
         case Some(project) =>
           receptionist ? CreateProject(project, s"user::$userID") map {
             // project created successfully
-            // TODO fix this :
 
-            //            case msg: CreateProjectResponse =>
-            //              Created(Json.toJson(msg))
+            case Response(json) =>
+              Created(json)
             // failed to create project
             case error: Error =>
               error.result

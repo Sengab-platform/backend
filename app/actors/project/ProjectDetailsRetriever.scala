@@ -5,10 +5,10 @@ import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
 import messages.ProjectManagerMessages.GetProjectDetails
+import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
-import models.project.Project
-import models.{Category, Response, User}
+import models.project.NewProject
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 
@@ -69,39 +69,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
 
     try {
       val parsedJson: JsValue = Json.parse(doc.content().toString)
-
-      // get embedded category
-      val category = Category.generateEmbeddedCategory(
-        (parsedJson \ "category" \ "id").as[String],
-        (parsedJson \ "category" \ "name").as[String]
-      )
-
-      // get embedded user
-      val owner = User.generateEmbeddedOwner(
-        (parsedJson \ "owner" \ "id").as[String],
-        (parsedJson \ "owner" \ "name").as[String],
-        (parsedJson \ "owner" \ "image").as[String]
-      )
-
-      // get project details
-      val project = Project.generateDetailedProject(
-        doc.id(),
-        (parsedJson \ "name").as[String],
-        owner,
-        (parsedJson \ "goal").as[Int],
-        (parsedJson \ "image").as[String],
-        (parsedJson \ "template_id").as[Int],
-        (parsedJson \ "created_at").as[String],
-        (parsedJson \ "brief_description").as[String],
-        (parsedJson \ "detailed_description").as[String],
-        (parsedJson \ "enrollments_count").as[Int], // return results ID
-        (parsedJson \ "contributions_count").as[Int], // return results ID
-        (parsedJson \ "is_featured").as[Boolean],
-        category,
-        (parsedJson \ "results").as[String], // return results ID
-        (parsedJson \ "stats").as[String] // return stats ID
-      )
-
+      val project = parsedJson.as[NewProject]
       Some(Response(Json.toJson(project)))
 
     } catch {
