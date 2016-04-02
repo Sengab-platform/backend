@@ -1,6 +1,7 @@
 package auth.models
 
 import com.couchbase.client.java.document.json.JsonObject
+import helpers.Helper
 import models.{About, NewUser, Stats}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
@@ -26,7 +27,9 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
     if (isSignUp) {
       val user = NewUser(
         userID, first_name = first_name, last_name = last_name, image = image,
-        about = about, stats = stats, created_at = created_at)
+        about = about, stats = stats, created_at = created_at,
+        contributions = Helper.USER_PATH + userID + Helper.CONTRIBUTIONS,
+        projects = Helper.USER_PATH + userID + Helper.CREATED)
       DBUtilities.User.createUser(
         JsonObject.fromJson(
           Json.stringify(

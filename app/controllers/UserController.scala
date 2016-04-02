@@ -54,8 +54,8 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
         // The receptionist got the activates
         // TODO fix this :
 
-        //        case msg: UserActivityResponse =>
-        //          Ok(Json.toJson(msg))
+        //                case Response(msg) =>
+        //                  Ok(msg)
         // The receptionist failed to get user activates
         case error: Error =>
           error.result

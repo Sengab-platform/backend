@@ -44,7 +44,9 @@ case class NewUser(
                     image: Option[String],
                     about: Option[About],
                     stats: Option[Stats],
-                    created_at: String
+                    created_at: String,
+                    contributions: String,
+                    projects: String
                   )
 
 object NewUser {
