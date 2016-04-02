@@ -7,7 +7,10 @@ import com.couchbase.client.java.document.json.JsonObject
 import messages.ProjectManagerMessages.GetProjectDetails
 import models.Response
 import models.errors.Error
+import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
+import models.project.Project.DetailedProject
 import play.api.Logger
+import play.api.libs.json.{JsValue, Json}
 
 
 class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
@@ -30,7 +33,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
     case GetProjectDetails(projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetails(projectID)} ")
 
-    //      executeQuery(DBUtilities.Project.getProjectWithId(projectID))
+      executeQuery(DBUtilities.Project.getProjectWithId(projectID))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")
@@ -40,41 +43,39 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
       Logger.info(s"actor ${self.path} - received msg : $err")
       out ! err
 
-    case QueryResult(doc) =>
-      Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)} ")
+    case QueryResult(jsonObj) =>
+      Logger.info(s"actor ${self.path} - received msg : ${QueryResult(jsonObj)} ")
 
-    //      if (doc.content() != null) {
-    //        val response = constructResponse(doc)
-    //        response match {
-    //          case Some(response) =>
-    //            out ! response
-    //
-    //          // TODO self or out? hmm.
-    //          case None =>
-    //            out ! CouldNotParseJSON("failed to get project details",
-    //              "couldn't parse json retrieved from the db ", this.getClass.toString)
-    //
-    //        }
-    //      } else {
-    //        out ! NotFoundError("no such project", "received null content document from DB", this.getClass.toString)
-    //      }
+      if (!jsonObj.isEmpty) {
+        val response = constructResponse(jsonObj)
+        response match {
+          case Some(response) =>
+            out ! response
+
+          // TODO self or out? hmm.
+          case None =>
+            out ! CouldNotParseJSON("failed to get project details",
+              "couldn't parse json retrieved from the db ", this.getClass.toString)
+
+        }
+      } else {
+        out ! NotFoundError("no such project", "received null content document from DB", this.getClass.toString)
+      }
 
 
   }
 
-  override def constructResponse(doc: JsonObject): Option[Response] = {
-    //
-    //    try {
-    //      val parsedJson: JsValue = Json.parse(doc.content().toString)
-    //      val project = parsedJson.as[DetailedProject]
-    //      Some(Response(Json.toJson(project)))
-    //      ???
-    //    } catch {
-    //      case e: Exception => None
-    //    }
-    ???
-  }
+  override def constructResponse(jsonObj: JsonObject): Option[Response] = {
 
+    try {
+      val parsedJson: JsValue = Json.parse(jsonObj.toString)
+      val project = parsedJson.as[DetailedProject]
+      Some(Response(Json.toJson(project)))
+
+    } catch {
+      case e: Exception => None
+    }
+  }
 
 }
 
