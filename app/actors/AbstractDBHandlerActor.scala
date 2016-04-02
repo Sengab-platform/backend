@@ -80,7 +80,7 @@ abstract class AbstractDBHandlerActor(out: ActorRef) extends Actor {
   /**
     * convert Json Object got from DB to a proper Response
     */
-  def constructResponse(doc: JsonObject): Option[Response]
+  def constructResponse(jsonObject: JsonObject): Option[Response]
 
   /**
     * convert JsValue to JsonObject value

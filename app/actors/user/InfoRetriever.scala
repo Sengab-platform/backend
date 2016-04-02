@@ -4,9 +4,12 @@ import actors.AbstractDBHandlerActor
 import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
+import helpers.Helper
 import messages.UserManagerMessages.GetUserProfile
-import models.Response
+import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
+import models.{Response, UserInfo}
 import play.Logger
+import play.api.libs.json.{JsObject, JsString, Json}
 
 class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
@@ -37,37 +40,35 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
     case QueryResult(doc) =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)} ")
 
-    // TODO Fix this
-    //      if (doc.content() != null) {
-    //        val response = constructResponse(doc)
-    //        response match {
-    //          case Some(response) =>
-    //            out ! response
-    //
-    //          case None =>
-    //            self ! CouldNotParseJSON("failed to get user info",
-    //              "couldn't parse json retrieved from the db ", this.getClass.toString)
-    //
-    //        }
-    //      } else {
-    //        out ! NotFoundError("no such user", "received null content document from DB", this.getClass.toString)
-    //      }
+      if (doc.getString("id") != DBUtilities.DBConfig.EMPTY_JSON_DOC) {
+        val response = constructResponse(doc)
+        response match {
+          case Some(response) =>
+            out ! response
+
+          case None =>
+            self ! CouldNotParseJSON("failed to get user info",
+              "couldn't parse json retrieved from the db ", this.getClass.toString)
+
+        }
+      } else {
+        out ! NotFoundError("no such user", "received null content document from DB", this.getClass.toString)
+      }
 
   }
 
-  override def constructResponse(doc: JsonObject): Option[Response] = {
-    ???
-    //    TODO fix this
-    //    try {
-    //      val parsedJson = Json.parse(doc.content().toString).as[JsObject]
-    //      val fullResponse = parsedJson + ("id" -> JsString(doc.id)) + ("url" -> JsString(Helper.USER_PATH + doc.id))
-    //      val user = Json.toJson(fullResponse.as[UserInfo])
-    //      Some(Response(Json.toJson(user)))
-    //    } catch {
-    //      case e: Exception =>
-    //        Logger.info(e.getMessage)
-    //        None
-    //    }
+  override def constructResponse(jsonObject: JsonObject): Option[Response] = {
+    try {
+      val parsedJson = Json.parse(jsonObject.toString).as[JsObject]
+      val id = jsonObject.getString("id")
+      val fullResponse = parsedJson + ("id" -> JsString(id)) + ("url" -> JsString(Helper.USER_PATH + id))
+      val user = Json.toJson(fullResponse.as[UserInfo])
+      Some(Response(Json.toJson(user)))
+    } catch {
+      case e: Exception =>
+        Logger.info(e.getMessage)
+        None
+    }
 
   }
 
