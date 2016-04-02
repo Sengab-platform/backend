@@ -45,9 +45,9 @@ case class UserInfo(
                      last_name: Option[String],
                      image: Option[String],
                      about: Option[About],
-                     stats: Option[Stats],
-                     projects: Option[String], // the User created projects url
-                     contributions: Option[String],
+                     stats: Stats,
+                     projects: String, // the User created projects url
+                     contributions: String,
                      url: String
                    )
 
