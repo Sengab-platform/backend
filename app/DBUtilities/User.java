@@ -3,7 +3,6 @@ package DBUtilities;
 import com.couchbase.client.core.BackpressureException;
 import com.couchbase.client.core.BucketClosedException;
 import com.couchbase.client.core.CouchbaseException;
-import com.couchbase.client.core.message.kv.subdoc.multi.Mutation;
 import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.handler.timeout.TimeoutException;
 import com.couchbase.client.java.AsyncBucket;
@@ -13,13 +12,18 @@ import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
-import com.couchbase.client.java.error.subdoc.MultiMutationException;
-import com.couchbase.client.java.subdoc.DocumentFragment;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.AsyncN1qlQueryRow;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.util.retry.RetryBuilder;
 import play.Logger;
 import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
+
+import static DBUtilities.DBConfig.bucket;
+import static com.couchbase.client.java.query.Update.update;
 
 /**
  * Created by rashwan on 3/28/16.
@@ -88,7 +92,7 @@ public class User {
      * @param about the updated about of the user.
      * @return an Observable of the document fragment that was updated that contains updated cas and other meta data about the mutation.
      */
-    public static Observable<DocumentFragment<Mutation>> updateSigningInUser(String userId, String firstName, String lastName, String imageURL, JsonObject about){
+    public static Observable<AsyncN1qlQueryRow> updateSigningInUser(String userId, String firstName, String lastName, String imageURL, JsonObject about){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -97,8 +101,10 @@ public class User {
         Logger.info ("DB: Partial updating user with ID: " + userId);
 
 
-        return mBucket.mutateIn (userId).replace ("first_name",firstName).replace ("last_name",lastName)
-            .replace ("image",imageURL).replace ("about",about).doMutate ()
+        return mBucket.query (N1qlQuery.simple (update(DBConfig.BUCKET_NAME).useKeys (Expression.s (userId))
+                .set ("first_name",firstName).set ("last_name",lastName)
+                .set ("image",imageURL).set ("about",about).returning ("meta(default).id")))
+                .flatMap (AsyncN1qlQueryResult::rows)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                     .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -114,11 +120,6 @@ public class User {
                     Logger.info ("DB: Failed to Partial update user with ID: " + userId + " , CAS value is changed.");
 
                     return Observable.error (new CASMismatchException ("Failed to update user, CAS value is changed."));
-                }else if(throwable instanceof MultiMutationException){
-                    //// TODO: 4/1/16 needs more accurate handling in the future.
-                    Logger.info ("DB: Failed to Partial update user with ID: " + userId + " , one of the mutations has failed.");
-
-                    return Observable.error (new CouchbaseException ("Failed to update user, one of the mutations has failed."));
                 } else {
                     Logger.info ("DB: Failed to Partial update user with ID: " + userId + " , General DB exception.");
 
@@ -187,15 +188,15 @@ public class User {
     }
 
     private static void checkDBStatus () {
-        if (DBConfig.bucket.isClosed ()){
+        if (bucket.isClosed ()){
             if (DBConfig.initDB() == DBConfig.OPEN_BUCKET_OK) {
-                mBucket = DBConfig.bucket;
+                mBucket = bucket;
             }else{
                 throw new BucketClosedException ("Failed to open bucket due to timeout or backpressure");
 
             }
         }else {
-            mBucket = DBConfig.bucket;
+            mBucket = bucket;
         }
     }
 }
