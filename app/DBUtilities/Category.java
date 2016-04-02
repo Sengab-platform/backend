@@ -118,6 +118,8 @@ public class Category {
             return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get categories with limit: $1 and offset: $2",limit,offset)));
         });
     }
+
+
     /**
      * Update a category. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
      * @param categoryId The id of the category to be updated .
