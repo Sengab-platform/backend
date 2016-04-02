@@ -1,6 +1,7 @@
 package auth.services
 
 import auth.models.UserAuth
+import org.joda.time.DateTime
 import play.Logger
 import play.api.libs.json.Json
 import rx.lang.scala.JavaConversions.toScalaObservable
@@ -47,7 +48,7 @@ class AuthUserService extends UserService[UserAuth] {
   }
 
   def findByEmailAndProvider(email: String, providerId: String): Future[Option[BasicProfile]] = {
-    ???
+    Future.successful(None)
   }
 
   // to be implemented
@@ -86,30 +87,36 @@ class AuthUserService extends UserService[UserAuth] {
   }
 
   def link(current: UserAuth, to: BasicProfile): Future[UserAuth] = {
-    ???
+    // Dummy implementation
+    Future.successful(UserAuth(to, identities = List(to)))
   }
 
   def saveToken(token: MailToken): Future[MailToken] = {
-    ???
+    // Dummy implementation
+    val dateTime = DateTime.now()
+    Future.successful(MailToken("uuid", "email", dateTime, dateTime, isSignUp = false))
   }
 
   def findToken(token: String): Future[Option[MailToken]] = {
-    ???
+    // Dummy implementation
+    Future.successful(None)
   }
 
   def deleteToken(uuid: String): Future[Option[MailToken]] = {
-    ???
+    // Dummy implementation
+    Future.successful(None)
   }
 
   def deleteExpiredTokens() {
-    ???
   }
 
   override def updatePasswordInfo(user: UserAuth, info: PasswordInfo): Future[Option[BasicProfile]] = {
-    ???
+    // Dummy implementation
+    Future.successful(None)
   }
 
   override def passwordInfoFor(user: UserAuth): Future[Option[PasswordInfo]] = {
-    ???
+    // Dummy implementation
+    Future.successful(None)
   }
 }

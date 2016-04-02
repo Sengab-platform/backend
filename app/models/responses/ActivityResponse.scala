@@ -2,7 +2,7 @@ package models.responses
 
 import play.api.libs.json.Json
 
-object ActivityResults {
+object ActivityResponse {
 
   case class Project(
                       id: String,

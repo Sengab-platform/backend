@@ -68,7 +68,7 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
   override def constructResponse(doc: JsonDocument): Option[Response] = {
 
     try {
-      import models.responses.ActivityResults._
+      import models.responses.ActivityResponse._
       val parsedJson: JsValue = Json.parse(doc.content().toString)
       val jsonArray: JsArray = (parsedJson \ "activities").as[JsArray]
       val activities = jsonArray.as[Seq[Activities]]
