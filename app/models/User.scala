@@ -40,6 +40,7 @@ object User {
 }
 
 case class UserInfo(
+                     id: String,
                      first_name: Option[String],
                      last_name: Option[String],
                      image: Option[String],
@@ -47,7 +48,7 @@ case class UserInfo(
                      stats: Option[Stats],
                      projects: Option[String], // the User created projects url
                      contributions: Option[String],
-                     url: Option[String] = None
+                     url: String
                    )
 
 object UserInfo {
