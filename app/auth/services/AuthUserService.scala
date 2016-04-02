@@ -2,8 +2,8 @@ package auth.services
 
 import auth.models.UserAuth
 import org.joda.time.DateTime
-import play.Logger
 import play.api.libs.json.Json
+import rx.lang.scala.JavaConversions.toScalaObservable
 import securesocial.core._
 import securesocial.core.providers.MailToken
 import securesocial.core.services.{SaveMode, UserService}
@@ -18,27 +18,25 @@ class AuthUserService extends UserService[UserAuth] {
     val promise = Promise[Option[BasicProfile]]
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    // TODO fix this
-    //    toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
-    //      .subscribe(doc => {
+    toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
+      .subscribe(doc => {
+        if (!(doc.get("id") == DBUtilities.DBConfig.EMPTY_JSON_DOC)) {
+          val json = Json.parse(doc.toString)
+          val user = Some(BasicProfile(
+            "google",
+            (json \ "id").as[String],
+            (json \ "first_name").asOpt[String],
+            (json \ "last_name").asOpt[String],
+            None,
+            None,
+            (json \ "image").asOpt[String],
+            AuthenticationMethod.OAuth2
+          ))
 
-    //        if (!(doc.content() == null)) {
-    //          val json = Json.parse(doc.content().toString)
-    //          val user = Some(BasicProfile(
-    //            "google",
-    //            doc.id,
-    //            (json \ "first_name").asOpt[String],
-    //            (json \ "last_name").asOpt[String],
-    //            None,
-    //            None,
-    //            (json \ "image").asOpt[String],
-    //            AuthenticationMethod.OAuth2
-    //          ))
-    //
-    //          promise.success(user)
-    //        }
-    //        else promise.success(None)
-    //      }, error => promise.success(None))
+          promise.success(user)
+        }
+        else promise.success(None)
+      }, error => promise.success(None))
 
     promise.future.map {
       case Some(basic) =>
@@ -46,51 +44,40 @@ class AuthUserService extends UserService[UserAuth] {
       case None =>
         None
     }
-    ???
   }
 
   def findByEmailAndProvider(email: String, providerId: String): Future[Option[BasicProfile]] = {
     Future.successful(None)
   }
 
-  // to be implemented
   def save(user: BasicProfile, mode: SaveMode): Future[UserAuth] = {
 
+    def getUserInfo(isSignUp: Boolean): UserAuth = {
+      val response = scala.io.Source.fromURL(
+        "https://www.googleapis.com/plus/v1/people/me?fields=gender,tagline&access_token="
+          + user.oAuth2Info.get.accessToken).mkString
+      val json_response = Json.parse(response)
+      val gender = (json_response \ "gender").asOpt[String]
+      val bio = (json_response \ "tagline").asOpt[String]
+      val newUser = UserAuth(user, gender, bio, List(user), isSignUp)
+      newUser
+    }
     mode match {
       case SaveMode.SignUp =>
 
-        val response = scala.io.Source.fromURL(
-          "https://www.googleapis.com/plus/v1/people/me?fields=gender,tagline&access_token="
-            + user.oAuth2Info.get.accessToken).mkString
-        val json_response = Json.parse(response)
-        val gender = (json_response \ "gender").asOpt[String]
-        val bio = (json_response \ "tagline").asOpt[String]
-        val newUser = UserAuth(user, gender, bio, List(user))
+        val newUser: UserAuth = getUserInfo(isSignUp = true)
         Future.successful(newUser)
 
       case SaveMode.LoggedIn =>
 
-        // JUST TESTING
-        Logger.info("SIGNIN")
-        val g: Option[String] = Option("a")
-        val newUser = UserAuth(user, g, g, List(user))
-        Future.successful(newUser)
-      // first see if there is a user with this BasicProfile already.
-      //              findProfile(user) match {
-      //                case Some(existingUser) =>
-      //
-      //
-      //
-      //                case None =>
-      //              }
-      //
-      //      case SaveMode.PasswordChange => ???
+        val updatedUser: UserAuth = getUserInfo(isSignUp = false)
+        Future.successful(updatedUser)
     }
   }
 
   def link(current: UserAuth, to: BasicProfile): Future[UserAuth] = {
     // Dummy implementation
-    Future.successful(UserAuth(to, identities = List(to)))
+    Future.successful(UserAuth(to, identities = List(to), isSignUp = false))
   }
 
   def saveToken(token: MailToken): Future[MailToken] = {
