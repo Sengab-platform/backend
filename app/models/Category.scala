@@ -2,15 +2,24 @@ package models
 
 import play.api.libs.json.Json
 
-case class Category(
-                     id: String,
-                     name: String,
-                     url: String,
-                     image: Option[String] = None,
-                     description: Option[String] = None
-                   )
 
-object Category {
-  implicit val CategoryF = Json.format[Category]
+case class EmbeddedCategory(id: String,
+                            url: String,
+                            name: String)
 
+
+object EmbeddedCategory {
+  implicit val f = Json.format[EmbeddedCategory]
+}
+
+case class DetailedCategory(
+                             id: String,
+                             url: String,
+                             name: String,
+                             image: String,
+                             description: String
+                           )
+
+object DetailedCategory {
+  implicit val f = Json.format[DetailedCategory]
 }

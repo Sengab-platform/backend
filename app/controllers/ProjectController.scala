@@ -8,11 +8,10 @@ import akka.pattern.ask
 import akka.util.Timeout
 import auth.services.AuthEnvironment
 import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails}
+import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{AskTimeoutError, BadJSONError}
-import models.project.Project
-import models.responses.ProjectResponses.{CreateProjectResponse, ProjectDetailsResponse}
-import play.api.libs.json.Json
+import models.project.Project.NewProject
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,8 +36,10 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   //  get specific project
   def getProjectDetails(projectId: String) = Action.async {
     receptionist ? GetProjectDetails(projectId) map {
-      case msg: ProjectDetailsResponse =>
-        Ok(Json.toJson(msg))
+      // TODO fix this :
+
+      //      case msg: ProjectDetailsResponse =>
+      //        Ok(Json.toJson(msg))
       case error: Error =>
         error.result
     } recover {
@@ -51,20 +52,22 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   }
 
   //  add project
-  def addProject() = SecuredAction.async(BodyParsers.parse.json) {
+  //  def addProject() = SecuredAction.async(BodyParsers.parse.json) {
+  def addProject() = Action.async(BodyParsers.parse.json) {
 
     request => {
       // extract project item and the user ID from request
-      val project = request.body.asOpt[Project]
-      val userID = request.user.main.userId
+      val project = request.body.asOpt[NewProject]
+      //      val userID = request.user.main.userId
 
       project match {
         //got Project Item
         case Some(project) =>
-          receptionist ? CreateProject(project, s"user::$userID") map {
+          receptionist ? CreateProject(project, s"user::117521628211683444029") map {
             // project created successfully
-            case msg: CreateProjectResponse =>
-              Created(Json.toJson(msg))
+
+            case Response(json) =>
+              Created(json)
             // failed to create project
             case error: Error =>
               error.result

@@ -1,12 +1,12 @@
 package messages
 
-import models.project.Project
+import models.project.Project.NewProject
 
 object ProjectManagerMessages {
 
   trait ProjectMessage
 
-  case class CreateProject(project: Project, userID: String) extends ProjectMessage
+  case class CreateProject(project: NewProject, userID: String) extends ProjectMessage
 
   case class ListProjects(filter: String, offset: Integer, limit: Integer) extends ProjectMessage
 
@@ -18,6 +18,6 @@ object ProjectManagerMessages {
 
   case class SearchProjects(keyword: String) extends ProjectMessage
 
-  case class ValidateProject(project: Project, userID: String) extends ProjectMessage
+  case class ValidateProject(project: NewProject, userID: String) extends ProjectMessage
 
 }

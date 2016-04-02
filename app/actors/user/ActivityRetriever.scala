@@ -5,10 +5,9 @@ import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
 import messages.UserManagerMessages.ListUserActivity
+import models.Response
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
-import models.responses.Response
 import play.Logger
-import play.api.libs.json.{JsArray, JsValue, Json}
 
 class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
@@ -65,19 +64,21 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
   /**
     * convert Json Document got from DB to a proper Response
     */
+
+  // TODO reimplement this method
+
   override def constructResponse(doc: JsonDocument): Option[Response] = {
-
-    try {
-      import models.responses.ActivityResponse._
-      val parsedJson: JsValue = Json.parse(doc.content().toString)
-      val jsonArray: JsArray = (parsedJson \ "activities").as[JsArray]
-      val activities = jsonArray.as[Seq[Activities]]
-
-      Some(UserActivityResponse(activities))
-
-    } catch {
-      case e: Exception => None
-    }
+    ???
+    //    try {
+    //      val parsedJson: JsValue = Json.parse(doc.content().toString)
+    //      val jsonArray: JsArray = (parsedJson \ "activities").as[JsArray]
+    //      val activities = jsonArray.as[Seq[Activities]]
+    //
+    //      Some(UserActivityResponse(activities))
+    //
+    //    } catch {
+    //      case e: Exception => None
+    //    }
   }
 }
 

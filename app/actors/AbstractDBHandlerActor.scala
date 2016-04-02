@@ -5,9 +5,9 @@ import akka.actor.{Actor, ActorRef}
 import com.couchbase.client.core.{BucketClosedException, CouchbaseException}
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
+import models.Response
 import models.errors.DBErrors.{BucketClosedError, CouchbaseError, GeneralServerError}
 import models.errors.GeneralErrors.NotFoundError
-import models.responses.Response
 import play.api.libs.json.{JsValue, Json}
 import rx.lang.scala.JavaConversions.toScalaObservable
 

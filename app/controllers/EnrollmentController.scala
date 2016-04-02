@@ -10,8 +10,6 @@ import messages.EnrollmentManagerMessages.{Enroll, Withdraw}
 import models.enrollment.Enrollment
 import models.errors.Error
 import models.errors.GeneralErrors.{AskTimeoutError, CouldNotParseJSON}
-import models.responses.EnrollmentResponses.{EnrollResponse, WithdrawResponse}
-import play.api.libs.json.Json
 import play.api.mvc.{Action, BodyParsers, Controller}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,8 +34,10 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
         receptionist ? Enroll(enrollment) map {
 
           // user enrolled in project successfully
-          case msg: EnrollResponse =>
-            Created(Json.toJson(msg))
+          // TODO fix this :
+
+          //          case msg: EnrollResponse =>
+          //            Created(Json.toJson(msg))
 
           // failed to enroll
           case err: Error =>
@@ -69,8 +69,9 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
         receptionist ? Withdraw(withdraw) map {
 
           // user has withdrawn from project successfully
-          case msg: WithdrawResponse =>
-            Ok(Json.toJson(msg))
+          // TODO fix this :
+          //          case msg: WithdrawResponse =>
+          //            Ok(Json.toJson(msg))
 
           // failed to withdraw
           case err: Error =>

@@ -1,41 +1,46 @@
 package models.project
 
-import models.Category
+import models.{EmbeddedCategory, EmbeddedOwner}
 import play.api.libs.json.Json
 
-case class Owner(
-                  id: String,
-                  url: String,
-                  name: String
-                )
-
-object Owner {
-  implicit val OwnerF = Json.format[Owner]
-
-}
-
-case class Project(
-                    id: Option[String] = None,
-                    url: Option[String] = None,
-                    name: String,
-                    image: String,
-                    owner: Option[Owner] = None,
-                    goal: Int,
-                    template_id: Option[Int] = None,
-                    templateBody: Option[TemplateBody] = None,
-                    created_at: String,
-                    brief_description: String,
-                    detailed_description: String,
-                    enrollments_count: Option[String] = None,
-                    contributions_count: Option[String] = None,
-                    is_featured: Option[Boolean] = None,
-                    category_id: Option[Int] = None,
-                    category: Category,
-                    results: String,
-                    stats: String
-                  )
-
 object Project {
-  implicit val ProjectF = Json.format[Project]
+
+  case class NewProject(name: String,
+                        goal: Int,
+                        template_id: Int,
+                        templateBody: TemplateBody,
+                        created_at: String,
+                        brief_description: String,
+                        detailed_description: String,
+                        is_featured: Boolean,
+                        category_id: Int)
+
+  case class DetailedProject(
+                              id: String,
+                              name: String,
+                              owner: EmbeddedOwner,
+                              url: String,
+                              goal: Int,
+                              image: String,
+                              template_id: Int,
+                              created_at: String,
+                              brief_description: String,
+                              detailed_description: String,
+                              enrollments_count: Int,
+                              contributions_count: Int,
+                              is_featured: Boolean,
+                              category: EmbeddedCategory,
+                              results: String,
+                              stats: String
+                            )
+
+  object NewProject {
+    implicit val newProjectF = Json.format[NewProject]
+  }
+
+
+  object DetailedProject {
+    implicit val detailedProjectProjectF = Json.format[DetailedProject]
+  }
 
 }
