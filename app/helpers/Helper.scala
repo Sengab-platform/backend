@@ -6,4 +6,6 @@ object Helper {
   val CATEGORY_PATH = "http://api.sengab.com/v1/categories/"
   val PROJECT_PATH = "http://api.sengab.com/v1/projects/"
   val USER_PATH = "http://api.sengab.com/v1/users/"
+  val CREATED = "/created_projects"
+  val CONTRIBUTIONS = "/contributions"
 }
