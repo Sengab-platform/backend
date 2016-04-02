@@ -4,10 +4,12 @@ import actors.AbstractDBHandlerActor
 import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
+import helpers.Helper
 import messages.UserManagerMessages.GetUserProfile
-import models.Response
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
+import models.{Response, UserInfo}
 import play.Logger
+import play.api.libs.json.{JsObject, JsString, JsValue, Json}
 
 class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
@@ -55,41 +57,20 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
   }
 
-  // TODO - Implement the new method :
+  override def constructResponse(doc: JsonDocument): Option[Response] = {
+    try {
+      val parsedJson: JsValue = Json.parse(doc.content().toString)
+      val user = Json.toJson(parsedJson.as[UserInfo]).as[JsObject]
+      val response = user + ("id" -> JsString(doc.id)) + ("url" -> JsString(Helper.USER_PATH + doc.id))
+      Some(Response(Json.toJson(response)))
+    } catch {
+      case e: Exception =>
+        Logger.info(e.getMessage)
+        None
+    }
 
-  override def constructResponse(doc: JsonDocument): Option[Response] = ???
+  }
 
-
-  //  override def constructResponse(doc: JsonDocument): Option[Response] =
-  //    try {
-  //      val parsedJson: JsValue = Json.parse(doc.content().toString)
-  //      val first_name = (parsedJson \ "first_name").asOpt[String]
-  //      val last_name = (parsedJson \ "last_name").asOpt[String]
-  //      val image = (parsedJson \ "image").asOpt[String]
-  //      val about = (parsedJson \ "about").as[About]
-  //      val stats = (parsedJson \ "stats").as[Stats]
-  //      val url = s"api.sengab.com/v1/users/${doc.id()}"
-  //      val projects = s"api.sengab.com/v1/users/${doc.id()}/projects"
-  //      val contributions = s"api.sengab.com/v1/users/${doc.id()}/contributions"
-  //
-  //      Some(UserInfoResponse(
-  //        doc.id,
-  //        url,
-  //        first_name,
-  //        last_name,
-  //        image,
-  //        about,
-  //        stats,
-  //        projects,
-  //        contributions
-  //      ))
-  //
-  //    } catch {
-  //      case e: Exception => None
-  //    }
-  /**
-    * convert Json Document got from DB to a proper Response
-    */
 }
 
 object InfoRetriever {

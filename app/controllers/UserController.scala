@@ -7,6 +7,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import messages.UserManagerMessages.{GetUserProfile, ListProjectsOfUser, ListUserActivity}
+import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.AskTimeoutError
 import play.api.mvc.{Action, Controller}
@@ -28,10 +29,8 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
       receptionist ? GetUserProfile(userId) map {
 
         // The receptionist got the info
-        // TODO fix this :
-
-        //        case msg: UserInfoResponse =>
-        //          Ok(Json.toJson(msg))
+        case Response(response) =>
+          Ok(response)
 
         // The receptionist failed to get user info
         case error: Error =>
