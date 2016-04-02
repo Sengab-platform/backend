@@ -61,14 +61,14 @@ object Project {
                                contributions_count: Int,
                                is_featured: Boolean,
                                category: Category,
-                               results: String,
-                               stats: String
+                               resultsID: String,
+                               statsID: String
                              ) = {
     Project(Some(id),
       Some(helpers.Helper.PROJECT_PATH + id),
       name,
       Some(owner),
-      goal, Some(template_id), None, created_at, brief_description, detailed_description, Some(enrollments_count), Some(contributions_count), Some(is_featured), None, Some(category), Some(results), Some(stats))
+      goal, Some(template_id), None, created_at, brief_description, detailed_description, Some(enrollments_count), Some(contributions_count), Some(is_featured), None, Some(category), Some(helpers.Helper.RESULT_PATH + resultsID), Some(helpers.Helper.STAT_PATH + statsID))
   }
 
 }

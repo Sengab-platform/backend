@@ -5,10 +5,12 @@ import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.JsonDocument
 import messages.ProjectManagerMessages.GetProjectDetails
-import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
+import models.project.Project
+import models.{Category, Response, User}
 import play.api.Logger
+import play.api.libs.json.{JsValue, Json}
 
 
 class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
@@ -30,6 +32,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
   override def receive: Receive = {
     case GetProjectDetails(projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetails(projectID)} ")
+
     //      executeQuery(DBUtilities.Project.getProjectWithId(projectID))
 
     case Terminate =>
@@ -49,8 +52,9 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
           case Some(response) =>
             out ! response
 
+          // TODO self or out? hmm.
           case None =>
-            self ! CouldNotParseJSON("failed to get project details",
+            out ! CouldNotParseJSON("failed to get project details",
               "couldn't parse json retrieved from the db ", this.getClass.toString)
 
         }
@@ -61,33 +65,48 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
 
   }
 
-  // TODO reimplement
   override def constructResponse(doc: JsonDocument): Option[Response] = {
-    ???
-    //    try {
-    //      val parsedJson: JsValue = Json.parse(doc.content().toString)
-    //      val name = (parsedJson \ "name").as[String]
-    //      val createdAt = (parsedJson \ "created_at").as[String]
-    //      val briefDescription = (parsedJson \ "brief_description").as[String]
-    //      val detailedDescription = (parsedJson \ "detailed_description").as[String]
-    //      val isFeatured = (parsedJson \ "is_featured").as[Boolean]
-    //      val url = s"sengab.com/projects/${doc.id()}" // place holder
-    //      val stats = s"sengab.com/projects/${doc.id()}/stats" // place holder
-    //      val results = s"sengab.com/projects/${doc.id()}/results" // place holder
-    //      Option(ProjectDetailsResponse(doc.id,
-    //        url,
-    //        name,
-    //        createdAt,
-    //        briefDescription,
-    //        detailedDescription,
-    //        isFeatured,
-    //        results,
-    //        stats
-    //      ))
-    //
-    //    } catch {
-    //      case e: Exception => None
-    //    }
+
+    try {
+      val parsedJson: JsValue = Json.parse(doc.content().toString)
+
+      // get embedded category
+      val category = Category.generateEmbeddedCategory(
+        (parsedJson \ "category" \ "id").as[String],
+        (parsedJson \ "category" \ "name").as[String]
+      )
+
+      // get embedded user
+      val owner = User.generateEmbeddedOwner(
+        (parsedJson \ "owner" \ "id").as[String],
+        (parsedJson \ "owner" \ "name").as[String],
+        (parsedJson \ "owner" \ "image").as[String]
+      )
+
+      // get project details
+      val project = Project.generateDetailedProject(
+        doc.id(),
+        (parsedJson \ "name").as[String],
+        owner,
+        (parsedJson \ "goal").as[Int],
+        (parsedJson \ "image").as[String],
+        (parsedJson \ "template_id").as[Int],
+        (parsedJson \ "created_at").as[String],
+        (parsedJson \ "brief_description").as[String],
+        (parsedJson \ "detailed_description").as[String],
+        (parsedJson \ "enrollments_count").as[Int], // return results ID
+        (parsedJson \ "contributions_count").as[Int], // return results ID
+        (parsedJson \ "is_featured").as[Boolean],
+        category,
+        (parsedJson \ "results").as[String], // return results ID
+        (parsedJson \ "stats").as[String] // return stats ID
+      )
+
+      Some(Response(Json.toJson(project)))
+
+    } catch {
+      case e: Exception => None
+    }
   }
 }
 
