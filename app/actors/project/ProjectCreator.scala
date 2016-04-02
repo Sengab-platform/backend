@@ -8,9 +8,8 @@ import messages.ProjectManagerMessages.CreateProject
 import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.CouldNotParseJSON
-import models.project.Project._
 import play.api.Logger
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsString, JsValue, Json}
 
 class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
@@ -37,7 +36,6 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
       Logger.info(s"actor ${self.path} - received msg : ${CreateProject(project, userID)}")
 
       // construct Json Object to be inserted into DB
-      // TODO
 
       val projectObj = toJsonObject(Json.toJson(project))
       executeQuery(DBUtilities.Project.createProject(userID, projectObj))
@@ -55,11 +53,12 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
       out ! err
 
 
-    // got a document , construct proper response from it and send the response to out
+    // got a json object , construct proper response from it and send the response to out
     case QueryResult(doc) =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)}")
 
       val response = constructResponse(doc)
+
       response match {
         case Some(response) =>
           out ! response
@@ -72,12 +71,21 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
   }
 
   // try to convert the retrieved JsonDocument from db to a CreateProjectResponse
-  override def constructResponse(doc: JsonObject): Option[Response] = {
+  override def constructResponse(jsonObj: JsonObject): Option[Response] = {
 
-    // TODO implement this
-    val parsedJson: JsValue = Json.parse(doc.toString)
-    val createdProject = parsedJson.as[DetailedProject]
-    Some(Response(parsedJson))
+    try {
+      val parsedJson: JsValue = Json.parse(jsonObj.toString)
+
+      val jsResponse = JsObject(Seq(
+        "id" -> JsString((parsedJson \ "id").as[String]),
+        "name" -> JsString((parsedJson \ "name").as[String]),
+        "created_at" -> JsString((parsedJson \ "created_at").as[String]),
+        "url" -> JsString(helpers.Helper.PROJECT_PATH + (parsedJson \ "id").as[String])))
+
+      Some(Response(jsResponse))
+    } catch {
+      case _: Exception => None
+    }
   }
 }
 
