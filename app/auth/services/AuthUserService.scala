@@ -20,11 +20,11 @@ class AuthUserService extends UserService[UserAuth] {
 
     toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
       .subscribe(doc => {
-        if (!(doc.content() == null)) {
-          val json = Json.parse(doc.content().toString)
+        if (!(doc.get("id") == DBUtilities.DBConfig.EMPTY_JSON_DOC)) {
+          val json = Json.parse(doc.toString)
           val user = Some(BasicProfile(
             "google",
-            doc.id,
+            (json \ "id").as[String],
             (json \ "first_name").asOpt[String],
             (json \ "last_name").asOpt[String],
             None,
