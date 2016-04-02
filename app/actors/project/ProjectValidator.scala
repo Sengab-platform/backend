@@ -2,7 +2,7 @@ package actors.project
 
 import akka.actor.{Actor, Props}
 import messages.ProjectManagerMessages.{CreateProject, ValidateProject}
-import models.project.Project
+import models.project.NewProject
 import play.api.Logger
 
 class ProjectValidator extends Actor {
@@ -21,7 +21,7 @@ class ProjectValidator extends Actor {
   }
 
   // just place holder
-  def isValid(p: Project) = true
+  def isValid(p: NewProject) = true
 }
 
 object ProjectValidator {
