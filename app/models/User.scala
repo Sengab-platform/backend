@@ -37,20 +37,6 @@ object User {
 
   def generateEmbeddedOwner(id: String, first_name: String, image: String) =
     new User(id, helpers.Helper.USER_PATH + id, Some(first_name), None, Some(image), None, None, None, None)
-
-  def getUserInfo(
-                   id: String,
-                   url: String,
-                   first_name: String,
-                   last_name: String,
-                   image: String,
-                   about: About,
-                   stats: Stats,
-                   projects: String,
-                   contributions: String)
-  = new User(id, url, Some(first_name), Some(last_name),
-    Some(image), Some(about), Some(stats), Some(projects), Some(contributions))
-
 }
 
 case class UserInfo(
