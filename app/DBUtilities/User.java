@@ -90,7 +90,7 @@ public class User {
      * @param lastName the updated last name of the user.
      * @param imageURL the updated image name of the user.
      * @param about the updated about of the user.
-     * @return an Observable of the document fragment that was updated that contains updated cas and other meta data about the mutation.
+     * @return an Observable of AsyncN1qlQueryRow containing the id of the updated user.
      */
     public static Observable<AsyncN1qlQueryRow> updateSigningInUser(String userId, String firstName, String lastName, String imageURL, JsonObject about){
         try {
