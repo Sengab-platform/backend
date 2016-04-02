@@ -3,7 +3,7 @@ package models
 import play.api.libs.json.Json
 
 case class About(
-                  email: String,
+                  email: Option[String],
                   bio: Option[String]
                 )
 
@@ -34,9 +34,21 @@ case class User(
 
 object User {
   implicit val UserF = Json.format[User]
+}
 
-  def generateEmbeddedOwner(id: String, first_name: String, image: String) =
-    new User(id, helpers.Helper.USER_PATH + id, Some(first_name), None, Some(image), None, None, None, None)
+case class NewUser(
+                    id: String,
+                    entity_type: String = "user",
+                    first_name: Option[String],
+                    last_name: Option[String],
+                    image: Option[String],
+                    about: Option[About],
+                    stats: Option[Stats],
+                    created_at: String
+                  )
+
+object NewUser {
+  implicit val NewUserF = Json.format[NewUser]
 }
 
 case class UserInfo(
@@ -47,7 +59,7 @@ case class UserInfo(
                      about: Option[About],
                      stats: Stats,
                      projects: String, // the User created projects url
-                     contributions: String,
+                     contributions: String, // the User created contributions url
                      url: String
                    )
 
