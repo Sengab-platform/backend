@@ -175,7 +175,7 @@ public class Project {
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
                 .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
-                .where(Expression.x ("project.us_featured")).orderBy (Sort.desc (Expression.x ("project.enrollments_count")))
+                .where(Expression.x ("project.is_featured")).orderBy (Sort.desc (Expression.x ("project.enrollments_count")))
                 .limit (limit).offset (offset)))
                 .timeout (1000,TimeUnit.MILLISECONDS)
                 .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedCategoryintoProject (queryRow.value ().getString ("id"), queryRow))
@@ -190,6 +190,41 @@ public class Project {
                 })
                 .defaultIfEmpty (JsonObject.create ());
     }
+
+    /**
+     * Searches for projects with name containing the provided string sorts them by popularity and sets a limit and offset for the results.
+     * @param searchText the String to look for in the projects name.
+     * @param limit the maximum number of document returned.
+     * @param offset an index to determine where to start form when getting results.
+     * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
+     */
+
+    public static Observable<JsonObject> searchForProjectsByName(String searchText,int limit,int offset){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+        Logger.info ("DB: Searching for projects with name containing: $1 with limit: $2 and offset: $3",searchText,limit,offset);
+
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+            .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
+            .where(Expression.x ("project.name").like (Expression.s ("%" + searchText + "%")))
+            .orderBy (Sort.desc (Expression.x ("project.enrollments_count"))).limit (limit).offset (offset)))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> embedCategoryintoProject (row.value ().getString ("id"),row))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                Logger.info ("DB: failed to search for projects with name containing: $1 with limit: $2 and offset: $3",searchText,limit,offset);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: failed to search for projects with name containing: $1 with limit: $2 and offset: $3",searchText,limit,offset)));
+            })
+            .defaultIfEmpty (JsonObject.create ());
+
+    }
+
 
     /**
      * Update a project. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
@@ -251,6 +286,7 @@ public class Project {
             });
     }
 
+
     private static void checkDBStatus () {
         if (bucket.isClosed ()){
             if (DBConfig.initDB() == DBConfig.OPEN_BUCKET_OK) {
@@ -263,6 +299,8 @@ public class Project {
             mBucket = bucket;
         }
     }
+
+
 
     private static Observable<JsonObject> embedCategoryintoProject (String projectId, AsyncN1qlQueryRow queryRow) {
         String categoryId = queryRow.value ().getObject ("project").getString ("category_id");

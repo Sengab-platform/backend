@@ -25,18 +25,17 @@ public class Result {
 
     /**
      * Create and save a project's results. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
-     * @param resultJsonObject The Json object to be the value of the document , it also has an Id field to use as the document key.
+     * @param resultId The Json object to be the value of the document , it also has an Id field to use as the document key.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonDocument> createResult(JsonObject resultJsonObject){
+    public static Observable<JsonDocument> createResult(String resultId){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        String resultId = DBConfig.getIdFromJson (resultJsonObject);
-        JsonDocument resultDocument = JsonDocument.create (resultId,DBConfig.removeIdFromJson (resultJsonObject));
+        JsonDocument resultDocument = JsonDocument.create (resultId,JsonObject.create ());
 
         return mBucket.insert (resultDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
@@ -50,7 +49,6 @@ public class Result {
                     return Observable.error (new CouchbaseException ("Failed to create result, General DB exception "));
                 }
             });
-
     }
 
     /**
