@@ -31,6 +31,7 @@ import static com.couchbase.client.java.query.Select.select;
 public class Category {
 
     private static AsyncBucket mBucket;
+    private static final Logger.ALogger logger = Logger.of (Category.class.getSimpleName ());
 
     /**
      * Create and save a category. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -92,14 +93,14 @@ public class Category {
      * @param offset an index to determine where to start form when getting results.
      * @return an observable of json object that contains all the resulted categories with id field added.
      */
-    public static Observable<JsonObject> bulkGetCategories(int limit,int offset){
+    public static Observable<JsonObject> bulkGetCategories(int offset,int limit){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        Logger.info ("DB: Bulk getting categories with limit: $1 and offset: $2",limit,offset);
+        logger.info ("DB: Bulk getting categories with limit: $1 and offset: $2",limit,offset);
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(category).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " category"))
         .where (Expression.x ("meta(category).id").like (Expression.s ("%category%")))
@@ -113,7 +114,7 @@ public class Category {
         .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
             .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
         .onErrorResumeNext (throwable -> {
-            Logger.info ("DB: failed to bulk get categories with limit: $1 and offset: $2",limit,offset);
+            logger.info ("DB: failed to bulk get categories with limit: $1 and offset: $2",limit,offset);
 
             return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get categories with limit: $1 and offset: $2",limit,offset)));
         });

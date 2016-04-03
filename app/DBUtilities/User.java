@@ -30,6 +30,7 @@ import static com.couchbase.client.java.query.Update.update;
  */
 public class User {
     private static AsyncBucket mBucket;
+    private static final Logger.ALogger logger = Logger.of (User.class.getSimpleName ());
 
     /**
      * Create and save a user. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -99,7 +100,7 @@ public class User {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        Logger.info ("DB: Partial updating user with ID: " + userId);
+        logger.info ("DB: Partial updating user with ID: {}", userId);
 
 
         return mBucket.query (N1qlQuery.simple (update(DBConfig.BUCKET_NAME).useKeys (Expression.s (userId))
@@ -112,19 +113,19 @@ public class User {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof DocumentDoesNotExistException){
-                    Logger.info ("DB: Failed to Partial update user with ID: " + userId + " , no user exists with this id.");
+                    logger.info ("DB: Failed to Partial update user with ID: {}, no user exists with this id.",userId);
 
-                    return Observable.error (new DocumentDoesNotExistException ("Failed to update user, ID dosen't exist in DB."));
+                    return Observable.error (new DocumentDoesNotExistException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
 
                 }else if (throwable instanceof CASMismatchException){
                     //// TODO: 4/1/16 needs more accurate handling in the future.
-                    Logger.info ("DB: Failed to Partial update user with ID: " + userId + " , CAS value is changed.");
+                    logger.info ("DB: Failed to Partial update user with ID: {}, CAS value is changed.",userId);
 
-                    return Observable.error (new CASMismatchException ("Failed to update user, CAS value is changed."));
+                    return Observable.error (new CASMismatchException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
                 } else {
-                    Logger.info ("DB: Failed to Partial update user with ID: " + userId + " , General DB exception.");
+                    logger.info ("DB: Failed to Partial update user with ID: {}, General DB exception.",userId);
 
-                    return Observable.error (new CouchbaseException ("Failed to update user, General DB exception."));
+                    return Observable.error (new CouchbaseException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
                 }
             });
     }

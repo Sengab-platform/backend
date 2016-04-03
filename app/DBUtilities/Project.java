@@ -39,6 +39,7 @@ public class Project {
     private static String ownerKey = "owner";
     private static String resultsKey = "results";
     private static String statsKey = "stats";
+    private static final Logger.ALogger logger = Logger.of (Project.class.getSimpleName ());
 
 
     /**
@@ -57,7 +58,7 @@ public class Project {
         String resultsId = "result::" + projectUUID;
         String statsID = "stats::" + projectUUID;
 
-        Logger.info ("DB: Creating project with ID: " + projectId);
+        logger.info ("DB: Creating project with ID: {}" ,projectId);
 
         return User.getUserWithId (userId).flatMap (userJsonObject -> {
 
@@ -81,7 +82,7 @@ public class Project {
                    String newStatsId = "stats::" + newProjectUUID;
                    String newResultsId = "results::" + newProjectUUID;
 
-                   Logger.info ("DB: Another project with same id exists, creating a project with another ID: " + projectId);
+                   logger.info ("DB: Another project with same id exists, creating a project with another ID: {}", projectId);
 
                    projectJsonObject.put (statsKey,newStatsId).put (resultsKey,newResultsId);
                    JsonDocument newProjectDocument = JsonDocument.create (newProjectId,projectJsonObject);
@@ -89,7 +90,7 @@ public class Project {
                    return mBucket.insert (newProjectDocument);
                }
 
-               Logger.info ("DB: Failed to insert project with ID: " + projectId + "General DB exception");
+               logger.info ("DB: Failed to insert project with ID: {}, General DB exception",projectId);
                return Observable.error (new CouchbaseException ("Failed to insert project, General DB exception"));
            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
 
@@ -107,7 +108,7 @@ public class Project {
             return Observable.error(e);
         }
 
-        Logger.info ("DB: Getting project with ID: " + projectId);
+        logger.info ("DB: Getting project with ID: {}", projectId);
 
         return mBucket.query (N1qlQuery.simple (select("*").from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -120,9 +121,9 @@ public class Project {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
 
-                Logger.info ("DB: Failed to Get project with ID: " + projectId + ", General DB exception");
+                logger.info ("DB: Failed to Get project with ID: {}, General DB exception",projectId);
 
-                return Observable.error (new CouchbaseException ("Failed to get project, General DB exception"));
+                return Observable.error (new CouchbaseException (String.format ("Failed to get project with ID: $1, General DB exception",projectId)));
             }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
 
@@ -134,14 +135,14 @@ public class Project {
      * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
      */
 
-    public static Observable<JsonObject> bulkGetProjects(String sortBy, int limit, int offset){
+    public static Observable<JsonObject> bulkGetProjects(String sortBy, int offset, int limit){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        Logger.info ("DB: bulk getting projects sorted by: $1 and with limit: $2 and offset: $3",sortBy,limit,offset);
+        logger.info ("DB: bulk getting projects sorted by: {} and with limit: {} and offset: {}",sortBy,limit,offset);
 
         return bucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -154,7 +155,7 @@ public class Project {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                      .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                Logger.info ("DB: failed to bulk get projects sorted by: $1 and with limit: $2 and offset: $3",sortBy,limit,offset);
+                logger.info ("DB: failed to bulk get projects sorted by: {} and with limit: {} and offset: {}",sortBy,limit,offset);
 
                 return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects sorted by: $1 and with limit: $2 and offset: $3",sortBy,limit,offset)));
             })
@@ -168,14 +169,14 @@ public class Project {
      * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
      */
 
-    public static Observable<JsonObject> getFeaturedProjets(int limit,int offset){
+    public static Observable<JsonObject> getFeaturedProjets(int offset,int limit){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        Logger.info ("DB: bulk getting featured projects with limit: $1 and offset: $2",limit,offset);
+        logger.info ("DB: bulk getting featured projects with limit: {} and offset: {}",limit,offset);
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
                 .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -188,7 +189,7 @@ public class Project {
                 .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                         .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
                 .onErrorResumeNext (throwable -> {
-                    Logger.info ("DB: failed to bulk get featured projects with limit: $1 and offset: $2",limit,offset);
+                    logger.info ("DB: failed to bulk get featured projects with limit: {} and offset: {}",limit,offset);
 
                     return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get featured projects with limit: $1 and offset: $2",limit,offset)));
                 })
@@ -202,14 +203,14 @@ public class Project {
      * @param offset an index to determine where to start form when getting results.
      * @return An observable of json object that contains all the resulted projects merged with their categories and with id field added.
      */
-    public static Observable<JsonObject> getProjectWithSpecificCategory(String categoryId, int limit, int offset){
+    public static Observable<JsonObject> getProjectWithSpecificCategory(String categoryId, int offset, int limit){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        Logger.info ("DB: Bulk getting projects with category_id: $1 ,limit: $2 and offset: $3",categoryId,limit,offset);
+        logger.info ("DB: Bulk getting projects with category_id: {} ,limit: {} and offset: {}",categoryId,limit,offset);
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
                 .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -222,7 +223,7 @@ public class Project {
                 .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                         .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
                 .onErrorResumeNext (throwable -> {
-                    Logger.info ("DB: failed to bulk get projects with category_id: $1 ,limit: $2 and offset: $3",categoryId,limit,offset);
+                    logger.info ("DB: failed to bulk get projects with category_id: {} ,limit: {} and offset: {}",categoryId,limit,offset);
 
                     return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects with category_id: $1 ,limit: $2 and offset: $3",categoryId,limit,offset)));
                 })
@@ -238,13 +239,13 @@ public class Project {
      * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
      */
 
-    public static Observable<JsonObject> searchForProjectsByName(String searchText,int limit,int offset){
+    public static Observable<JsonObject> searchForProjectsByName(String searchText,int offset,int limit){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        Logger.info ("DB: Searching for projects with name containing: $1 with limit: $2 and offset: $3",searchText,limit,offset);
+        logger.info ("DB: Searching for projects with name containing: {} with limit: {} and offset: {}",searchText,limit,offset);
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -256,9 +257,9 @@ public class Project {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                Logger.info ("DB: failed to search for projects with name containing: $1 with limit: $2 and offset: $3",searchText,limit,offset);
+                logger.info ("DB: failed to search for projects with name containing: {} with limit: {} and offset: {}",searchText,limit,offset);
 
-                return Observable.error (new CouchbaseException (String.format ("DB: failed to search for projects with name containing: $1 with limit: $2 and offset: $3",searchText,limit,offset)));
+                return Observable.error (new CouchbaseException (String.format ("DB: failed to search for projects with name containing: $1 with limit: $2 and offset: {}",searchText,limit,offset)));
             })
             .defaultIfEmpty (JsonObject.create ());
 

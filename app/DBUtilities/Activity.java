@@ -30,6 +30,7 @@ import static com.couchbase.client.java.query.Select.select;
  */
 public class Activity {
     private static AsyncBucket mBucket;
+    private static final Logger.ALogger logger = Logger.of (Activity.class.getSimpleName ());
 
     /**
      * Create and save a user's activities . can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -64,26 +65,27 @@ public class Activity {
      * @param activityId the id of the activities document to get.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
-    public static Observable<JsonObject> getActivityWithId(String activityId,int limit,int offset){
+    public static Observable<JsonObject> getActivityWithId(String activityId,int offset,int limit){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        Logger.info ("DB: Getting activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset);
+        logger.info ("DB: Getting activity with id: {} ,limit: {} and offset: {}",activityId,limit,offset);
 
         int endIndex = offset + limit ;
-        Logger.info (endIndex + "");
+        logger.info (endIndex + "");
 
-        return mBucket.query (N1qlQuery.simple (select(Expression.x ("activities[" + offset + ":" + endIndex + "] activities"))
-        .from (DBConfig.BUCKET_NAME).useKeys (Expression.s (activityId)))).timeout (1000,TimeUnit.MILLISECONDS)
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("activities[" + offset + ":array_min([(array_length(activities))," + endIndex + "])]")
+            .as ("activities")).from (DBConfig.BUCKET_NAME)
+            .useKeys (Expression.s (activityId)))).timeout (1000,TimeUnit.MILLISECONDS)
         .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
         .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                 .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
         .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
         .onErrorResumeNext (throwable -> {
-            Logger.info ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset);
+            logger.info ("DB: failed to get activity with id: {} ,limit: {} and offset: {}",activityId,limit,offset);
 
             return Observable.error (new CouchbaseException (String.format ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset)));
         })

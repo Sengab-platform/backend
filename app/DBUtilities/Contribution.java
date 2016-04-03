@@ -13,6 +13,7 @@ import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.util.retry.RetryBuilder;
+import play.Logger;
 import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Contribution {
     private static AsyncBucket mBucket;
+    private static final Logger.ALogger logger = Logger.of (Contribution.class.getSimpleName ());
 
     /**
      * Create and save a user's contribution of a project. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
