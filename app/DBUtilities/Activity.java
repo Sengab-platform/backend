@@ -73,6 +73,7 @@ public class Activity {
         Logger.info ("DB: Getting activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset);
 
         int endIndex = offset + limit ;
+        Logger.info (endIndex + "");
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("activities[" + offset + ":" + endIndex + "] activities"))
         .from (DBConfig.BUCKET_NAME).useKeys (Expression.s (activityId)))).timeout (1000,TimeUnit.MILLISECONDS)

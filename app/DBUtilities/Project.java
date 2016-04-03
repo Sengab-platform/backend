@@ -113,7 +113,7 @@ public class Project {
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
             .where (Expression.x ("meta(project).id").eq (Expression.s (projectId)))))
             .timeout (500,TimeUnit.MILLISECONDS)
-            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryintoProject (projectId, queryRow))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryIntoProject (projectId, queryRow))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
             .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -148,7 +148,7 @@ public class Project {
             .orderBy (Sort.desc (Expression.x ("project." + Expression.x (sortBy))))
             .limit (limit).offset (offset)))
             .timeout (1000,TimeUnit.MILLISECONDS)
-            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryintoProject (queryRow.value ().getString ("id"), queryRow))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryIntoProject (queryRow.value ().getString ("id"), queryRow))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                      .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -182,7 +182,7 @@ public class Project {
                 .where(Expression.x ("project.is_featured")).orderBy (Sort.desc (Expression.x ("project.enrollments_count")))
                 .limit (limit).offset (offset)))
                 .timeout (1000,TimeUnit.MILLISECONDS)
-                .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryintoProject (queryRow.value ().getString ("id"), queryRow))
+                .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryIntoProject (queryRow.value ().getString ("id"), queryRow))
                 .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                         .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
                 .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -216,7 +216,7 @@ public class Project {
                 .where (Expression.x ("project.category_id").eq (Expression.s (categoryId)))
                 .orderBy (Sort.desc (Expression.x ("project.enrollments_count"))).limit (limit).offset (offset)))
                 .timeout (1000,TimeUnit.MILLISECONDS)
-                .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> embedIdAndCategoryintoProject (row.value ().getString ("id"),row))
+                .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
                 .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                         .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
                 .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -250,7 +250,7 @@ public class Project {
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
             .where(Expression.x ("project.name").like (Expression.s ("%" + searchText + "%")))
             .orderBy (Sort.desc (Expression.x ("project.enrollments_count"))).limit (limit).offset (offset)))
-            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> embedIdAndCategoryintoProject (row.value ().getString ("id"),row))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                     .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -342,11 +342,12 @@ public class Project {
     }
 
 
-
-    private static Observable<JsonObject> embedIdAndCategoryintoProject (String projectId, AsyncN1qlQueryRow queryRow) {
+    private static Observable<JsonObject> embedIdAndCategoryIntoProject (String projectId, AsyncN1qlQueryRow queryRow) {
         String categoryId = queryRow.value ().getObject ("project").getString ("category_id");
-        JsonObject categoryObject = queryRow.value ().getObject ("category").put ("category_id",categoryId);
+        JsonObject categoryObject = queryRow.value ().getObject ("category");
+        JsonObject userCategoryObject = JsonObject.create ()
+                .put ("name",categoryObject.getString ("name")).put ("category_id",categoryId);
         JsonObject projectObject = queryRow.value ().getObject ("project").removeKey ("category_id");
-        return Observable.just (projectObject.put ("id",projectId).put ("category",categoryObject));
+        return Observable.just (projectObject.put ("id",projectId).put ("category",userCategoryObject));
     }
 }

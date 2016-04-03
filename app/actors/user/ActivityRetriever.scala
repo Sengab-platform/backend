@@ -38,7 +38,7 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
       Logger.info(s"actor ${self.path} - received msg : ${ListUserActivity(userID, offset, limit)} ")
 
       // Here we will send the result
-      executeQuery(DBUtilities.Activity.getActivityWithId("activity::" + userID, limit, offset))
+      executeQuery(DBUtilities.Activity.getActivityWithId("activity::" + userID, 6, 0))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")
