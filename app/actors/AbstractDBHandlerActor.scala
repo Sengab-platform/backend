@@ -11,7 +11,7 @@ import play.api.libs.json.{JsValue, Json}
 import rx.lang.scala.JavaConversions.toScalaObservable
 
 /**
-  * this class should be inherited for any actor communicating with db
+  * this class should be inherited by any actor communicating with db
   * any actor extends this class has to implement functions onNext,onError and onComplete
   * these are the 3 params for subscribe method called in executeQuery method.
   * method executeQuery has to be called within the actor and pass Observable[JsonObject].
@@ -20,7 +20,7 @@ import rx.lang.scala.JavaConversions.toScalaObservable
 abstract class AbstractDBHandlerActor(out: ActorRef) extends Actor {
 
   /**
-    * define the default message that will be sent to user when error happen
+    * define the default message that will be sent to the user when error happen
     */
   val ErrorMsg: String
 
@@ -30,11 +30,13 @@ abstract class AbstractDBHandlerActor(out: ActorRef) extends Actor {
     */
   def onNext(): (JsonObject) => Unit
 
-  /**
-    * take @param observable , convert it to Scala Observable
-    * then pass onNext() ,onError() and onComplete methods to subscribe
-    */
 
+  /**
+    * convert the observable got from the DB queries methods into Scala Observable
+    * then pass onNext() ,onError() and onComplete to subscribe method
+    *
+    * @param observable got from the DB queries methods
+    */
   def executeQuery(observable: rx.Observable[JsonObject]): Unit = {
     toScalaObservable(observable).subscribe(onNext(), onError(), onComplete)
   }
@@ -93,7 +95,7 @@ object AbstractDBHandlerActor {
 
   /**
     * this message should be sent to self when the db query successes to get data which is wrapped
-    * by this message as @param jsonObject
+    * by this message as jsonObject
     *
     */
   case class QueryResult(jsonObject: JsonObject)

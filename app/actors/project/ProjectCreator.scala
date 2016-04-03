@@ -22,7 +22,7 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
   }
   }
 
-  // send the retrieved JsonDocument to self wrapped in QueryResult message to be handled
+  // send the retrieved JsonObject to self wrapped in QueryResult message to be handled
   override def onNext(): (JsonObject) => Unit = {
     doc: JsonObject => {
       self ! QueryResult(doc)
