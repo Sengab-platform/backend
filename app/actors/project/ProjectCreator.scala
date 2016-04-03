@@ -16,18 +16,6 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
   // this msg would sent to user when error happens while querying from db
   override val ErrorMsg: String = "Creating project failed"
 
-  // when the query is completed, terminate self
-  override def onComplete: () => Unit = { () => {
-    self ! Terminate
-  }
-  }
-
-  // send the retrieved JsonObject to self wrapped in QueryResult message to be handled
-  override def onNext(): (JsonObject) => Unit = {
-    doc: JsonObject => {
-      self ! QueryResult(doc)
-    }
-  }
 
   override def receive: Receive = {
 

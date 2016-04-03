@@ -19,16 +19,6 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
   override val ErrorMsg: String = "failed to get project details"
 
 
-  override def onComplete: () => Unit = { () => {
-    self ! Terminate
-  }
-  }
-
-  override def onNext(): (JsonObject) => Unit = { doc: JsonObject => {
-    self ! QueryResult(doc)
-  }
-  }
-
   override def receive: Receive = {
     case GetProjectDetails(projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetails(projectID)} ")

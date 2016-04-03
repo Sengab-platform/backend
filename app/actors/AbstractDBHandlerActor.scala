@@ -1,6 +1,6 @@
 package actors
 
-import actors.AbstractDBHandlerActor.Terminate
+import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
 import akka.actor.{Actor, ActorRef}
 import com.couchbase.client.core.{BucketClosedException, CouchbaseException}
 import com.couchbase.client.java.document.json.JsonObject
@@ -12,7 +12,6 @@ import rx.lang.scala.JavaConversions.toScalaObservable
 
 /**
   * this class should be inherited by any actor communicating with db
-  * any actor extends this class has to implement functions onNext,onError and onComplete
   * these are the 3 params for subscribe method called in executeQuery method.
   * method executeQuery has to be called within the actor and pass Observable[JsonObject].
   */
@@ -28,7 +27,11 @@ abstract class AbstractDBHandlerActor(out: ActorRef) extends Actor {
   /**
     * called when the db query get data back as JsonObject
     */
-  def onNext(): (JsonObject) => Unit
+  def onNext(): (JsonObject) => Unit = {
+    doc: JsonObject => {
+      self ! QueryResult(doc)
+    }
+  }
 
 
   /**
@@ -77,7 +80,10 @@ abstract class AbstractDBHandlerActor(out: ActorRef) extends Actor {
   /**
     * called when the db query completes and all Json Objects retrieved
     */
-  def onComplete: () => Unit
+  def onComplete: () => Unit = { () => {
+    self ! Terminate
+  }
+  }
 
   /**
     * convert Json Object got from DB to a proper Response
