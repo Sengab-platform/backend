@@ -7,6 +7,7 @@ object Project {
 
   case class NewProject(name: String,
                         goal: Int,
+                        image:String,
                         template_id: Int,
                         templateBody: TemplateBody,
                         created_at: String,

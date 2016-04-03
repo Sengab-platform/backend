@@ -39,8 +39,8 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
       if (jsonObj.get("id") != DBUtilities.DBConfig.EMPTY_JSON_DOC) {
         val response = constructResponse(jsonObj)
         response match {
-          case Some(response) =>
-            out ! response
+          case Some(Response(jsonResult)) =>
+            out ! Response(jsonResult)
 
           // TODO self or out? hmm.
           case None =>
@@ -80,10 +80,9 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
         .transform(jsonTransformer).get
         .transform(jsonTransformer_2).get
 
-      // TODO
-      //      val project = fullResponse.as[DetailedProject]
+      val project = fullResponse.as[DetailedProject]
 
-      Some(Response(Json.toJson(fullResponse)))
+      Some(Response(Json.toJson(project)))
 
     } catch {
       case e: Exception => None
