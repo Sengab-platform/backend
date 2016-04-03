@@ -10,7 +10,7 @@ import models.errors.Error
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import models.project.Project.DetailedProject
 import play.api.Logger
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json._
 
 
 class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
@@ -46,7 +46,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
     case QueryResult(jsonObj) =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(jsonObj)} ")
 
-      if (!jsonObj.isEmpty) {
+      if (jsonObj.get("id") != DBUtilities.DBConfig.EMPTY_JSON_DOC) {
         val response = constructResponse(jsonObj)
         response match {
           case Some(response) =>
@@ -59,7 +59,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
 
         }
       } else {
-        out ! NotFoundError("no such project", "received null content document from DB", this.getClass.toString)
+        out ! NotFoundError("no such project", "received empty Json Object from DB", this.getClass.toString)
       }
 
 
@@ -68,15 +68,37 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out)
   override def constructResponse(jsonObj: JsonObject): Option[Response] = {
 
     try {
-      val parsedJson: JsValue = Json.parse(jsonObj.toString)
-      val project = parsedJson.as[DetailedProject]
-      Some(Response(Json.toJson(project)))
+      val parsedJson = Json.parse(jsonObj.toString).as[JsObject]
+
+      // add project url to the json retrieved
+      val modifiedJson = parsedJson + ("url" -> JsString(helpers.Helper.PROJECT_PATH + jsonObj.get("id")))
+
+      // add owner url to the json retrieved
+      val jsonTransformer = (__ \ 'owner).json.update(
+        __.read[JsObject].map { o => o ++ Json.obj("url" ->
+          JsString(helpers.Helper.USER_PATH + jsonObj.getObject("owner").get("id")))
+        }
+      )
+      // add category url to the json retrieved
+      val jsonTransformer_2 = (__ \ 'category).json.update(
+        __.read[JsObject].map { o => o ++ Json.obj("url" ->
+          JsString(helpers.Helper.CATEGORY_PATH + jsonObj.getObject("category").get("category_id")))
+        }
+      )
+
+      val fullResponse = modifiedJson
+        .transform(jsonTransformer).get
+        .transform(jsonTransformer_2).get
+
+      // TODO
+      //      val project = fullResponse.as[DetailedProject]
+
+      Some(Response(Json.toJson(fullResponse)))
 
     } catch {
       case e: Exception => None
     }
   }
-
 }
 
 

@@ -3,7 +3,7 @@ package models
 import play.api.libs.json.Json
 
 
-case class EmbeddedCategory(id: String,
+case class EmbeddedCategory(category_id: String,
                             url: String,
                             name: String)
 
