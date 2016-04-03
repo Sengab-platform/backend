@@ -8,7 +8,7 @@ object ProjectManagerMessages {
 
   case class CreateProject(project: NewProject, userID: String) extends ProjectMessage
 
-  case class ListProjects(filter: String, offset: Integer, limit: Integer) extends ProjectMessage
+  case class ListProjects(filter: String, offset: Int, limit: Int) extends ProjectMessage
 
   case class GetProjectDetails(projectID: String) extends ProjectMessage
 

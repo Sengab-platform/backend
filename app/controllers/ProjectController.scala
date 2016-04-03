@@ -7,7 +7,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import auth.services.AuthEnvironment
-import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails}
+import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails, ListProjects}
 import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{AskTimeoutError, BadJSONError}
@@ -29,8 +29,20 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
 
 
   //  list all projects (paginated)
-  def listProjects(filter: String, offset: Int, limit: Int) = Action {
-    Ok
+  def listProjects(filter: String, offset: Int, limit: Int) = Action.async {
+    receptionist ? ListProjects(filter, offset, limit) map {
+
+      case Response(json) =>
+        Ok(json)
+      case error: Error =>
+        error.result
+
+    } recover {
+      case e: TimeoutException =>
+        AskTimeoutError("Failed to get projects",
+          "Ask Timeout Exception on Actor Receptionist",
+          this.getClass.toString).result
+    }
   }
 
   //  get specific project
@@ -38,8 +50,8 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
     receptionist ? GetProjectDetails(projectId) map {
       // TODO fix this :
 
-      //      case msg: ProjectDetailsResponse =>
-      //        Ok(Json.toJson(msg))
+      case Response(json) =>
+        Ok(json)
       case error: Error =>
         error.result
     } recover {

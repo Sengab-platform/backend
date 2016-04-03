@@ -14,17 +14,27 @@ class ProjectManager extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${CreateProject(project, userID)} ")
       projectValidator forward ValidateProject(project, userID)
 
-    case ListProjects(filter, offset, limit) => ???
+    case ListProjects(filter, offset, limit) =>
+      Logger.info(s"actor ${self.path} - received msg : ${ListProjects(filter, offset, limit)} ")
+      projectRetriever forward ListProjects(filter, offset, limit)
+
 
     case GetProjectDetails(projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetails(projectID)} ")
       projectRetriever forward GetProjectDetails(projectID)
 
     case GetProjectResults(projectID, offset, limit) => ???
+      Logger.info(s"actor ${self.path} - received msg : ${GetProjectResults(projectID, offset, limit)} ")
+      projectRetriever forward GetProjectResults(projectID, offset, limit)
 
-    case GetProjectStats(projectID) => ???
 
-    case SearchProjects(keyword) => ???
+    case GetProjectStats(projectID) =>
+      Logger.info(s"actor ${self.path} - received msg : ${GetProjectStats(projectID)} ")
+      projectRetriever forward GetProjectStats(projectID)
+
+    case SearchProjects(keyword) =>
+      Logger.info(s"actor ${self.path} - received msg : ${SearchProjects(keyword)} ")
+      projectRetriever forward SearchProjects(keyword)
 
   }
 }
