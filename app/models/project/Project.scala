@@ -13,7 +13,7 @@ object Project {
                         brief_description: String,
                         detailed_description: String,
                         is_featured: Boolean,
-                        category_id: Int)
+                        category_id: String)
 
   case class DetailedProject(
                               id: String,
@@ -35,7 +35,7 @@ object Project {
                             )
 
   object NewProject {
-    implicit val ىewProjectProjectF = Json.format[NewProject]
+    implicit val newProjectProjectF = Json.format[NewProject]
   }
 
 
