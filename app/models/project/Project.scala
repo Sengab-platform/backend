@@ -13,7 +13,7 @@ object Project {
                         brief_description: String,
                         detailed_description: String,
                         is_featured: Boolean,
-                        category_id: Int)
+                        category_id: String)
 
   case class DetailedProject(
                               id: String,

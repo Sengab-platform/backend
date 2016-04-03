@@ -9,7 +9,7 @@ import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.CouldNotParseJSON
 import play.api.Logger
-import play.api.libs.json.{JsObject, JsString, JsValue, Json}
+import play.api.libs.json._
 
 class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
 
@@ -23,9 +23,13 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandlerActor(out) {
     case CreateProject(project, userID) =>
       Logger.info(s"actor ${self.path} - received msg : ${CreateProject(project, userID)}")
 
-      // construct Json Object to be inserted into DB
+      // add contributions_count and enrollments_count field with default values = 0
+      val completedProject = Json.toJson(project).as[JsObject].
+        +("contributions_count" -> JsNumber(0)).
+        +("enrollments_count" -> JsNumber(0))
 
-      val projectObj = toJsonObject(Json.toJson(project))
+      // construct Json Object to be inserted into DB
+      val projectObj = toJsonObject(completedProject)
       executeQuery(DBUtilities.Project.createProject(userID, projectObj))
 
 
