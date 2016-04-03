@@ -35,7 +35,7 @@ object Project {
                             )
 
   object NewProject {
-    implicit val ىewProjectProjectF = Json.format[NewProject]
+    implicit val newProjectProjectF = Json.format[NewProject]
   }
 
 
