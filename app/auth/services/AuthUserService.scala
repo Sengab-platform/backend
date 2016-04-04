@@ -1,6 +1,7 @@
 package auth.services
 
 import auth.models.UserAuth
+import helpers.Helper
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import rx.lang.scala.JavaConversions.toScalaObservable
@@ -18,7 +19,7 @@ class AuthUserService extends UserService[UserAuth] {
     val promise = Promise[Option[BasicProfile]]
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    toScalaObservable(DBUtilities.User.getUserWithId("user::" + userId))
+    toScalaObservable(DBUtilities.User.getUserWithId(Helper.UserIDPrefix + userId))
       .subscribe(doc => {
         if (!(doc.getString("id") == DBUtilities.DBConfig.EMPTY_JSON_DOC)) {
           val json = Json.parse(doc.toString)
