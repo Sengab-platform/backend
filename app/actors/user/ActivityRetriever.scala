@@ -15,25 +15,6 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
 
   override val ErrorMsg: String = "Retrieving user activity failed"
 
-  /**
-    * called when the db query completes and all Json Documents retrieved
-    */
-  override def onComplete: () => Unit = {
-    () => {
-      self ! Terminate
-    }
-  }
-
-  /**
-    * called when the db query get data back as JsonDocument
-    */
-  override def onNext(): (JsonObject) => Unit = {
-    doc: JsonObject => {
-      self ! QueryResult(doc)
-    }
-  }
-
-
   override def receive = {
     case ListUserActivity(userID, offset, limit) =>
       Logger.info(s"actor ${self.path} - received msg : ${ListUserActivity(userID, offset, limit)} ")
@@ -67,21 +48,19 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
   /**
     * convert Json Document got from DB to a proper Response
     */
-
-  // TODO add project URL
-
   def constructResponse(jsonObject: JsonObject): Option[Response] = {
     try {
       val parsedJson = Json.parse(jsonObject.toString)
-
-      val activities = (parsedJson \ "activities").as[Seq[Activities]]
+      val activityListTransform = (__ \ "activities")
+        .json.pickBranch(helpers.Helper.tfList(Activities.mongo2resp))
+      val activities = (parsedJson.transform(activityListTransform).get \ "activities")
+        .as[Seq[Activities]]
       Some(Response(Json.toJson(activities)))
     }
     catch {
       case e: Exception => None
     }
   }
-
 
 }
 
