@@ -124,6 +124,41 @@ public class User {
     }
 
     /**
+     * Bulk gets created projects for the provided user id, sorts them by name and sets a limit and offset for the results.
+     * @param userId The user id to get created projects for.
+     * @param offset an index to determine where how much result to omit from the beginning.
+     * @param limit the maximum number of document returned.
+     * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
+     */
+
+    public static Observable<JsonObject> getProjectsCreatedByUser(String userId,int offset,int limit){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+        logger.info ("DB: Bulk getting created projects for user with id: {} with offset: {} and limit: {}", userId,offset,limit);
+
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+            .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
+            .where (Expression.x ("project.owner.id").eq (Expression.s (userId))).orderBy (Sort.desc (Expression.x ("project.name")))
+            .limit (limit).offset (offset)))
+            .timeout (1000,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows)
+            .flatMap (row -> DBConfig.embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                logger.info ("DB: Failed to Bulk get created projects for user with id: {} with offset: {} and limit: {}",userId,limit,offset);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get created projects for user with id: $1 with offset: $2 and limit: $3, general DB exception.",userId,offset,limit)));
+            })
+            .defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
+    /**
      * Receives updated user profile data from the provider when signing in and update the user profile without affecting the rest of the profile's data. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
      * @param userId the id of the user to update
      * @param firstName the updated first name of the user.
