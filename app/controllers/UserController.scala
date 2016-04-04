@@ -52,8 +52,6 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
       // Ask receptionist to get user activates
       receptionist ? ListUserActivity(userId, offset, limit) map {
         // The receptionist got the activates
-        // TODO fix this :
-
         case Response(msg) =>
           Ok(msg)
         // The receptionist failed to get user activates
