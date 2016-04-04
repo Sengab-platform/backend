@@ -5,6 +5,7 @@ import actors.AbstractDBHandler
 import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
+import helpers.Helper
 import messages.UserManagerMessages.ListUserActivity
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import models.{Activities, Response}
@@ -20,7 +21,7 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
       Logger.info(s"actor ${self.path} - received msg : ${ListUserActivity(userID, offset, limit)} ")
 
       // Here we will send the result
-      executeQuery(DBUtilities.Activity.getActivityWithId("activity::" + userID, offset, limit))
+      executeQuery(DBUtilities.Activity.getActivityWithId(Helper.ActivityIDPrefix + userID, offset, limit))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")
@@ -52,7 +53,7 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
     try {
       val parsedJson = Json.parse(jsonObject.toString)
       val activityListTransform = (__ \ "activities")
-        .json.pickBranch(helpers.Helper.tfList(Activities.mongo2resp))
+        .json.pickBranch(Helper.tfList(Activities.mongo2resp))
       val activities = (parsedJson.transform(activityListTransform).get \ "activities")
         .as[Seq[Activities]]
       Some(Response(Json.toJson(activities)))

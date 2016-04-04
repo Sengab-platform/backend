@@ -62,7 +62,7 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandler(out) {
     try {
       val parsedJson = Json.parse(jsonObject.toString).as[JsObject]
       val id = jsonObject.getString("id")
-      val fullResponse = parsedJson + ("id" -> JsString(id)) + ("url" -> JsString(Helper.USER_PATH + id))
+      val fullResponse = parsedJson + ("id" -> JsString(id)) + ("url" -> JsString(Helper.UserPath + id))
       val user = Json.toJson(fullResponse.as[UserInfo])
       Some(Response(Json.toJson(user)))
     } catch {

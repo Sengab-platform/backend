@@ -5,6 +5,7 @@ import actors.AbstractBulkDBHandler.{BulkResult, ItemResult}
 import actors.AbstractDBActor.Terminate
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonArray
+import helpers.Helper
 import messages.CategoryManagerMessages.RetrieveCategories
 import models.errors.GeneralErrors.CouldNotParseJSON
 import models.{DetailedCategory, Response}
@@ -56,7 +57,7 @@ class CategoriesRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
     val categories = parsedJson.value.seq.map { categoryItem => {
       val DBCategoryObj = categoryItem.as[JsObject]
       // add category url to the json retrieved
-      val FullCategoryObj = DBCategoryObj + ("url" -> JsString(helpers.Helper.CATEGORY_PATH + (DBCategoryObj \ "id").as[String]))
+      val FullCategoryObj = DBCategoryObj + ("url" -> JsString(Helper.CategoryPath + (DBCategoryObj \ "id").as[String]))
       FullCategoryObj.as[DetailedCategory]
     }
     }

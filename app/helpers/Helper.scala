@@ -3,14 +3,19 @@ package helpers
 import play.api.libs.json.{JsError, _}
 
 object Helper {
-  val STAT_PATH = "http://api.sengab.com/v1/stats/"
-  val RESULT_PATH = "http://api.sengab.com/v1/results/"
-  val CATEGORY_PATH = "http://api.sengab.com/v1/categories/"
-  val PROJECT_PATH = "http://api.sengab.com/v1/projects/"
-  val USER_PATH = "http://api.sengab.com/v1/users/"
+  // URLs
+  val StatsPath = "http://api.sengab.com/v1/stats/"
+  val ResultPath = "http://api.sengab.com/v1/results/"
+  val CategoryPath = "http://api.sengab.com/v1/categories/"
+  val ProjectPath = "http://api.sengab.com/v1/projects/"
+  val UserPath = "http://api.sengab.com/v1/users/"
 
-  val CREATED = "/created_projects"
-  val CONTRIBUTIONS = "/contributions"
+  val Created = "/created_projects"
+  val Contributions = "/contributions"
+
+  // IDs
+  val UserIDPrefix = "user::"
+  val ActivityIDPrefix = "activity::"
 
   /**
     * Transforms a JsArray using the provided Reads; cumulating errors.

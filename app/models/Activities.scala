@@ -1,5 +1,6 @@
 package models
 
+import helpers.Helper
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
@@ -27,7 +28,7 @@ object Project {
 
   private val genField = (__ \ "url").json.update(
     of[JsString].map { jsStr =>
-      JsString(helpers.Helper.PROJECT_PATH + jsStr.value.trim)
+      JsString(Helper.ProjectPath + jsStr.value.trim)
     }
   )
 

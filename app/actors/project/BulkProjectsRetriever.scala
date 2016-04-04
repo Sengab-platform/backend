@@ -3,12 +3,12 @@ package actors.project
 import actors.AbstractBulkDBHandler
 import actors.AbstractBulkDBHandler.{BulkResult, ItemResult}
 import actors.AbstractDBActor.Terminate
-import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonArray
+import helpers.Helper
 import messages.ProjectManagerMessages.ListProjects
 import models.Response
-import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
+import models.errors.GeneralErrors.CouldNotParseJSON
 import models.project.Project.DetailedProject
 import play.api.Logger
 import play.api.libs.json.{JsObject, _}
@@ -63,18 +63,18 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
 
         val projectObj = projectItem.as[JsObject]
         // add project url to the json retrieved
-        val modifiedJson = projectObj + ("url" -> JsString(helpers.Helper.PROJECT_PATH + (projectObj \ "id").as[String]))
+        val modifiedJson = projectObj + ("url" -> JsString(Helper.ProjectPath + (projectObj \ "id").as[String]))
 
         // add owner url to the json retrieved
         val jsonTransformer = (__ \ 'owner).json.update(
           __.read[JsObject].map { o => o ++ Json.obj("url" ->
-            JsString(helpers.Helper.USER_PATH + (projectObj \ "owner" \ "id").as[String]))
+            JsString(Helper.UserPath + (projectObj \ "owner" \ "id").as[String]))
           }
         )
         // add category url to the json retrieved
         val jsonTransformer_2 = (__ \ 'category).json.update(
           __.read[JsObject].map { o => o ++ Json.obj("url" ->
-            JsString(helpers.Helper.CATEGORY_PATH + (projectObj \ "category" \ "category_id").as[String]))
+            JsString(Helper.CategoryPath + (projectObj \ "category" \ "category_id").as[String]))
           }
         )
 
