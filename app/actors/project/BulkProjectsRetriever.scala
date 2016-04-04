@@ -3,12 +3,11 @@ package actors.project
 import actors.AbstractBulkDBHandler
 import actors.AbstractBulkDBHandler.{BulkResult, ItemResult}
 import actors.AbstractDBActor.Terminate
-import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonArray
 import messages.ProjectManagerMessages.ListProjects
 import models.Response
-import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
+import models.errors.GeneralErrors.CouldNotParseJSON
 import models.project.Project.DetailedProject
 import play.api.Logger
 import play.api.libs.json.{JsObject, _}
@@ -27,7 +26,7 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
       // received new item , aggregate it to the final result Array
       Logger.info(s"actor ${self.path} - received msg : ${ItemResult(jsonObject)}")
 
-      if (jsonObject.get("id") != DBUtilities.DBConfig.EMPTY_JSON_DOC) {
+      if (!jsonObject.isEmpty) {
         appendFinalResult(jsonObject)
       } else {
         unhandled(jsonObject)
