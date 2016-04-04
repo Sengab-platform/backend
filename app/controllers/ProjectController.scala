@@ -7,7 +7,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import auth.services.AuthEnvironment
-import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails, ListProjects}
+import messages.ProjectManagerMessages.{CreateProject, GetProjectDetails, ListProjects, SearchProjects}
 import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{AskTimeoutError, BadJSONError}
@@ -48,8 +48,6 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   //  get specific project
   def getProjectDetails(projectId: String) = Action.async {
     receptionist ? GetProjectDetails(projectId) map {
-      // TODO fix this :
-
       case Response(json) =>
         Ok(json)
       case error: Error =>
@@ -99,7 +97,20 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   }
 
   //  search in projects (paginated)
-  def searchProjects(keyword: String, offset: Int, limit: Int) = TODO
+  def searchProjects(keyword: String, offset: Int, limit: Int) = Action.async {
+    receptionist ? SearchProjects(keyword, offset, limit) map {
+      case Response(json) =>
+        Ok(json)
+      case error: Error =>
+        error.result
+    } recover {
+      case e: TimeoutException =>
+        AskTimeoutError("Failed to search for projects",
+          "Ask Timeout Exception on Actor Receptionist",
+          this.getClass.toString).result
+
+    }
+  }
 
 
   //  list stats of a project
