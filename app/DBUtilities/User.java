@@ -188,17 +188,17 @@ public class User {
                 if (throwable instanceof DocumentDoesNotExistException){
                     logger.info ("DB: Failed to partial update user with ID: {}, no user exists with this id.",userId);
 
-                    return Observable.error (new DocumentDoesNotExistException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
+                    return Observable.error (new DocumentDoesNotExistException (String.format ("DB: Failed to partial update user with ID: $1, no user exists with this id.",userId)));
 
                 }else if (throwable instanceof CASMismatchException){
                     //// TODO: 4/1/16 needs more accurate handling in the future.
                     logger.info ("DB: Failed to partial update user with ID: {}, CAS value is changed.",userId);
 
-                    return Observable.error (new CASMismatchException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
+                    return Observable.error (new CASMismatchException (String.format ("DB: Failed to partial update user with ID: $1, CAS value is changed.",userId)));
                 } else {
                     logger.info ("DB: Failed to partial update user with ID: {}, General DB exception.",userId);
 
-                    return Observable.error (new CouchbaseException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
+                    return Observable.error (new CouchbaseException (String.format ("Failed to partial update user with ID: $1 , General DB exception.",userId)));
                 }
             });
     }
@@ -217,7 +217,7 @@ public class User {
 
         Logger.info ("DB: Adding 1 to contributions count of user with id: {}",userId);
 
-        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + "aUser")).useKeys (Expression.s (userId))
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " aUser")).useKeys (Expression.s (userId))
         .set ("stats.contributions",Expression.x ("stats.contributions + " + 1 ))
         .returning (Expression.x ("stats.contributions, meta(aUser).id"))))
         .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
@@ -230,11 +230,11 @@ public class User {
                 //// TODO: 4/1/16 needs more accurate handling in the future.
                 logger.info ("DB: Failed to add 1 to contributions count of user with id: {}",userId);
 
-                return Observable.error (new CASMismatchException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of user with id: $1, General DB exception.",userId)));
             } else {
                 logger.info ("DB: Failed to add 1 to contributions count of user with id: {}",userId);
 
-                return Observable.error (new CouchbaseException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of user with id: $1, General DB exception.",userId)));
             }
       }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
