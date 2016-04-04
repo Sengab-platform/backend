@@ -16,18 +16,6 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandler(out) {
 
   override val ErrorMsg: String = "Retrieving user info failed"
 
-  override def onComplete: () => Unit = {
-    () => {
-      self ! Terminate
-    }
-  }
-
-  override def onNext(): (JsonObject) => Unit = {
-    doc: JsonObject => {
-      self ! QueryResult(doc)
-    }
-  }
-
   override def receive = {
 
     case GetUserProfile(userID) =>
