@@ -56,7 +56,7 @@ class CategoriesRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
     val categories = parsedJson.value.seq.map { categoryItem => {
       val DBCategoryObj = categoryItem.as[JsObject]
       // add category url to the json retrieved
-      val FullCategoryObj = DBCategoryObj + ("url" -> JsString(helpers.Helper.PROJECT_PATH + (DBCategoryObj \ "id").as[String]))
+      val FullCategoryObj = DBCategoryObj + ("url" -> JsString(helpers.Helper.CATEGORY_PATH + (DBCategoryObj \ "id").as[String]))
       FullCategoryObj.as[DetailedCategory]
     }
     }
