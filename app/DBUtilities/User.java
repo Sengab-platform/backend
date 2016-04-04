@@ -186,22 +186,59 @@ public class User {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof DocumentDoesNotExistException){
-                    logger.info ("DB: Failed to Partial update user with ID: {}, no user exists with this id.",userId);
+                    logger.info ("DB: Failed to partial update user with ID: {}, no user exists with this id.",userId);
 
                     return Observable.error (new DocumentDoesNotExistException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
 
                 }else if (throwable instanceof CASMismatchException){
                     //// TODO: 4/1/16 needs more accurate handling in the future.
-                    logger.info ("DB: Failed to Partial update user with ID: {}, CAS value is changed.",userId);
+                    logger.info ("DB: Failed to partial update user with ID: {}, CAS value is changed.",userId);
 
                     return Observable.error (new CASMismatchException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
                 } else {
-                    logger.info ("DB: Failed to Partial update user with ID: {}, General DB exception.",userId);
+                    logger.info ("DB: Failed to partial update user with ID: {}, General DB exception.",userId);
 
                     return Observable.error (new CouchbaseException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
                 }
             });
     }
+
+    /**
+     * Adds 1 to the contributions count of the user with the provided ID.
+     * @param userId The ID of the user to update.
+     * @return An observable of Json object containing the user id and the new contributions count.
+     */
+    public static Observable<JsonObject> add1ToUserContributionCount(String userId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Adding 1 to contributions count of user with id: {}",userId);
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + "aUser")).useKeys (Expression.s (userId))
+        .set ("stats.contributions",Expression.x ("stats.contributions + " + 1 ))
+        .returning (Expression.x ("stats.contributions, meta(aUser).id"))))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to add 1 to contributions count of user with id: {}",userId);
+
+                return Observable.error (new CASMismatchException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
+            } else {
+                logger.info ("DB: Failed to add 1 to contributions count of user with id: {}",userId);
+
+                return Observable.error (new CouchbaseException (String.format ("Failed to update user with ID: $1 , General DB exception.",userId)));
+            }
+      }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
     /**
      * Update a user. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
      * @param userId The id of the user to be updated .
