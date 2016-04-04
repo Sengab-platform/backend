@@ -1,7 +1,7 @@
 package actors.project
 
 import akka.actor.{Actor, Props}
-import messages.ProjectManagerMessages.{GetProjectDetails, ListProjects}
+import messages.ProjectManagerMessages.{GetProjectDetails, ListProjects, SearchProjects}
 import play.api.Logger
 
 class ProjectRetriever extends Actor {
@@ -14,12 +14,16 @@ class ProjectRetriever extends Actor {
 
 
     case ListProjects(filter, offset, limit) =>
-      Logger.info(s"actor ${self.path} - received msg : ${ListProjects(filter, offset, limit)} ")
 
+      Logger.info(s"actor ${self.path} - received msg : ${ListProjects(filter, offset, limit)} ")
       val bulkProjectsRetriever = context.actorOf(BulkProjectsRetriever.props(sender()), "bulkProjectsRetriever")
       bulkProjectsRetriever forward ListProjects(filter, offset, limit)
 
+    case SearchProjects(keyword, offset, limit) =>
 
+      Logger.info(s"actor ${self.path} - received msg : ${SearchProjects(keyword, offset, limit)} ")
+      val projectsSearchRetriever = context.actorOf(ProjectsSearchRetriever.props(sender()), "projectsSearchRetriever")
+      projectsSearchRetriever forward SearchProjects(keyword, offset, limit)
   }
 }
 

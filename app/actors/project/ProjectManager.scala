@@ -32,9 +32,9 @@ class ProjectManager extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectStats(projectID)} ")
       projectRetriever forward GetProjectStats(projectID)
 
-    case SearchProjects(keyword) =>
-      Logger.info(s"actor ${self.path} - received msg : ${SearchProjects(keyword)} ")
-      projectRetriever forward SearchProjects(keyword)
+    case SearchProjects(keyword,offset,limit) =>
+      Logger.info(s"actor ${self.path} - received msg : ${SearchProjects(keyword,offset,limit)} ")
+      projectRetriever forward SearchProjects(keyword,offset,limit)
 
   }
 }
