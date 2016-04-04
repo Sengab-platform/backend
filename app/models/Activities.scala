@@ -3,30 +3,19 @@ package models
 import play.api.libs.json.Json
 
 case class Project(
-                    project_id: String,
-                    project_name: String,
-                    image: String)
+                    id: String,
+                    name: String,
+                    url: Option[String] = None)
 
 object Project {
   implicit val f = Json.format[Project]
 }
 
-case class Activity(
-                     activity_id: String,
-                     activity_type: String,
-                     created_at: String,
-                     project: Project
-                   )
-
-object Activity {
-  implicit val f = Json.format[Activity]
-
-}
-
 case class Activities(
-                       id: String,
-                       entity_type: String,
-                       activities: Seq[Activity]
+                       id: Int,
+                       activity_type: String,
+                       created_at: String,
+                       project: Project
                      )
 
 object Activities {
