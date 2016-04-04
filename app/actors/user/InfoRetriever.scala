@@ -1,7 +1,8 @@
 package actors.user
 
-import actors.AbstractDBHandlerActor
-import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
+import actors.AbstractDBActor.Terminate
+import actors.AbstractDBHandler
+import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
 import helpers.Helper
@@ -11,7 +12,7 @@ import models.{Response, UserInfo}
 import play.Logger
 import play.api.libs.json.{JsObject, JsString, Json}
 
-class InfoRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
+class InfoRetriever(out: ActorRef) extends AbstractDBHandler(out) {
 
   override val ErrorMsg: String = "Retrieving user info failed"
 

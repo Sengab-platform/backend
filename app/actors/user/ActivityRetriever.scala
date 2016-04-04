@@ -1,7 +1,8 @@
 package actors.user
 
-import actors.AbstractDBHandlerActor
-import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
+import actors.AbstractDBActor.Terminate
+import actors.AbstractDBHandler
+import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
 import messages.UserManagerMessages.ListUserActivity
@@ -10,7 +11,7 @@ import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import play.Logger
 import play.api.libs.json._
 
-class ActivityRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
+class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
 
   override val ErrorMsg: String = "Retrieving user activity failed"
 

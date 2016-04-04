@@ -16,7 +16,7 @@ object ProjectManagerMessages {
 
   case class GetProjectStats(projectID: String) extends ProjectMessage
 
-  case class SearchProjects(keyword: String) extends ProjectMessage
+  case class SearchProjects(keyword: String, offset: Int, limit: Int) extends ProjectMessage
 
   case class ValidateProject(project: NewProject, userID: String) extends ProjectMessage
 

@@ -1,7 +1,8 @@
 package actors.project
 
-import actors.AbstractDBHandlerActor
-import actors.AbstractDBHandlerActor.{QueryResult, Terminate}
+import actors.AbstractDBActor.Terminate
+import actors.AbstractDBHandler
+import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
 import messages.ProjectManagerMessages.GetProjectDetails
@@ -13,7 +14,7 @@ import play.api.Logger
 import play.api.libs.json._
 
 
-class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandlerActor(out) {
+class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandler(out) {
 
   // this msg would sent to user when error happens while querying from db
   override val ErrorMsg: String = "failed to get project details"
