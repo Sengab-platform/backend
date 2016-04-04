@@ -90,7 +90,7 @@ public class Category {
     /**
      * Bulk gets all categories with limit and offset. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param limit the maximum number of document returned.
-     * @param offset an index to determine where to start form when getting results.
+     * @param offset an index to determine where how much result to omit from the beginning.
      * @return an observable of json object that contains all the resulted categories with id field added.
      */
     public static Observable<JsonObject> bulkGetCategories(int offset,int limit){

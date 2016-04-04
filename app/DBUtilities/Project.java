@@ -13,7 +13,6 @@ import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
-import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.query.dsl.Sort;
@@ -114,7 +113,7 @@ public class Project {
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
             .where (Expression.x ("meta(project).id").eq (Expression.s (projectId)))))
             .timeout (500,TimeUnit.MILLISECONDS)
-            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryIntoProject (projectId, queryRow))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> DBConfig.embedIdAndCategoryIntoProject (projectId, queryRow))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
             .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -131,7 +130,7 @@ public class Project {
      * Bulk gets projects sorts them using any document field and sets a limit and offset for the results.
      * @param sortBy A Json field in the project document to sort the results with.
      * @param limit the maximum number of document returned.
-     * @param offset an index to determine where to start form when getting results.
+     * @param offset an index to determine where how much result to omit from the beginning.
      * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
      */
 
@@ -149,7 +148,7 @@ public class Project {
             .orderBy (Sort.desc (Expression.x ("project." + Expression.x (sortBy))))
             .limit (limit).offset (offset)))
             .timeout (1000,TimeUnit.MILLISECONDS)
-            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryIntoProject (queryRow.value ().getString ("id"), queryRow))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> DBConfig.embedIdAndCategoryIntoProject (queryRow.value ().getString ("id"), queryRow))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                      .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -165,7 +164,7 @@ public class Project {
     /**
      * Bulk gets projects sorts them by popularity and sets a limit and offset for the results.
      * @param limit the maximum number of document returned.
-     * @param offset an index to determine where to start form when getting results.
+     * @param offset an index to determine where how much result to omit from the beginning.
      * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
      */
 
@@ -183,7 +182,7 @@ public class Project {
                 .where(Expression.x ("project.is_featured")).orderBy (Sort.desc (Expression.x ("project.enrollments_count")))
                 .limit (limit).offset (offset)))
                 .timeout (1000,TimeUnit.MILLISECONDS)
-                .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> embedIdAndCategoryIntoProject (queryRow.value ().getString ("id"), queryRow))
+                .flatMap (AsyncN1qlQueryResult::rows).flatMap (queryRow -> DBConfig.embedIdAndCategoryIntoProject (queryRow.value ().getString ("id"), queryRow))
                 .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                         .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
                 .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -200,7 +199,7 @@ public class Project {
      * Bulk gets projects that have a specific category_id sorts them by popularity and sets a limit and offset for the results.
      * @param categoryId The category id to get projects for.
      * @param limit the maximum number of document returned.
-     * @param offset an index to determine where to start form when getting results.
+     * @param offset an index to determine where how much result to omit from the beginning.
      * @return An observable of json object that contains all the resulted projects merged with their categories and with id field added.
      */
     public static Observable<JsonObject> getProjectWithSpecificCategory(String categoryId, int offset, int limit){
@@ -217,7 +216,7 @@ public class Project {
                 .where (Expression.x ("project.category_id").eq (Expression.s (categoryId)))
                 .orderBy (Sort.desc (Expression.x ("project.enrollments_count"))).limit (limit).offset (offset)))
                 .timeout (1000,TimeUnit.MILLISECONDS)
-                .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
+                .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> DBConfig.embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
                 .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                         .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
                 .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -235,7 +234,7 @@ public class Project {
      * Searches for projects with name containing the provided string sorts them by popularity and sets a limit and offset for the results.
      * @param searchText the String to look for in the projects name.
      * @param limit the maximum number of document returned.
-     * @param offset an index to determine where to start form when getting results.
+     * @param offset an index to determine where how much result to omit from the beginning.
      * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
      */
 
@@ -251,7 +250,7 @@ public class Project {
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
             .where(Expression.x ("project.name").like (Expression.s ("%" + searchText + "%")))
             .orderBy (Sort.desc (Expression.x ("project.enrollments_count"))).limit (limit).offset (offset)))
-            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> DBConfig.embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                     .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -343,12 +342,4 @@ public class Project {
     }
 
 
-    private static Observable<JsonObject> embedIdAndCategoryIntoProject (String projectId, AsyncN1qlQueryRow queryRow) {
-        String categoryId = queryRow.value ().getObject ("project").getString ("category_id");
-        JsonObject categoryObject = queryRow.value ().getObject ("category");
-        JsonObject userCategoryObject = JsonObject.create ()
-                .put ("name",categoryObject.getString ("name")).put ("category_id",categoryId);
-        JsonObject projectObject = queryRow.value ().getObject ("project").removeKey ("category_id");
-        return Observable.just (projectObject.put ("id",projectId).put ("category",userCategoryObject));
-    }
 }

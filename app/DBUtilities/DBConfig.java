@@ -5,7 +5,9 @@ import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import play.Logger;
+import rx.Observable;
 
 
 public class DBConfig {
@@ -41,6 +43,15 @@ public class DBConfig {
             logger.info ("DB: DB failed to initialize");
             return OPEN_BUCKET_ERROR;
         }
+    }
+
+    public static Observable<JsonObject> embedIdAndCategoryIntoProject (String projectId, AsyncN1qlQueryRow queryRow) {
+        String categoryId = queryRow.value ().getObject ("project").getString ("category_id");
+        JsonObject categoryObject = queryRow.value ().getObject ("category");
+        JsonObject userCategoryObject = JsonObject.create ()
+                .put ("name",categoryObject.getString ("name")).put ("category_id",categoryId);
+        JsonObject projectObject = queryRow.value ().getObject ("project").removeKey ("category_id");
+        return Observable.just (projectObject.put ("id",projectId).put ("category",userCategoryObject));
     }
 
      static String getIdFromJson(JsonObject object){

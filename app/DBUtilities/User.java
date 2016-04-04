@@ -16,6 +16,7 @@ import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.dsl.Expression;
+import com.couchbase.client.java.query.dsl.Sort;
 import com.couchbase.client.java.util.retry.RetryBuilder;
 import play.Logger;
 import rx.Observable;
@@ -23,6 +24,7 @@ import rx.Observable;
 import java.util.concurrent.TimeUnit;
 
 import static DBUtilities.DBConfig.bucket;
+import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
 
 /**
@@ -83,6 +85,42 @@ public class User {
             })
             .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
+    }
+
+    /**
+     * Bulk gets enrolled projects for the provided user id, sorts them by name and sets a limit and offset for the results.
+     * @param userId The user id to get enrolled projects for.
+     * @param offset an index to determine where how much result to omit from the beginning.
+     * @param limit the maximum number of document returned.
+     * @return an observable of json object that contains all the resulted projects merged with their categories and with id field added.
+     */
+    public static Observable<JsonObject> getEnrolledProjectsForUser(String userId,int offset, int limit){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+        logger.info ("DB: Bulk getting enrolled projects for user with id: {} with offset: {} and limit: {}", userId,offset,limit);
+
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id,project, category"))
+            .from (Expression.x (DBConfig.BUCKET_NAME + " aUser")).useKeys (Expression.s (userId))
+            .join (Expression.x (DBConfig.BUCKET_NAME + " project")).onKeys (Expression.x ("aUser.enrolled_projects"))
+            .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
+            .orderBy (Sort.asc (Expression.x ("project.name"))).limit (limit).offset (offset)))
+            .timeout (1000,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows)
+            .flatMap (row -> DBConfig.embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                logger.info ("DB: Failed to Bulk get enrolled projects for user with id: {} with offset: {} and limit: {}",userId,limit,offset);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get enrolled projects for user with id: $1 with offset: $2 and limit: $3, general DB exception.",userId,offset,limit)));
+            })
+            .defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+
     }
 
     /**

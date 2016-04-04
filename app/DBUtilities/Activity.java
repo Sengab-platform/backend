@@ -63,6 +63,8 @@ public class Activity {
     /**
      * Get activities of a user using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param activityId the id of the activities document to get.
+     * @param offset an index to determine where how much result to omit from the beginning.
+     * @param limit the maximum number of document returned.
      * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
      */
     public static Observable<JsonObject> getActivityWithId(String activityId,int offset,int limit){
