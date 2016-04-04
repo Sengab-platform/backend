@@ -35,12 +35,12 @@ class Receptionist extends Actor {
 
     case msg: CategoryMessage =>
       Logger.info(s"actor ${self.path} - received msg : $msg")
-    //      categoryManager forward msg
+      categoryManager forward msg
 
 
     case msg: EnrollmentMessage =>
       Logger.info(s"actor ${self.path} - received msg : $msg ")
-      enrollmentManager forward msg
+    //  enrollmentManager forward msg
 
 
     case msg: ContributionMessage =>
