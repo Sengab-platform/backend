@@ -27,6 +27,7 @@ import static DBUtilities.DBConfig.bucket;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
 import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayPut;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayRemove;
 
 /**
  * Created by rashwan on 3/28/16.
@@ -240,6 +241,12 @@ public class User {
       }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
 
+    /**
+     * Adds a project with the provided ID to the user's enrolled projects list.
+     * @param userId The ID for the user to add the project to.
+     * @param projectId The ID for the project to add to the user's enrolled projects.
+     * @return An observable of Json object that contains the ID of the user and the added project ID, if the operation succeeds.
+     */
     public static Observable<JsonObject> addProjectToEnrolledProjects(String userId,String projectId){
         try {
             checkDBStatus();
@@ -247,7 +254,7 @@ public class User {
             return Observable.error(e);
         }
 
-        logger.info ("DB: Failed to add project with ID: {} to enrolled projects for user with id: {}",userId,projectId);
+        logger.info ("DB: Adding project with ID: {} to enrolled projects for user with id: {}",userId,projectId);
 
         return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
         .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
@@ -269,6 +276,46 @@ public class User {
                 logger.info ("DB: Failed to add project with ID: {} to enrolled projects for user with id: {}",userId,projectId);
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+
+    }
+
+    /**
+     * Removes a project with the provided ID from the user's enrolled projects list.
+     * @param userId The ID for the user to remove the project from.
+     * @param projectId The ID for the project to remove from the user's enrolled projects.
+     * @return An observable of Json object that contains the ID of the user, if the operation succeeds.
+     */
+    public static Observable<JsonObject> removeProjectFromEnrolledProjects(String userId,String projectId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info ("DB: Removing project with ID: {} to enrolled projects for user with id: {}",userId,projectId);
+
+        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
+        .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
+                arrayRemove (Expression.x ("enrolled_projects"),Expression.s (projectId)))
+        .returning (Expression.x ("meta(project).id"))))
+        .timeout (1000,TimeUnit.MILLISECONDS)
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to remove project with ID: {} to enrolled projects for user with id: {}",userId,projectId);
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to remove project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
+            } else {
+                logger.info ("DB: Failed to remove project with ID: {} to enrolled projects for user with id: {}",userId,projectId);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
             }
         }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
 
