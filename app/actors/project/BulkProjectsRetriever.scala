@@ -5,7 +5,7 @@ import actors.AbstractBulkDBHandler.{BulkResult, ItemResult}
 import actors.AbstractDBActor.Terminate
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonArray
-import helpers.Helper
+import helpers.Helper._
 import messages.ProjectManagerMessages.ListProjects
 import models.Response
 import models.errors.GeneralErrors.CouldNotParseJSON
@@ -50,7 +50,6 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
       context.stop(self)
   }
 
-
   /**
     * convert Json Object got from DB to a proper Response
     */
@@ -62,21 +61,15 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
       val projects = parsedJson.value.seq.map { projectItem => {
 
         val projectObj = projectItem.as[JsObject]
+
         // add project url to the json retrieved
-        val modifiedJson = projectObj + ("url" -> JsString(Helper.ProjectPath + (projectObj \ "id").as[String]))
+        val modifiedJson = addField(projectObj, "url", helpers.Helper.ProjectPath + (projectObj \ "id").as[String])
 
         // add owner url to the json retrieved
-        val jsonTransformer = (__ \ 'owner).json.update(
-          __.read[JsObject].map { o => o ++ Json.obj("url" ->
-            JsString(Helper.UserPath + (projectObj \ "owner" \ "id").as[String]))
-          }
-        )
+        val jsonTransformer = addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath + (projectObj \ "owner" \ "id").as[String])
+
         // add category url to the json retrieved
-        val jsonTransformer_2 = (__ \ 'category).json.update(
-          __.read[JsObject].map { o => o ++ Json.obj("url" ->
-            JsString(Helper.CategoryPath + (projectObj \ "category" \ "category_id").as[String]))
-          }
-        )
+        val jsonTransformer_2 = addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath + (projectObj \ "category" \ "category_id").as[String])
 
         val fullProject = modifiedJson
           .transform(jsonTransformer).get
@@ -92,10 +85,10 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
     } catch {
       case e: Exception => None
     }
-
   }
 }
 
 object BulkProjectsRetriever {
   def props(out: ActorRef): Props = Props(new BulkProjectsRetriever(out))
 }
+
