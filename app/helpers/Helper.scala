@@ -19,9 +19,9 @@ object Helper {
 
   /**
     * Transforms a JsArray using the provided Reads; cumulating errors.
-    * Implemented by a Scala developer on Google Forms.
     * Used to transform a list of objects.
     *
+    * @author David P
     * @param reads the transforming Reads
     * @tparam A the Type deserialized by the given Reads
     * @return a JsArray transforming Reads
