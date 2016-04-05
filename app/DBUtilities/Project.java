@@ -265,6 +265,31 @@ public class Project {
 
     }
 
+    public static Observable<JsonObject> getProjectName(String projectId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Getting project name for project with ID: {}",projectId);
+
+        return mBucket.query (N1qlQuery.simple (select (Expression.x ("name")).from (DBConfig.BUCKET_NAME)
+        .useKeys (Expression.s (projectId)))).timeout (1000,TimeUnit.MILLISECONDS)
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+
+            logger.info ("DB: Failed to Get project name for project with ID: {}, General DB exception",projectId);
+
+            return Observable.error (new CouchbaseException (String.format ("Failed to get project naem for project  with ID: $1, General DB exception",projectId)));
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+
+    }
+
     /**
      * Adds 1 to the contributions count of the project with the provided ID.
      * @param projectId The ID of the project to update.

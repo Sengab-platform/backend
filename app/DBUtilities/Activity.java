@@ -20,10 +20,13 @@ import com.couchbase.client.java.util.retry.RetryBuilder;
 import play.Logger;
 import rx.Observable;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static DBUtilities.DBConfig.EMPTY_JSON_DOC;
 import static com.couchbase.client.java.query.Select.select;
+import static com.couchbase.client.java.query.Update.update;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayAppend;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -60,6 +63,44 @@ public class Activity {
 
     }
 
+    /**
+     * Adds an activity to the user's activities list.
+     * @param projectId The project id which the user made the activity on.
+     * @param activityId The id of the activity document related to this user.
+     * @param activityObject The activity content.
+     * @return An observable of Json object containing the activity which was appended to the list and the id of the activity document.
+     */
+    public static Observable<JsonObject> addActivity(String projectId,String activityId,JsonObject activityObject){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        return Project.getProjectName (projectId)
+        .flatMap (projectObject -> embedProjectNameInActivity (projectObject,activityObject))
+        .flatMap (activity -> mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " activity"))
+        .useKeys (Expression.s (activityId)).set (Expression.x ("activities"),
+            arrayAppend(Expression.x ("activities"),Expression.x (activity)))
+        .returning (Expression.x ("activities[-1] as activity,meta(activity).id"))))).timeout (1000,TimeUnit.MILLISECONDS)
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to add a new activity with contents: {} to activity with id: {}",activityObject,activityId);
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2, General DB exception.",activityObject.toString (),activityId)));
+            } else {
+                logger.info ("DB: Failed to add a new activity with contents: {} to activity with id: {}",activityObject,activityId);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2, General DB exception.",activityObject.toString (),activityId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
     /**
      * Get activities of a user using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param activityId the id of the activities document to get.
@@ -152,6 +193,13 @@ public class Activity {
                     return Observable.error (new CouchbaseException ("Failed to delete activity, General DB exception "));
                 }
             });
+    }
+
+    private static Observable<JsonObject> embedProjectNameInActivity(JsonObject projectObject,JsonObject activityObject){
+        UUID activityId = UUID.randomUUID ();
+        String projectName = projectObject.getString ("name");
+        activityObject.getObject ("project").put ("name",projectName);
+        return Observable.just (activityObject.put ("id",activityId.toString ()));
     }
 
     private static void checkDBStatus () {
