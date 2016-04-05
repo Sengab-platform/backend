@@ -35,4 +35,24 @@ object Helper {
       } map JsArray
     case _ => JsError("expected JsArray")
   }
+
+  //to add a JS Transformer to be used for adding a field in a sub Js Object
+  def addTransformer(TargetObjectPath: JsPath,
+                     NewKey: String,
+                     NewValue: String
+                    ): Reads[JsObject] = {
+    TargetObjectPath.json.update(
+      __.read[JsObject].map { o => o ++ Json.obj(NewKey ->
+        JsString(NewValue))
+      }
+    )
+  }
+
+  // to add a field directly to a given Js Object
+  def addField(TargetObject: JsObject,
+               NewKey: String,
+               NewValue: String): JsObject = {
+    TargetObject + (NewKey -> JsString(NewValue))
+  }
 }
+
