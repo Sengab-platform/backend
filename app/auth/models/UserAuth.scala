@@ -15,7 +15,7 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
   def create(main: BasicProfile, gender: Option[String], bio: Option[String],
              identities: List[BasicProfile]) {
 
-    val userID = "user::" + main.userId
+    val userID = Helper.UserIDPrefix + main.userId
     val first_name = main.firstName
     val last_name = main.lastName
     val image = Some(main.avatarUrl.get.split("\\?")(0))
@@ -28,8 +28,8 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
       val user = NewUser(
         userID, first_name = first_name, last_name = last_name, image = image,
         about = about, stats = stats, created_at = created_at,
-        contributions = Helper.USER_PATH + userID + Helper.CONTRIBUTIONS,
-        projects = Helper.USER_PATH + userID + Helper.CREATED)
+        contributions = Helper.UserPath + userID + Helper.Contributions,
+        projects = Helper.UserPath + userID + Helper.Created)
       DBUtilities.User.createUser(
         JsonObject.fromJson(
           Json.stringify(

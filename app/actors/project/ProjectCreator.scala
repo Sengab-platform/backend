@@ -5,6 +5,7 @@ import actors.AbstractDBHandler
 import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
+import helpers.Helper
 import messages.ProjectManagerMessages.CreateProject
 import models.Response
 import models.errors.Error
@@ -73,7 +74,7 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
         "id" -> JsString((parsedJson \ "id").as[String]),
         "name" -> JsString((parsedJson \ "name").as[String]),
         "created_at" -> JsString((parsedJson \ "created_at").as[String]),
-        "url" -> JsString(helpers.Helper.PROJECT_PATH + (parsedJson \ "id").as[String])))
+        "url" -> JsString(Helper.ProjectPath + (parsedJson \ "id").as[String])))
 
       Some(Response(jsResponse))
     } catch {

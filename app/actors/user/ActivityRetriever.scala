@@ -5,9 +5,10 @@ import actors.AbstractDBHandler
 import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
+import helpers.Helper
 import messages.UserManagerMessages.ListUserActivity
-import models.Response
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
+import models.{Activities, Response}
 import play.Logger
 import play.api.libs.json._
 
@@ -15,31 +16,12 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
 
   override val ErrorMsg: String = "Retrieving user activity failed"
 
-  /**
-    * called when the db query completes and all Json Documents retrieved
-    */
-  override def onComplete: () => Unit = {
-    () => {
-      self ! Terminate
-    }
-  }
-
-  /**
-    * called when the db query get data back as JsonDocument
-    */
-  override def onNext(): (JsonObject) => Unit = {
-    doc: JsonObject => {
-      self ! QueryResult(doc)
-    }
-  }
-
-
   override def receive = {
     case ListUserActivity(userID, offset, limit) =>
       Logger.info(s"actor ${self.path} - received msg : ${ListUserActivity(userID, offset, limit)} ")
 
       // Here we will send the result
-      executeQuery(DBUtilities.Activity.getActivityWithId("activity::" + userID, 6, 0))
+      executeQuery(DBUtilities.Activity.getActivityWithId(Helper.ActivityIDPrefix + userID, offset, limit))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")
@@ -67,42 +49,19 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
   /**
     * convert Json Document got from DB to a proper Response
     */
-
-  // TODO reimplement this method
-
-  def constructResponse(jsonObj: JsonObject): Option[Response] = {
-    Logger.info("OBJECT: " + jsonObj.get("id"))
-
-    //  try {
-    val parsedJson = Json.parse(jsonObj.toString).as[JsObject]
-    val modifiedParsedJson = parsedJson +
-      ("id" -> JsString(jsonObj.getString("id"))) +
-      ("entity_type" -> JsString("activity"))
-
-    val jsonTransformer = (__ \ 'activities \ 'project).json.update(
-      __.read[JsObject].map { o => o ++ Json.obj("project_url" ->
-        JsString("AAA"))
-      }
-    )
-
-    //    val jsonTransformer = (__ \ 'key25 \ 'key251).
-    //      json.copyFrom( (__ \ 'key2 \ 'key21).json.pick )
-
-
-    val fullResponse = modifiedParsedJson.transform(jsonTransformer).get
-    //      val jsonArray: JsArray = (parsedJson \ "activities").as[JsArray]
-
-    //val activities = fullResponse.as[Activities]
-
-    Some(Response(Json.toJson(fullResponse)))
-
-    //    } catch {
-    //      case e: Exception =>
-    //        Logger.info(e.getMessage)
-    //        None
-    //    }
+  def constructResponse(jsonObject: JsonObject): Option[Response] = {
+    try {
+      val parsedJson = Json.parse(jsonObject.toString)
+      val activityListTransform = (__ \ "activities")
+        .json.pickBranch(Helper.tfList(Activities.mongo2resp))
+      val activities = (parsedJson.transform(activityListTransform).get \ "activities")
+        .as[Seq[Activities]]
+      Some(Response(Json.toJson(activities)))
+    }
+    catch {
+      case e: Exception => None
+    }
   }
-
 
 }
 
