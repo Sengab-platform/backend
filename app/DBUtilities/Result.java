@@ -30,14 +30,14 @@ public class Result {
      * @param resultId The Json object to be the value of the document , it also has an Id field to use as the document key.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonObject> createResult(String resultId){
+    public static Observable<JsonObject> createResult(String resultId,JsonObject resultObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        JsonDocument resultDocument = JsonDocument.create (resultId,JsonObject.create ());
+        JsonDocument resultDocument = JsonDocument.create (resultId,resultObject);
 
         return mBucket.insert (resultDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)

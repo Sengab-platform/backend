@@ -7,7 +7,6 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.handler.timeout.TimeoutException;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
@@ -40,13 +39,13 @@ public class Activity {
      * @param activityId The id for the activity document to be created.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonObject> createActivity(String activityId){
+    public static Observable<JsonObject> createActivity(String activityId,JsonObject activityObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        JsonDocument activityDocument = JsonDocument.create (activityId,JsonObject.create ().put ("activities", JsonArray.create ()));
+        JsonDocument activityDocument = JsonDocument.create (activityId,activityObject);
 
         return mBucket.insert (activityDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)

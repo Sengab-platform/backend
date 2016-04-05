@@ -30,14 +30,14 @@ public class Stats {
      * @param statsId the id of the stats document to create.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonObject> createStats(String statsId){
+    public static Observable<JsonObject> createStats(String statsId,JsonObject statsObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        JsonDocument statsDocument = JsonDocument.create (statsId,JsonObject.create ());
+        JsonDocument statsDocument = JsonDocument.create (statsId,statsObject);
 
         return mBucket.insert (statsDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)

@@ -30,15 +30,15 @@ public class Contribution {
      * @param contributionJsonObject The Json object to be the value of the document , it also has an Id field to use as the document key.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonObject> createContribution(JsonObject contributionJsonObject){
+    public static Observable<JsonObject> createContribution(String projectId,String userId,JsonObject contributionJsonObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        String contributionId = DBConfig.getIdFromJson (contributionJsonObject);
-        JsonDocument contributionDocument = JsonDocument.create (contributionId,DBConfig.removeIdFromJson (contributionJsonObject));
+        String contributionId = "contribution::" + projectId + "::" + userId;
+        JsonDocument contributionDocument = JsonDocument.create (contributionId,contributionJsonObject);
 
         return mBucket.insert (contributionDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
