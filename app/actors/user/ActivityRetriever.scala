@@ -46,14 +46,12 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
       }
   }
 
-  /**
-    * convert Json Document got from DB to a proper Response
-    */
+  //todo enhancement
   def constructResponse(jsonObject: JsonObject): Option[Response] = {
     try {
       val parsedJson = Json.parse(jsonObject.toString)
       val activityListTransform = (__ \ "activities")
-        .json.pickBranch(Helper.tfList(Activities.mongo2resp))
+        .json.pickBranch(Helper.tfList(Activities.dp2resp))
       val activities = (parsedJson.transform(activityListTransform).get \ "activities")
         .as[Seq[Activities]]
       Some(Response(Json.toJson(activities)))
