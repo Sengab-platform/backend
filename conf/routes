@@ -50,7 +50,7 @@ GET           /users/:user_id/created_projects         controllers.UserControlle
 GET           /categories                              controllers.CategoryController.getCategories(offset:Int?=0,limit:Int?=20)
 
 # list projects of a category (paginated)
-#GET           /categories/:category_id                controllers.CategoryController.getProjectsForCategory(category_id,offset:Int?=0,limit:Int?=20)
+GET           /categories/:category_id                 controllers.CategoryController.getProjectsForCategory(category_id,offset:Int?=0,limit:Int?=20)
 
 
 ### Enrollment Requests ###

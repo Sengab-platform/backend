@@ -9,7 +9,7 @@ import helpers.Helper._
 import messages.ProjectManagerMessages.ListProjects
 import models.Response
 import models.errors.GeneralErrors.CouldNotParseJSON
-import models.project.Project.DetailedProject
+import models.project.Project.EmbeddedProject
 import play.api.Logger
 import play.api.libs.json.{JsObject, _}
 
@@ -75,7 +75,7 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
           .transform(jsonTransformer).get
           .transform(jsonTransformer_2).get
 
-        fullProject.as[DetailedProject]
+        fullProject.as[EmbeddedProject]
       }
       }
 
