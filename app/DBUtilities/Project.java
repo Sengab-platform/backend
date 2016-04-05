@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static DBUtilities.DBConfig.EMPTY_JSON_DOC;
 import static DBUtilities.DBConfig.bucket;
 import static com.couchbase.client.java.query.Select.select;
+import static com.couchbase.client.java.query.Update.update;
 
 public class Project {
     private static AsyncBucket mBucket;
@@ -264,7 +265,66 @@ public class Project {
 
     }
 
+    public static Observable<JsonObject> getProjectName(String projectId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
 
+        Logger.info ("DB: Getting project name for project with ID: {}",projectId);
+
+        return mBucket.query (N1qlQuery.simple (select (Expression.x ("name")).from (DBConfig.BUCKET_NAME)
+        .useKeys (Expression.s (projectId)))).timeout (1000,TimeUnit.MILLISECONDS)
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+
+            logger.info ("DB: Failed to Get project name for project with ID: {}, General DB exception",projectId);
+
+            return Observable.error (new CouchbaseException (String.format ("Failed to get project naem for project  with ID: $1, General DB exception",projectId)));
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+
+    }
+
+    /**
+     * Adds 1 to the contributions count of the project with the provided ID.
+     * @param projectId The ID of the project to update.
+     * @return An observable of Json object containing the project id and the new contributions count.
+     */
+    public static Observable<JsonObject> add1ToProjectContributionCount(String projectId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Adding 1 to contributions count of project with id: {}",projectId);
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " project")).useKeys (Expression.s (projectId))
+        .set ("contributions_count",Expression.x ("contributions_count + " + 1 ))
+        .returning (Expression.x ("contributions_count, meta(project).id"))))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to add 1 to contributions count of project with id: {}",projectId);
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of project with id: $1, General DB exception.",projectId)));
+            } else {
+                logger.info ("DB: Failed to add 1 to contributions count of project with id: {}",projectId);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of project with id: $1, General DB exception.",projectId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
     /**
      * Update a project. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
      * @param projectId The id of the project to be updated .

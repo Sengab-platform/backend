@@ -35,6 +35,22 @@ object Project {
                               stats: String
                             )
 
+  case class EmbeddedProject(
+                              id: String,
+                              name: String,
+                              owner: EmbeddedOwner,
+                              url: String,
+                              goal: Int,
+                              image: String,
+                              template_id: Int,
+                              created_at: String,
+                              brief_description: String,
+                              enrollments_count: Option[Int],
+                              contributions_count: Option[Int],
+                              is_featured: Boolean,
+                              category: EmbeddedCategory
+                            )
+
   object NewProject {
     implicit val newProjectProjectF = Json.format[NewProject]
   }
@@ -44,4 +60,7 @@ object Project {
     implicit val detailedProjectProjectF = Json.format[DetailedProject]
   }
 
+  object EmbeddedProject {
+    implicit val EmbeddedProjectF = Json.format[EmbeddedProject]
+  }
 }
