@@ -40,7 +40,6 @@ object User {
 case class NewUser(
                     id: String,
                     entity_type: String = "user",
-                    url: String,
                     first_name: Option[String],
                     last_name: Option[String],
                     image: Option[String],

@@ -16,6 +16,7 @@ import play.api.libs.json._
 class CategoryProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
 
   override val ErrorMsg: String = "Retrieving category failed"
+
   override def receive = {
     case RetrieveCategoryProjects(categoryID, offset, limit) =>
       Logger.info(s"actor ${self.path} - received msg : ${RetrieveCategoryProjects(categoryID, offset, limit)}")
@@ -61,12 +62,11 @@ class CategoryProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out
       // add owner url to the json retrieved
       val jsonTransformer = addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath + (ProjectObj \ "owner" \ "id").as[String])
 
-      // add category url to the json retrieved
-      val jsonTransformer_2 = addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath + (ProjectObj \ "category" \ "category_id").as[String])
+        // add category url to the json retrieved
+        .compose(addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath + (ProjectObj \ "category" \ "category_id").as[String]))
 
       val EmbeddedProject = ModifiedProject
         .transform(jsonTransformer).get
-        .transform(jsonTransformer_2).get
 
       EmbeddedProject.as[EmbeddedProject]
     }

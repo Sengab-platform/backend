@@ -16,7 +16,6 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
              identities: List[BasicProfile]) {
 
     val userID = Helper.UserIDPrefix + main.userId
-    val url = Helper.UserPath + userID
     val first_name = main.firstName
     val last_name = main.lastName
     val image = Some(main.avatarUrl.get.split("\\?")(0))
@@ -27,7 +26,7 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
 
     if (isSignUp) {
       val user = NewUser(
-        userID, url = url, first_name = first_name, last_name = last_name, image = image,
+        userID, first_name = first_name, last_name = last_name, image = image,
         about = about, stats = stats, created_at = created_at,
         contributions = Helper.UserPath + userID + Helper.Contributions,
         projects = Helper.UserPath + userID + Helper.Created)

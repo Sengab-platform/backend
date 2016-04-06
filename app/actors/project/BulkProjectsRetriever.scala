@@ -39,7 +39,7 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
         case Some(Response(jsonResult)) =>
           out ! Response(jsonResult)
 
-          // todo always send to out
+        // todo always send to out
         case None =>
           out ! CouldNotParseJSON("failed to get projects",
             "couldn't parse json retrieved from the db ", this.getClass.toString)
@@ -66,14 +66,16 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
         val modifiedJson = addField(projectObj, "url", helpers.Helper.ProjectPath + (projectObj \ "id").as[String])
 
         // add owner url to the json retrieved
-        val jsonTransformer = addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath + (projectObj \ "owner" \ "id").as[String])
+        val jsonTransformer =
+          addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath +
+            (projectObj \ "owner" \ "id").as[String])
 
-        // add category url to the json retrieved
-        val jsonTransformer_2 = addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath + (projectObj \ "category" \ "category_id").as[String])
+            // add category url to the json retrieved
+            .compose(addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath +
+            (projectObj \ "category" \ "category_id").as[String]))
 
         val fullProject = modifiedJson
           .transform(jsonTransformer).get
-          .transform(jsonTransformer_2).get
 
         fullProject.as[EmbeddedProject]
       }

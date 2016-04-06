@@ -10,7 +10,7 @@ import messages.UserManagerMessages.GetUserProfile
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import models.{Response, UserInfo}
 import play.Logger
-import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.libs.json.{JsObject, Json}
 
 class InfoRetriever(out: ActorRef) extends AbstractDBHandler(out) {
 
@@ -50,7 +50,8 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandler(out) {
     try {
       val parsedJson = Json.parse(jsonObject.toString).as[JsObject]
       val id = jsonObject.getString("id")
-      val fullResponse = parsedJson + ("id" -> JsString(id)) + ("url" -> JsString(Helper.UserPath + id))
+      //val fullResponse = parsedJson + ("id" -> JsString(id)) + ("url" -> JsString(Helper.UserPath + id))
+      val fullResponse = Helper.addField(parsedJson, "id", id) ++ Helper.addField(parsedJson, "url", Helper.UserPath + id)
       val user = Json.toJson(fullResponse.as[UserInfo])
       Some(Response(Json.toJson(user)))
     } catch {

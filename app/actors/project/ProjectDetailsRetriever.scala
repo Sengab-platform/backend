@@ -5,7 +5,7 @@ import actors.AbstractDBHandler
 import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
-import helpers.Helper
+import helpers.Helper._
 import messages.ProjectManagerMessages.GetProjectDetails
 import models.Response
 import models.errors.Error
@@ -63,24 +63,19 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandler(out) {
       val parsedJson = Json.parse(jsonObj.toString).as[JsObject]
 
       // add project url to the json retrieved
-      val modifiedJson = parsedJson + ("url" -> JsString(Helper.ProjectPath + jsonObj.get("id")))
+      val modifiedJson = addField(parsedJson, "url", helpers.Helper.ProjectPath + (parsedJson \ "id").as[String])
 
       // add owner url to the json retrieved
-      val jsonTransformer = (__ \ 'owner).json.update(
-        __.read[JsObject].map { o => o ++ Json.obj("url" ->
-          JsString(Helper.UserPath + jsonObj.getObject("owner").get("id")))
-        }
-      )
-      // add category url to the json retrieved
-      val jsonTransformer_2 = (__ \ 'category).json.update(
-        __.read[JsObject].map { o => o ++ Json.obj("url" ->
-          JsString(Helper.CategoryPath + jsonObj.getObject("category").get("category_id")))
-        }
-      )
+      val jsonTransformer =
+        addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath +
+          (parsedJson \ "owner" \ "id").as[String])
+
+          // add category url to the json retrieved
+          .compose(addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath +
+          (parsedJson \ "category" \ "category_id").as[String]))
 
       val fullResponse = modifiedJson
         .transform(jsonTransformer).get
-        .transform(jsonTransformer_2).get
 
       val project = fullResponse.as[DetailedProject]
 
