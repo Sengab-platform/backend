@@ -74,8 +74,8 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
       // Ask receptionist to get user enrolled projects
       receptionist ? ListProjectsOfUser(userId, EnrolledSort, offset, limit) map {
         // The receptionist got the activates
-        //        case Response(feed) =>
-        //          Ok(feed)
+        case Response(feed) =>
+          Ok(feed)
         // The receptionist failed to get user enrolled projects
         case error: Error =>
           error.result
@@ -96,8 +96,8 @@ class UserController @Inject()(@Named("receptionist") receptionist: ActorRef)
       // Ask receptionist to get user created projects
       receptionist ? ListProjectsOfUser(userId, CreatedSort, offset, limit) map {
         // The receptionist got the activates
-        //        case Response(feed) =>
-        //          Ok(feed)
+        case Response(feed) =>
+          Ok(feed)
         // The receptionist failed to get user created projects
         case error: Error =>
           error.result
