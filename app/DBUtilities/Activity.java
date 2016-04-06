@@ -90,11 +90,11 @@ public class Activity {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info ("DB: Failed to add a new activity with contents: {} to activity with id: {}",activityObject,activityId);
+                logger.info (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2",activityObject,activityId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2, General DB exception.",activityObject.toString (),activityId)));
             } else {
-                logger.info ("DB: Failed to add a new activity with contents: {} to activity with id: {}",activityObject,activityId);
+                logger.info (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2",activityObject,activityId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2, General DB exception.",activityObject.toString (),activityId)));
             }
@@ -113,7 +113,7 @@ public class Activity {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info ("DB: Getting activity with id: {} ,limit: {} and offset: {}",activityId,limit,offset);
+        logger.info (String.format ("DB: Getting activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset));
 
         int endIndex = offset + limit ;
         logger.info (endIndex + "");
@@ -127,7 +127,7 @@ public class Activity {
         .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
         .onErrorResumeNext (throwable -> {
-            logger.info ("DB: failed to get activity with id: {} ,limit: {} and offset: {}",activityId,limit,offset);
+            logger.info (String.format ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset));
 
             return Observable.error (new CouchbaseException (String.format ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset)));
         })

@@ -40,6 +40,7 @@ public class Contribution {
         String contributionId = "contribution::" + projectId + "::" + userId;
         JsonDocument contributionDocument = JsonDocument.create (contributionId,contributionJsonObject);
 
+        logger.info (String.format ("DB: Adding contribution with ID: $1",contributionId));
         return mBucket.insert (contributionDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                     .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
@@ -47,9 +48,13 @@ public class Contribution {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof DocumentAlreadyExistsException) {
-                    return Observable.error (new DocumentAlreadyExistsException ("Failed to create contribution, ID already exists"));
+                    logger.info (String.format ("DB: Failed to add contribution with ID: $1",contributionId));
+
+                    return Observable.error (new DocumentAlreadyExistsException (String.format ("Failed to create contribution with ID: $1 , ID already exists",contributionId)));
                 } else {
-                    return Observable.error (new CouchbaseException ("Failed to create contribution, General DB exception "));
+                    logger.info (String.format ("DB: Failed to add contribution with ID: $1",contributionId));
+
+                    return Observable.error (new CouchbaseException (String.format ("Failed to create contribution with ID: $1 , General DB exception ",contributionId)));
                 }
             }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
 
