@@ -82,6 +82,43 @@ public class Stats {
             .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
+
+    /**
+     * Adds 1 to the contributions count of the stats with the provided ID.
+     * @param statsId The ID of the stats to update.
+     * @return An observable of Json object containing the stats id and the new contributions count.
+     */
+    public static Observable<JsonObject> add1ToStatsContributionCount(String statsId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Adding 1 to contributions count of project with id: {}",statsId);
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " stats")).useKeys (Expression.s (statsId))
+        .set ("contributions_count",Expression.x ("contributions_count + " + 1 ))
+        .returning (Expression.x ("contributions_count, meta(stats).id"))))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to add 1 to contributions count of stats with id: {}",statsId);
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of stats with id: $1, General DB exception.",statsId)));
+            } else {
+                logger.info ("DB: Failed to add 1 to contributions count of stats with id: {}",statsId);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of stats with id: $1, General DB exception.",statsId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
     /**
      * Adds 1 to the enrollments count of the stats with the provided ID.
      * @param statsId The ID of the stats to update.
