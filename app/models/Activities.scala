@@ -16,7 +16,7 @@ case class Project(
 object Project {
 
   lazy val rec2db = coreReads
-  lazy val mongo2resp = (
+  lazy val db2resp = (
     (__ \ "url").json.copyFrom((__ \ "id").json.pick) and
       coreReads reduce
     ) andThen genField
@@ -43,15 +43,15 @@ case class Activities(
 
 object Activities {
 
-  lazy val req2mongo = (
+  lazy val req2db = (
     (__ \ "project").json.pickBranch(Project.rec2db) and
       coreReads
     ) reduce
-  lazy val mongo2resp = (
-    (__ \ "project").json.pickBranch(Project.mongo2resp) and
+  lazy val dp2resp = (
+    (__ \ "project").json.pickBranch(Project.db2resp) and
       coreReads
     ) reduce
-  implicit val mongoFmt = Json.format[Activities]
+  implicit val dbFmt = Json.format[Activities]
   private val coreReads = (
     (__ \ "id").json.pickBranch and
       (__ \ "activity_type").json.pickBranch and

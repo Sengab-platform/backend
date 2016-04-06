@@ -29,7 +29,8 @@ case class User(
                  about: Option[About],
                  stats: Option[Stats],
                  projects: Option[String], // the User created projects url
-                 contributions: Option[String] // the User contributions url
+                 contributions: Option[String],
+                 created_at: String // the User contributions url
                )
 
 object User {
@@ -53,7 +54,7 @@ object NewUser {
   implicit val NewUserF = Json.format[NewUser]
 }
 
-case class EmbeddedOwner(id: String,url:String, name: String, image: String)
+case class EmbeddedOwner(id: String, url: String, name: String, image: String)
 
 object EmbeddedOwner {
   implicit val embeddedOwnerF = Json.format[EmbeddedOwner]

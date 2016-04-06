@@ -5,11 +5,11 @@ import actors.AbstractBulkDBHandler.{BulkResult, ItemResult}
 import actors.AbstractDBActor.Terminate
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonArray
-import helpers.Helper
+import helpers.Helper._
 import messages.ProjectManagerMessages.SearchProjects
 import models.Response
 import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
-import models.project.Project.DetailedProject
+import models.project.Project.EmbeddedProject
 import play.api.Logger
 import play.api.libs.json._
 
@@ -62,44 +62,15 @@ class ProjectsSearchRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) 
   /**
     * convert Json Object got from DB to a proper Response
     */
-  override def constructResponse(jsonArray: JsonArray): Option[Response] = {
 
+  override def constructResponse(jsonArray: JsonArray): Option[Response] = {
     try {
       val parsedJson = Json.parse(jsonArray.toString).as[JsArray]
-      val projects = parsedJson.value.seq.map { projectItem => {
-
-        val projectObj = projectItem.as[JsObject]
-        // add project url to the json retrieved
-        val modifiedJson = projectObj + ("url" -> JsString(Helper.ProjectPath + (projectObj \ "id").as[String]))
-
-        // add owner url to the json retrieved
-        val jsonTransformer = (__ \ 'owner).json.update(
-          __.read[JsObject].map { o => o ++ Json.obj("url" ->
-            JsString(Helper.UserPath + (projectObj \ "owner" \ "id").as[String]))
-          }
-        )
-        // add category url to the json retrieved
-        val jsonTransformer_2 = (__ \ 'category).json.update(
-          __.read[JsObject].map { o => o ++ Json.obj("url" ->
-            JsString(Helper.CategoryPath + (projectObj \ "category" \ "category_id").as[String]))
-          }
-        )
-
-        val fullProject = modifiedJson
-          .transform(jsonTransformer).get
-          .transform(jsonTransformer_2).get
-
-        fullProject.as[DetailedProject]
-      }
-      }
-
+      val projects: Seq[EmbeddedProject] = BulkProjectsResponseHelper(parsedJson)
       if (projects.isEmpty) None else Some(Response(Json.toJson(projects)))
-
-
     } catch {
       case e: Exception => None
     }
-
   }
 }
 

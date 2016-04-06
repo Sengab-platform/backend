@@ -29,7 +29,7 @@ class UserRetriever extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${ListProjectsOfUser(userID, sort, offset, limit)} ")
 
       // Create ActivityRetriever Actor
-      val userProjectsRetriever = context.actorOf(UserProjectsRetriever.props(), "userProjectsRetriever")
+      val userProjectsRetriever = context.actorOf(UserProjectsRetriever.props(sender()))
       // Forward ListUserActivity message to ActivityRetriever actor
       userProjectsRetriever forward ListProjectsOfUser(userID, sort, offset, limit)
 

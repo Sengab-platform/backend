@@ -1,5 +1,7 @@
 package helpers
 
+import models.project.Project
+import models.project.Project.EmbeddedProject
 import play.api.libs.json.{JsError, _}
 
 object Helper {
@@ -19,9 +21,9 @@ object Helper {
 
   /**
     * Transforms a JsArray using the provided Reads; cumulating errors.
-    * Implemented by a Scala developer on Google Forms.
     * Used to transform a list of objects.
     *
+    * @author David P
     * @param reads the transforming Reads
     * @tparam A the Type deserialized by the given Reads
     * @return a JsArray transforming Reads
@@ -35,4 +37,47 @@ object Helper {
       } map JsArray
     case _ => JsError("expected JsArray")
   }
+
+  def BulkProjectsResponseHelper(parsedJson: JsArray): Seq[Project.EmbeddedProject] = {
+    val projects = parsedJson.value.seq.map { projectItem => {
+
+      val ProjectObj = projectItem.as[JsObject]
+
+      // add project url to the json retrieved
+      val ModifiedProject = addField(ProjectObj, "url", helpers.Helper.ProjectPath + (ProjectObj \ "id").as[String])
+
+      // add owner url to the json retrieved
+      val jsonTransformer = addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath + (ProjectObj \ "owner" \ "id").as[String])
+
+        // add category url to the json retrieved
+        .compose(addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath + (ProjectObj \ "category" \ "category_id").as[String]))
+
+      val EmbeddedProject = ModifiedProject
+        .transform(jsonTransformer).get
+
+      EmbeddedProject.as[EmbeddedProject]
+    }
+    }
+    projects
+  }
+
+  //to add a JS Transformer to be used for adding a field in a sub Js Object
+  def addTransformer(TargetObjectPath: JsPath,
+                     NewKey: String,
+                     NewValue: String
+                    ): Reads[JsObject] = {
+    TargetObjectPath.json.update(
+      __.read[JsObject].map { o => o ++ Json.obj(NewKey ->
+        JsString(NewValue))
+      }
+    )
+  }
+
+  // to add a field directly to a given Js Object
+  def addField(TargetObject: JsObject,
+               NewKey: String,
+               NewValue: String): JsObject = {
+    TargetObject + (NewKey -> JsString(NewValue))
+  }
 }
+
