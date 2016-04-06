@@ -62,36 +62,15 @@ class ProjectsSearchRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) 
   /**
     * convert Json Object got from DB to a proper Response
     */
-  override def constructResponse(jsonArray: JsonArray): Option[Response] = {
 
+  override def constructResponse(jsonArray: JsonArray): Option[Response] = {
     try {
       val parsedJson = Json.parse(jsonArray.toString).as[JsArray]
-      val projects = parsedJson.value.seq.map { projectItem => {
-
-        val ProjectObj = projectItem.as[JsObject]
-
-        // add project url to the json retrieved
-        val ModifiedProject = addField(ProjectObj, "url", helpers.Helper.ProjectPath + (ProjectObj \ "id").as[String])
-
-        // add owner url to the json retrieved
-        val jsonTransformer = addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath + (ProjectObj \ "owner" \ "id").as[String])
-
-          // add category url to the json retrieved
-          .compose(addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath + (ProjectObj \ "category" \ "category_id").as[String]))
-
-        val EmbeddedProject = ModifiedProject
-          .transform(jsonTransformer).get
-
-        EmbeddedProject.as[EmbeddedProject]
-      }
-      }
+      val projects: Seq[EmbeddedProject] = BulkProjectsResponseHelper(parsedJson)
       if (projects.isEmpty) None else Some(Response(Json.toJson(projects)))
-
-
     } catch {
       case e: Exception => None
     }
-
   }
 }
 

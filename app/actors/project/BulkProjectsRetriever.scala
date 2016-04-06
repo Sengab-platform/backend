@@ -11,7 +11,7 @@ import models.Response
 import models.errors.GeneralErrors.CouldNotParseJSON
 import models.project.Project.EmbeddedProject
 import play.api.Logger
-import play.api.libs.json.{JsObject, _}
+import play.api.libs.json._
 
 class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
 
@@ -54,36 +54,10 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
     * convert Json Object got from DB to a proper Response
     */
   override def constructResponse(jsonArray: JsonArray): Option[Response] = {
-
-    // todo try better solution
     try {
       val parsedJson = Json.parse(jsonArray.toString).as[JsArray]
-      val projects = parsedJson.value.seq.map { projectItem => {
-
-        val projectObj = projectItem.as[JsObject]
-
-        // add project url to the json retrieved
-        val modifiedJson = addField(projectObj, "url", helpers.Helper.ProjectPath + (projectObj \ "id").as[String])
-
-        // add owner url to the json retrieved
-        val jsonTransformer =
-          addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath +
-            (projectObj \ "owner" \ "id").as[String])
-
-            // add category url to the json retrieved
-            .compose(addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath +
-            (projectObj \ "category" \ "category_id").as[String]))
-
-        val fullProject = modifiedJson
-          .transform(jsonTransformer).get
-
-        fullProject.as[EmbeddedProject]
-      }
-      }
-
-      if (projects.isEmpty) None else Some(Response(Json.toJson(projects)))
-
-
+      val categoryProjects: Seq[EmbeddedProject] = BulkProjectsResponseHelper(parsedJson)
+      if (categoryProjects.isEmpty) None else Some(Response(Json.toJson(categoryProjects)))
     } catch {
       case e: Exception => None
     }

@@ -1,5 +1,7 @@
 package helpers
 
+import models.project.Project
+import models.project.Project.EmbeddedProject
 import play.api.libs.json.{JsError, _}
 
 object Helper {
@@ -34,6 +36,29 @@ object Helper {
         acc.flatMap(seq => e.transform(reads).map(seq :+ _))
       } map JsArray
     case _ => JsError("expected JsArray")
+  }
+
+  def BulkProjectsResponseHelper(parsedJson: JsArray): Seq[Project.EmbeddedProject] = {
+    val projects = parsedJson.value.seq.map { projectItem => {
+
+      val ProjectObj = projectItem.as[JsObject]
+
+      // add project url to the json retrieved
+      val ModifiedProject = addField(ProjectObj, "url", helpers.Helper.ProjectPath + (ProjectObj \ "id").as[String])
+
+      // add owner url to the json retrieved
+      val jsonTransformer = addTransformer(__ \ 'owner, "url", helpers.Helper.UserPath + (ProjectObj \ "owner" \ "id").as[String])
+
+        // add category url to the json retrieved
+        .compose(addTransformer(__ \ 'category, "url", helpers.Helper.CategoryPath + (ProjectObj \ "category" \ "category_id").as[String]))
+
+      val EmbeddedProject = ModifiedProject
+        .transform(jsonTransformer).get
+
+      EmbeddedProject.as[EmbeddedProject]
+    }
+    }
+    projects
   }
 
   //to add a JS Transformer to be used for adding a field in a sub Js Object
