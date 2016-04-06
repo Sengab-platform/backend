@@ -325,6 +325,70 @@ public class Project {
             }
         }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
+
+
+    public static Observable<JsonObject> add1ToProjectEnrollmentsCount(String projectId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Adding 1 to contributions count of project with id: {}",projectId);
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " project")).useKeys (Expression.s (projectId))
+        .set ("enrollments_count",Expression.x ("enrollments_count + " + 1 ))
+        .returning (Expression.x ("enrollments_count, meta(project).id"))))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to add 1 to enrollments count of project with id: {}",projectId);
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to enrollments count of project with id: $1, General DB exception.",projectId)));
+            } else {
+                logger.info ("DB: Failed to add 1 to enrollments count of project with id: {}",projectId);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to enrollments count of project with id: $1, General DB exception.",projectId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
+    public static Observable<JsonObject> remove1FromProjectEnrollmentsCount(String projectId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Removing 1 from contributions count of project with id: {}",projectId);
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " project")).useKeys (Expression.s (projectId))
+        .set ("enrollments_count",Expression.x ("enrollments_count - " + 1 ))
+        .returning (Expression.x ("enrollments_count, meta(project).id"))))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to remove 1 from enrollments count of project with id: {}",projectId);
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to remove 1 from enrollments count of project with id: $1, General DB exception.",projectId)));
+            } else {
+                logger.info ("DB: Failed to remove 1 from enrollments count of project with id: {}",projectId);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove 1 from enrollments count of project with id: $1, General DB exception.",projectId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
     /**
      * Update a project. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
      * @param projectId The id of the project to be updated .
