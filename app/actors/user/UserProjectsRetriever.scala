@@ -15,7 +15,7 @@ import play.api.libs.json.{JsArray, Json}
 
 class UserProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
 
-  override val ErrorMsg: String = "ERROR"
+  override val ErrorMsg: String = "Failed to retrieve user projects"
 
   override def receive = {
     case ListProjectsOfUser(userID, sort, offset, limit) =>
@@ -23,8 +23,10 @@ class UserProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
       sort match {
         case "enrolled" =>
           executeQuery(DBUtilities.User.getEnrolledProjectsForUser(userID, offset, limit))
+        case "created" =>
+          executeQuery(DBUtilities.User.getProjectsCreatedByUser(userID, offset, limit))
         case _ =>
-          Logger.info("ERROR")
+          Logger.info("ERROR: Only created and enrolled projects supported.")
       }
 
     case ItemResult(jsonObject) =>
@@ -59,8 +61,8 @@ class UserProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
   override def constructResponse(jsonArray: JsonArray): Option[Response] = {
     try {
       val parsedJson = Json.parse(jsonArray.toString).as[JsArray]
-      val categoryProjects: Seq[EmbeddedProject] = BulkProjectsResponseHelper(parsedJson)
-      if (categoryProjects.isEmpty) None else Some(Response(Json.toJson(categoryProjects)))
+      val projects: Seq[EmbeddedProject] = BulkProjectsResponseHelper(parsedJson)
+      if (projects.isEmpty) None else Some(Response(Json.toJson(projects)))
     } catch {
       case e: Exception => None
     }
