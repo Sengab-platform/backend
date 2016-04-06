@@ -12,11 +12,16 @@ import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.util.retry.RetryBuilder;
 import play.Logger;
 import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.query.Update.update;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -76,6 +81,77 @@ public class Stats {
             })
             .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
+    }
+    /**
+     * Adds 1 to the enrollments count of the stats with the provided ID.
+     * @param statsId The ID of the stats to update.
+     * @return An observable of Json object containing the stats id and the new enrollments count.
+     */
+    public static Observable<JsonObject> add1ToStatsEnrollmentsCount(String statsId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Adding 1 to contributions count of stats with id: {}",statsId);
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " stats")).useKeys (Expression.s (statsId))
+        .set ("enrollments_count",Expression.x ("enrollments_count + " + 1 ))
+        .returning (Expression.x ("enrollments_count, meta(stats).id"))))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to add 1 to enrollments count of stats with id: {}",statsId);
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to enrollments count of stats with id: $1, General DB exception.",statsId)));
+            } else {
+                logger.info ("DB: Failed to add 1 to enrollments count of stats with id: {}",statsId);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to enrollments count of stats with id: $1, General DB exception.",statsId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
+    /**
+     * Remove 1 from the enrollments count of the stats with the provided ID.
+     * @param statsId The ID of the stats to update.
+     * @return An observable of Json object containing the stats id and the new enrollments count.
+     */
+    public static Observable<JsonObject> remove1FromStatsEnrollmentsCount(String statsId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info ("DB: Removing 1 from contributions count of stats with id: {}",statsId);
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " stats")).useKeys (Expression.s (statsId))
+        .set ("enrollments_count",Expression.x ("enrollments_count - " + 1 ))
+        .returning (Expression.x ("enrollments_count, meta(stats).id"))))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info ("DB: Failed to remove 1 from enrollments count of stats with id: {}",statsId);
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: $1, General DB exception.",statsId)));
+            } else {
+                logger.info ("DB: Failed to remove 1 from enrollments count of stats with id: {}",statsId);
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: $1, General DB exception.",statsId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
 
     /**

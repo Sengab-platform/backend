@@ -326,7 +326,11 @@ public class Project {
         }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
 
-
+    /**
+     * Adds 1 to the enrollments count of the project with the provided ID.
+     * @param projectId The ID of the project to update.
+     * @return An observable of Json object containing the project id and the new enrollments count.
+     */
     public static Observable<JsonObject> add1ToProjectEnrollmentsCount(String projectId){
         try {
             checkDBStatus();
@@ -358,6 +362,11 @@ public class Project {
         }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
 
+    /**
+     * Remove 1 From the enrollments count of the project with the provided ID.
+     * @param projectId The ID of the project to update.
+     * @return An observable of Json object containing the project id and the new enrollments count.
+     */
     public static Observable<JsonObject> remove1FromProjectEnrollmentsCount(String projectId){
         try {
             checkDBStatus();
