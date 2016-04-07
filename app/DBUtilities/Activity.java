@@ -7,7 +7,6 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.handler.timeout.TimeoutException;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
@@ -40,13 +39,13 @@ public class Activity {
      * @param activityId The id for the activity document to be created.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonObject> createActivity(String activityId){
+    public static Observable<JsonObject> createActivity(String activityId,JsonObject activityObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        JsonDocument activityDocument = JsonDocument.create (activityId,JsonObject.create ().put ("activities", JsonArray.create ()));
+        JsonDocument activityDocument = JsonDocument.create (activityId,activityObject);
 
         return mBucket.insert (activityDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
@@ -91,11 +90,11 @@ public class Activity {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info ("DB: Failed to add a new activity with contents: {} to activity with id: {}",activityObject,activityId);
+                logger.info (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2",activityObject,activityId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2, General DB exception.",activityObject.toString (),activityId)));
             } else {
-                logger.info ("DB: Failed to add a new activity with contents: {} to activity with id: {}",activityObject,activityId);
+                logger.info (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2",activityObject,activityId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2, General DB exception.",activityObject.toString (),activityId)));
             }
@@ -114,7 +113,7 @@ public class Activity {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info ("DB: Getting activity with id: {} ,limit: {} and offset: {}",activityId,limit,offset);
+        logger.info (String.format ("DB: Getting activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset));
 
         int endIndex = offset + limit ;
         logger.info (endIndex + "");
@@ -128,7 +127,7 @@ public class Activity {
         .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
         .onErrorResumeNext (throwable -> {
-            logger.info ("DB: failed to get activity with id: {} ,limit: {} and offset: {}",activityId,limit,offset);
+            logger.info (String.format ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset));
 
             return Observable.error (new CouchbaseException (String.format ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset)));
         })

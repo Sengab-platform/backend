@@ -30,14 +30,14 @@ public class Result {
      * @param resultId The Json object to be the value of the document , it also has an Id field to use as the document key.
      * @return an observable of the created Json document.
      */
-    public static Observable<JsonObject> createResult(String resultId){
+    public static Observable<JsonObject> createResult(String resultId,JsonObject resultObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-
-        JsonDocument resultDocument = JsonDocument.create (resultId,JsonObject.create ());
+        logger.info (String.format ("DB: Adding a result document with ID: $1 ,to the DB ",resultId));
+        JsonDocument resultDocument = JsonDocument.create (resultId,resultObject);
 
         return mBucket.insert (resultDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
@@ -46,9 +46,11 @@ public class Result {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof DocumentAlreadyExistsException) {
-                    return Observable.error (new DocumentAlreadyExistsException ("Failed to create result, ID already exists"));
+                    logger.info (String.format ("DB: Failed to add a result document with ID: $1 ,to the DB ",resultId));
+
+                    return Observable.error (new DocumentAlreadyExistsException (String.format ("Failed to create result document with ID: $1 , ID already exists",resultId)));
                 } else {
-                    return Observable.error (new CouchbaseException ("Failed to create result, General DB exception "));
+                    return Observable.error (new CouchbaseException (String.format ("Failed to create result document with ID: $1 , General DB exception ",resultId)));
                 }
             }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
@@ -65,13 +67,17 @@ public class Result {
             return Observable.error(e);
         }
 
+        logger.info (String.format ("DB: Getting a result document with ID: $1",resultId));
+
         return mBucket.get (resultId).timeout (500,TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                     .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                return Observable.error (new CouchbaseException ("Failed to get result, General DB exception"));
+
+                logger.info (String.format ("DB: Failed to get a result document with ID: $1",resultId));
+                return Observable.error (new CouchbaseException (String.format ("Failed to get result with ID: $1, General DB exception",resultId)));
             })
             .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));

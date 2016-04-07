@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 import static DBUtilities.DBConfig.bucket;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayPut;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayRemove;
 
 /**
  * Created by rashwan on 3/28/16.
@@ -100,7 +102,7 @@ public class User {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info ("DB: Bulk getting enrolled projects for user with id: {} with offset: {} and limit: {}", userId,offset,limit);
+        logger.info (String.format ("DB: Bulk getting enrolled projects for user with id: $1 with offset: $2 and limit: $3", userId,offset,limit));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id,project, category"))
             .from (Expression.x (DBConfig.BUCKET_NAME + " aUser")).useKeys (Expression.s (userId))
@@ -115,7 +117,7 @@ public class User {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                logger.info ("DB: Failed to Bulk get enrolled projects for user with id: {} with offset: {} and limit: {}",userId,limit,offset);
+                logger.info (String.format ("DB: Failed to Bulk get enrolled projects for user with id: $1 with offset: $2 and limit: $3",userId,limit,offset));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get enrolled projects for user with id: $1 with offset: $2 and limit: $3, general DB exception.",userId,offset,limit)));
             })
@@ -137,7 +139,7 @@ public class User {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info ("DB: Bulk getting created projects for user with id: {} with offset: {} and limit: {}", userId,offset,limit);
+        logger.info (String.format ("DB: Bulk getting created projects for user with id: $1 with offset: $2 and limit: $3", userId,offset,limit));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -151,7 +153,7 @@ public class User {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                logger.info ("DB: Failed to Bulk get created projects for user with id: {} with offset: {} and limit: {}",userId,limit,offset);
+                logger.info (String.format ("DB: Failed to Bulk get created projects for user with id: $1 with offset: $2 and limit: $3",userId,limit,offset));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get created projects for user with id: $1 with offset: $2 and limit: $3, general DB exception.",userId,offset,limit)));
             })
@@ -173,7 +175,7 @@ public class User {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info ("DB: Partial updating user with ID: {}", userId);
+        logger.info (String.format ("DB: Partial updating user with ID: $1", userId));
 
 
         return mBucket.query (N1qlQuery.simple (update(DBConfig.BUCKET_NAME).useKeys (Expression.s (userId))
@@ -186,17 +188,17 @@ public class User {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof DocumentDoesNotExistException){
-                    logger.info ("DB: Failed to partial update user with ID: {}, no user exists with this id.",userId);
+                    logger.info (String.format ("DB: Failed to partial update user with ID: $1, no user exists with this id.",userId));
 
                     return Observable.error (new DocumentDoesNotExistException (String.format ("DB: Failed to partial update user with ID: $1, no user exists with this id.",userId)));
 
                 }else if (throwable instanceof CASMismatchException){
                     //// TODO: 4/1/16 needs more accurate handling in the future.
-                    logger.info ("DB: Failed to partial update user with ID: {}, CAS value is changed.",userId);
+                    logger.info (String.format ("DB: Failed to partial update user with ID: $1, CAS value is changed.",userId));
 
                     return Observable.error (new CASMismatchException (String.format ("DB: Failed to partial update user with ID: $1, CAS value is changed.",userId)));
                 } else {
-                    logger.info ("DB: Failed to partial update user with ID: {}, General DB exception.",userId);
+                    logger.info (String.format ("DB: Failed to partial update user with ID: $1, General DB exception.",userId));
 
                     return Observable.error (new CouchbaseException (String.format ("Failed to partial update user with ID: $1 , General DB exception.",userId)));
                 }
@@ -215,7 +217,7 @@ public class User {
             return Observable.error(e);
         }
 
-        Logger.info ("DB: Adding 1 to contributions count of user with id: {}",userId);
+        logger.info (String.format ("DB: Adding 1 to contributions count of user with id: $1",userId));
 
         return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " aUser")).useKeys (Expression.s (userId))
         .set ("stats.contributions",Expression.x ("stats.contributions + " + 1 ))
@@ -228,17 +230,96 @@ public class User {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info ("DB: Failed to add 1 to contributions count of user with id: {}",userId);
+                logger.info (String.format ("DB: Failed to add 1 to contributions count of user with id: $1",userId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of user with id: $1, General DB exception.",userId)));
             } else {
-                logger.info ("DB: Failed to add 1 to contributions count of user with id: {}",userId);
+                logger.info (String.format ("DB: Failed to add 1 to contributions count of user with id: $1",userId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of user with id: $1, General DB exception.",userId)));
             }
       }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
 
+    /**
+     * Adds a project with the provided ID to the user's enrolled projects list.
+     * @param userId The ID for the user to add the project to.
+     * @param projectId The ID for the project to add to the user's enrolled projects.
+     * @return An observable of Json object that contains the ID of the user and the added project ID, if the operation succeeds.
+     */
+    public static Observable<JsonObject> addProjectToEnrolledProjects(String userId,String projectId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info (String.format ("DB: Adding project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
+
+        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
+        .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
+                arrayPut (Expression.x ("enrolled_projects"),Expression.s (projectId)))
+        .returning (Expression.x ("enrolled_projects[-1] as project,meta(project).id"))))
+        .timeout (1000,TimeUnit.MILLISECONDS)
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
+            } else {
+                logger.info (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+
+    }
+
+    /**
+     * Removes a project with the provided ID from the user's enrolled projects list.
+     * @param userId The ID for the user to remove the project from.
+     * @param projectId The ID for the project to remove from the user's enrolled projects.
+     * @return An observable of Json object that contains the ID of the user, if the operation succeeds.
+     */
+    public static Observable<JsonObject> removeProjectFromEnrolledProjects(String userId,String projectId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info (String.format ("DB: Removing project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
+
+        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
+        .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
+                arrayRemove (Expression.x ("enrolled_projects"),Expression.s (projectId)))
+        .returning (Expression.x ("meta(project).id"))))
+        .timeout (1000,TimeUnit.MILLISECONDS)
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+            if (throwable instanceof CASMismatchException){
+                //// TODO: 4/1/16 needs more accurate handling in the future.
+                logger.info (String.format ("DB: Failed to remove project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
+
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to remove project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
+            } else {
+                logger.info (String.format ("DB: Failed to remove project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
+
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
+            }
+        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+
+    }
     /**
      * Update a user. can error with {@link CouchbaseException},{@link DocumentDoesNotExistException},{@link CASMismatchException} and {@link BucketClosedException} .
      * @param userId The id of the user to be updated .
