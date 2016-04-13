@@ -29,7 +29,8 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
         userID, first_name = first_name, last_name = last_name, image = image,
         about = about, stats = stats, created_at = created_at,
         contributions = Helper.UserPath + userID + Helper.Contributions,
-        projects = Helper.UserPath + userID + Helper.Created)
+        projects = Helper.UserPath + userID + Helper.Created, enrolled_projects = List())
+
       DBUtilities.User.createUser(
         JsonObject.fromJson(
           Json.stringify(

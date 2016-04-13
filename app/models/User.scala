@@ -29,8 +29,8 @@ case class User(
                  about: Option[About],
                  stats: Option[Stats],
                  projects: Option[String], // the User created projects url
-                 contributions: Option[String],
-                 created_at: String // the User contributions url
+                 contributions: Option[String], // the User contributions url
+                 created_at: String
                )
 
 object User {
@@ -47,7 +47,8 @@ case class NewUser(
                     stats: Option[Stats],
                     created_at: String,
                     contributions: String,
-                    projects: String
+                    projects: String,
+                    enrolled_projects: List[String]
                   )
 
 object NewUser {
