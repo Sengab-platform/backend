@@ -11,13 +11,13 @@ object About {
   implicit val AboutF = Json.format[About]
 }
 
-case class Stats(
+case class UserStats(
                   projects: Int,
                   contributions: Int
                 )
 
-object Stats {
-  implicit val StatsF = Json.format[Stats]
+object UserStats {
+  implicit val StatsF = Json.format[UserStats]
 }
 
 case class User(
@@ -28,7 +28,7 @@ case class User(
                  gender: Option[String],
                  image: Option[String],
                  about: Option[About],
-                 stats: Option[Stats],
+                 stats: Option[UserStats],
                  projects: Option[String], // the User created projects url
                  contributions: Option[String], // the User contributions url
                  created_at: String
@@ -46,7 +46,7 @@ case class NewUser(
                     gender: Option[String],
                     image: Option[String],
                     about: Option[About],
-                    stats: Option[Stats],
+                    stats: Option[UserStats],
                     created_at: String,
                     contributions: String,
                     projects: String,
@@ -70,7 +70,7 @@ case class UserInfo(
                      gender: Option[String],
                      image: Option[String],
                      about: Option[About],
-                     stats: Stats,
+                     stats: UserStats,
                      projects: String, // the User created projects url
                      contributions: String, // the User created contributions url
                      url: String,

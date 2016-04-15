@@ -18,6 +18,7 @@ object Helper {
   // IDs
   val UserIDPrefix = "user::"
   val ActivityIDPrefix = "activity::"
+  val StatsIDPrefix = "stats::"
 
   /**
     * Transforms a JsArray using the provided Reads; cumulating errors.

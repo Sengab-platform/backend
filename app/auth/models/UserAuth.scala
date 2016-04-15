@@ -2,7 +2,7 @@ package auth.models
 
 import com.couchbase.client.java.document.json.JsonObject
 import helpers.Helper
-import models.{About, NewUser, Stats}
+import models.{About, NewUser, UserStats}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import securesocial.core._
@@ -20,7 +20,7 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
     val last_name = main.lastName
     val image = Some(main.avatarUrl.get.split("\\?")(0))
     val about = Some(About(main.email, bio))
-    val stats = Some(Stats(0, 0))
+    val stats = Some(UserStats(0, 0))
     val dateTime: DateTime = DateTime.now
     val created_at = dateTime.toString
 
