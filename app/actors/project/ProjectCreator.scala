@@ -25,10 +25,11 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
     case CreateProject(project, userID) =>
       Logger.info(s"actor ${self.path} - received msg : ${CreateProject(project, userID)}")
 
-      // add contributions_count and enrollments_count field with default values = 0
+      // add contributions_count , enrollments_count with default values = 0  and entity_type with value = project
       val completedProject = Json.toJson(project).as[JsObject].
         +("contributions_count" -> JsNumber(0)).
-        +("enrollments_count" -> JsNumber(0))
+        +("enrollments_count" -> JsNumber(0)).
+        +("entity_type" -> JsString("project"))
 
       // construct Json Object to be inserted into DB
       val projectObj = toJsonObject(completedProject)
