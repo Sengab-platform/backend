@@ -14,7 +14,7 @@ abstract class AbstractBulkDBHandler(out: ActorRef) extends AbstractDBActor[Json
     * field to aggregate the json objects retrieved from DB
     */
   // todo reduce null values
-  var finalResultArray: JsonArray = JsonArray.empty()
+  val finalResultArray: JsonArray = JsonArray.create()
 
 
   override def onComplete: () => Unit = { () => {
