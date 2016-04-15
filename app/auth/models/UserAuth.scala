@@ -26,7 +26,7 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
 
     if (isSignUp) {
       val user = NewUser(
-        userID, first_name = first_name, last_name = last_name, image = image,
+        userID, first_name = first_name, last_name = last_name, gender = gender, image = image,
         about = about, stats = stats, created_at = created_at,
         contributions = Helper.UserPath + userID + Helper.Contributions,
         projects = Helper.UserPath + userID + Helper.Created, enrolled_projects = List())
