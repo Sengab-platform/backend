@@ -8,7 +8,7 @@ import com.couchbase.client.java.document.json.JsonArray
 import helpers.Helper._
 import messages.UserManagerMessages.ListProjectsOfUser
 import models.Response
-import models.errors.GeneralErrors.CouldNotParseJSON
+import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import models.project.Project.EmbeddedProject
 import play.Logger
 import play.api.libs.json.{JsArray, Json}
@@ -32,24 +32,26 @@ class UserProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
     case ItemResult(jsonObject) =>
       // received new item , aggregate it to the final result Array
       Logger.info(s"actor ${self.path} - received msg : ${ItemResult(jsonObject)}")
-
-      if (!jsonObject.isEmpty) {
+      if (!jsonObject.getString("id").equals("empty_doc")) {
         appendFinalResult(jsonObject)
       } else {
         unhandled(jsonObject)
       }
 
     case BulkResult(jsArray) =>
-      val response = constructResponse(jsArray)
-      response match {
-        case Some(Response(jsonResult)) =>
-          out ! Response(jsonResult)
-
-        case None =>
-          out ! CouldNotParseJSON("failed to get projects",
-            "couldn't parse json retrieved from the db ", this.getClass.toString)
+      if (jsArray.isEmpty) {
+        out ! NotFoundError("Couldn't find projects",
+          "Constructed json array is empty", this.getClass.toString)
+      } else {
+        val response = constructResponse(jsArray)
+        response match {
+          case Some(Response(jsonResult)) =>
+            out ! Response(jsonResult)
+          case None =>
+            out ! CouldNotParseJSON("failed to get projects",
+              "couldn't parse json retrieved from the db ", this.getClass.toString)
+        }
       }
-
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")
       context.stop(self)
