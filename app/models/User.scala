@@ -70,7 +70,8 @@ case class UserInfo(
                      stats: Stats,
                      projects: String, // the User created projects url
                      contributions: String, // the User created contributions url
-                     url: String
+                     url: String,
+                     enrolled_projects: List[String]
                    )
 
 object UserInfo {
