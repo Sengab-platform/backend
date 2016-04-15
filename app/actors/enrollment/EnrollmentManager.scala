@@ -8,12 +8,12 @@ class EnrollmentManager extends Actor {
   override def receive = {
     case Enroll(enrollment) =>
       Logger.info(s"actor ${self.path} - received msg : ${Enroll(enrollment)}")
-      val enrollmentHandler = context.actorOf(EnrollmentHandler.props(sender()), "enrollmentHandler")
+      val enrollmentHandler = context.actorOf(EnrollmentHandler.props(sender()))
       enrollmentHandler forward Enroll(enrollment)
 
     case Withdraw(withdraw) =>
       Logger.info(s"actor ${self.path} - received msg : ${Withdraw(withdraw)}")
-      val withdrawHandler = context.actorOf(WithdrawHandler.props(sender()), "withdrawHandler")
+      val withdrawHandler = context.actorOf(WithdrawHandler.props(sender()))
       withdrawHandler forward Withdraw(withdraw)
   }
 }
