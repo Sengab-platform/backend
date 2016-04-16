@@ -14,10 +14,7 @@ GET         /                                        controllers.ProjectControll
 GET         /projects                                controllers.ProjectController.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
 
 # get specific project
-GET         /projects/:project_id                    controllers.ProjectController.getProjectDetails(project_id)
-
-# get specific project with template body
-GET         /projects/:project_id/with_template        controllers.ProjectController.getProjectDetailsWithTemplateBody(project_id)
+GET         /projects/:project_id                    controllers.ProjectController.getProjectDetails(project_id, format: String?="without_template_body")
 
 # add project
 POST        /projects                                controllers.ProjectController.addProject()
@@ -44,16 +41,16 @@ GET         /users/:user_id/activities               controllers.UserController.
 GET         /users/:user_id/enrolled_projects        controllers.UserController.getUserEnrolledProjects(user_id, offset:Int?=0,limit:Int?=20)
 
 # list projects created by a specific user (paginated)
-GET           /users/:user_id/created_projects         controllers.UserController.getUserCreatedProjects(user_id, offset:Int?=0,limit:Int?=20)
+GET         /users/:user_id/created_projects         controllers.UserController.getUserCreatedProjects(user_id, offset:Int?=0,limit:Int?=20)
 
 
 ### Category Requests ###
 
 # list all categories (paginated)
-GET           /categories                              controllers.CategoryController.getCategories(offset:Int?=0,limit:Int?=20)
+GET         /categories                              controllers.CategoryController.getCategories(offset:Int?=0,limit:Int?=20)
 
 # list projects of a category (paginated)
-GET           /categories/:category_id                 controllers.CategoryController.getProjectsForCategory(category_id,offset:Int?=0,limit:Int?=20)
+GET         /categories/:category_id                 controllers.CategoryController.getProjectsForCategory(category_id,offset:Int?=0,limit:Int?=20)
 
 
 ### Enrollment Requests ###
