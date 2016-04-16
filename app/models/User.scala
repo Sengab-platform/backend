@@ -80,3 +80,9 @@ case class UserInfo(
 object UserInfo {
   implicit val UserF = Json.format[UserInfo]
 }
+
+case class Contributor(id: String, gender: String)
+
+object Contributor {
+  implicit val contF = Json.format[Contributor]
+}
