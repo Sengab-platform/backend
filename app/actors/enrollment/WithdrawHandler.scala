@@ -16,7 +16,7 @@ class WithdrawHandler(out: ActorRef) extends AbstractDBHandler(out) {
 
   override def receive = {
     case Withdraw(userID: String, projectID: Enrollment) => Logger.info(s"actor ${self.path} - received msg : ${Withdraw(userID, projectID)}")
-      val DBProjectID = projectID.projectID.toString
+      val DBProjectID = projectID.projectID
       executeQuery(DBUtilities.User.removeProjectFromEnrolledProjects(userID, DBProjectID))
 
 

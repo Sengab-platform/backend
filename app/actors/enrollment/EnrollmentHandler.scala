@@ -18,7 +18,7 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
   override def receive = {
     case Enroll(userID, projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${Enroll(userID, projectID)}")
-      val DBProjectID = projectID.projectID.toString
+      val DBProjectID = projectID.projectID
 
       executeQuery(DBUtilities.User.addProjectToEnrolledProjects(userID, DBProjectID))
 
