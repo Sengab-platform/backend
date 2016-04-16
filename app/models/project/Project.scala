@@ -9,7 +9,7 @@ object Project {
                         goal: Int,
                         image: String,
                         template_id: Int,
-                        templateBody: TemplateBody,
+                        template_body: TemplateBody,
                         created_at: String,
                         brief_description: String,
                         detailed_description: String,
