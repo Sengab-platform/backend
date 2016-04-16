@@ -12,11 +12,16 @@ import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.util.retry.RetryBuilder;
 import play.Logger;
 import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.query.Update.update;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -99,24 +104,59 @@ public class Result {
         JsonDocument resultDocument = JsonDocument.create (resultId,DBConfig.removeIdFromJson (resultJsonObject));
 
         return mBucket.replace (resultDocument).timeout (500,TimeUnit.MILLISECONDS)
-                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-                .onErrorResumeNext (throwable -> {
-                    if (throwable instanceof DocumentDoesNotExistException){
-                        return Observable.error (new DocumentDoesNotExistException ("Failed to update result, ID dosen't exist in DB"));
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof DocumentDoesNotExistException){
+                    return Observable.error (new DocumentDoesNotExistException ("Failed to update result, ID dosen't exist in DB"));
 
-                    }else if (throwable instanceof CASMismatchException){
-                        //// TODO: 3/28/16 needs more accurate handling in the future.
-                        return Observable.error (new CASMismatchException ("Failed to update result, CAS value is changed"));
-                    }
-                    else {
-                        return Observable.error (new CouchbaseException ("Failed to update result, General DB exception "));
-                    }
-                });
+                }else if (throwable instanceof CASMismatchException){
+                    //// TODO: 3/28/16 needs more accurate handling in the future.
+                    return Observable.error (new CASMismatchException ("Failed to update result, CAS value is changed"));
+                }
+                else {
+                    return Observable.error (new CouchbaseException ("Failed to update result, General DB exception "));
+                }
+            });
     }
 
+    /**
+     * Adds 1 to the contributions count of the result with the provided ID.
+     * @param resultId The ID of the result to update.
+     * @return An observable of Json object containing the result id and the new contributions count.
+     */
+    public static Observable<JsonObject> add1ToResultsContributionCount(String resultId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info (String.format ("DB: Adding 1 to contributions count of result with id: $1",resultId));
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " result")).useKeys (Expression.s (resultId))
+            .set ("contributions_count",Expression.x ("contributions_count + " + 1 ))
+            .returning (Expression.x ("contributions_count, meta(result).id"))))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof CASMismatchException){
+                    //// TODO: 4/1/16 needs more accurate handling in the future.
+                    logger.info (String.format ("DB: Failed to add 1 to contributions count of result with id: $1",resultId));
+
+                    return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of result with id: $1, General DB exception.",resultId)));
+                } else {
+                    logger.info (String.format ("DB: Failed to add 1 to contributions count of result with id: $1",resultId));
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of result with id: $1, General DB exception.",resultId)));
+                }
+            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
     /**
      * Delete results of a project using its id. can error with {@link CouchbaseException}, {@link DocumentDoesNotExistException} and {@link BucketClosedException} .
      * @param resultId The id of the results document to be deleted.

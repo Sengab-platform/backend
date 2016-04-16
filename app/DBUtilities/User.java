@@ -122,7 +122,6 @@ public class User {
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get enrolled projects for user with id: $1 with offset: $2 and limit: $3, general DB exception.",userId,offset,limit)));
             })
             .defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
-
     }
 
     /**

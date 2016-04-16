@@ -213,21 +213,21 @@ public class Project {
         logger.info (String.format ("DB: Bulk getting projects with category_id: $1 ,limit: $2 and offset: $3",categoryId,limit,offset));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
-                .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
-                .where (Expression.x ("project.category_id").eq (Expression.s (categoryId)))
-                .orderBy (Sort.desc (Expression.x ("project.enrollments_count"))).limit (limit).offset (offset)))
-                .timeout (1000,TimeUnit.MILLISECONDS)
-                .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> DBConfig.embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
-                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-                .onErrorResumeNext (throwable -> {
-                    logger.info (String.format ("DB: failed to bulk get projects with category_id: $1 ,limit: $2 and offset: $3",categoryId,limit,offset));
+            .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
+            .where (Expression.x ("project.category_id").eq (Expression.s (categoryId)))
+            .orderBy (Sort.desc (Expression.x ("project.enrollments_count"))).limit (limit).offset (offset)))
+            .timeout (1000,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> DBConfig.embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                logger.info (String.format ("DB: failed to bulk get projects with category_id: $1 ,limit: $2 and offset: $3",categoryId,limit,offset));
 
-                    return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects with category_id: $1 ,limit: $2 and offset: $3",categoryId,limit,offset)));
-                })
-                .defaultIfEmpty (JsonObject.create ().put ("id",EMPTY_JSON_DOC));
+                return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects with category_id: $1 ,limit: $2 and offset: $3",categoryId,limit,offset)));
+            })
+            .defaultIfEmpty (JsonObject.create ().put ("id",EMPTY_JSON_DOC));
 
     }
 
