@@ -12,6 +12,8 @@ object ProjectManagerMessages {
 
   case class GetProjectDetails(projectID: String) extends ProjectMessage
 
+  case class GetProjectDetailsWithTemplateBody(projectID: String) extends ProjectMessage
+
   case class GetProjectResults(projectID: String, offset: Integer, limit: Integer) extends ProjectMessage
 
   case class GetProjectStats(projectID: String) extends ProjectMessage

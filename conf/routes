@@ -16,6 +16,9 @@ GET         /projects                                controllers.ProjectControll
 # get specific project
 GET         /projects/:project_id                    controllers.ProjectController.getProjectDetails(project_id)
 
+# get specific project with template body
+GET         /projects/:project_id/with_template        controllers.ProjectController.getProjectDetailsWithTemplateBody(project_id)
+
 # add project
 POST        /projects                                controllers.ProjectController.addProject()
 

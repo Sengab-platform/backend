@@ -61,6 +61,21 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
     }
   }
 
+  def getProjectDetailsWithTemplateBody(projectId: String) = Action.async {
+    receptionist ? GetProjectDetailsWithTemplateBody(projectId) map {
+      case Response(json) =>
+        Ok(json)
+      case error: Error =>
+        error.result
+    } recover {
+      case e: TimeoutException =>
+        AskTimeoutError("Failed to get project details with template body",
+          "Ask Timeout Exception on Actor Receptionist",
+          this.getClass.toString).result
+
+    }
+  }
+
   //  add project
   //  def addProject() = SecuredAction.async(BodyParsers.parse.json) {
   def addProject() = Action.async(BodyParsers.parse.json) {
