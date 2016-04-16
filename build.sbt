@@ -26,35 +26,3 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.
 routesGenerator := InjectedRoutesGenerator
-
-//wartremoverErrors := Warts.allBut(Wart.Any)
-//
-//// Play Framework
-//wartremoverWarnings ++= Seq(
-//  PlayWart.CookiesPartial,
-//  PlayWart.FlashPartial,
-//  PlayWart.FormPartial,
-//  PlayWart.HeadersPartial,
-//  PlayWart.JsLookupResultPartial,
-//  PlayWart.JsReadablePartial,
-//  PlayWart.LangObject,
-//  PlayWart.MessagesObject,
-//  PlayWart.PlayGlobalExecutionContext,
-//  PlayWart.SessionPartial)
-//
-//// Bonus Warts
-//wartremoverWarnings ++= Seq(
-//  PlayWart.DateFormatPartial,
-//  PlayWart.FutureObject,
-//  PlayWart.GenMapLikePartial,
-//  PlayWart.GenTraversableLikeOps,
-//  PlayWart.GenTraversableOnceOps,
-//  PlayWart.OptionPartial,
-//  PlayWart.ScalaGlobalExecutionContext,
-//  PlayWart.StringOpsPartial,
-//  PlayWart.TraversableOnceOps)
-//
-//wartremoverExcluded += crossTarget.value / "routes" / "main" / "controllers" / "ReverseRoutes.scala"
-//wartremoverExcluded += crossTarget.value / "routes" / "main" / "controllers" / "javascript" / "JavaScriptReverseRoutes.scala"
-//wartremoverExcluded += crossTarget.value / "routes" / "main" / "router" / "Routes.scala"
-//wartremoverExcluded += crossTarget.value / "routes" / "main" / "router" / "RoutesPrefix.scala"
