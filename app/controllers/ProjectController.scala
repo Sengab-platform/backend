@@ -47,7 +47,7 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
 
   //  get specific project
   def getProjectDetails(projectId: String, format: String) = Action.async {
-    if (format.equals("with_template")) {
+    if (format.equals("with_template_body")) {
       receptionist ? GetProjectDetailsWithTemplateBody(projectId) map {
         case Response(json) =>
           Ok(json)
