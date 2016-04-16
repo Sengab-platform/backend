@@ -3,42 +3,42 @@
 # ~~~~
 
 ### Home page ###
-GET         /                                    controllers.ProjectController.index
+GET         /                                        controllers.ProjectController.index
 
-### Authentication
-POST        /authenticate/:provider              @securesocial.controllers.LoginApi.authenticate(provider:String, builder:String = "token")
+### Authentication --> /auth/api/authenticate/google
+->          /auth                                    securesocial.Routes
 
 ### Project Requests ###
 
 # list all projects (paginated)
-GET         /projects                            controllers.ProjectController.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
+GET         /projects                                controllers.ProjectController.listProjects(filter:String ?= "popular",offset:Int?=0,limit:Int?=20)
 
 # get specific project
-GET         /projects/:project_id                controllers.ProjectController.getProjectDetails(project_id)
+GET         /projects/:project_id                    controllers.ProjectController.getProjectDetails(project_id)
 
 # add project
-POST        /projects                            controllers.ProjectController.addProject()
+POST        /projects                                controllers.ProjectController.addProject()
 
 # search in projects (paginated)
-GET         /projects/search/:keyword            controllers.ProjectController.searchProjects(keyword,offset:Int?=0,limit:Int?=20)
+GET         /projects/search/:keyword                controllers.ProjectController.searchProjects(keyword,offset:Int?=0,limit:Int?=20)
 
 # list results of a project (paginated)
-GET         /projects/:project_id/results        controllers.ProjectController.getProjectResults(project_id,offset:Int?=0,limit:Int?=20)
+GET         /projects/:project_id/results            controllers.ProjectController.getProjectResults(project_id,offset:Int?=0,limit:Int?=20)
 
 # list stats of a project
-GET         /projects/:project_id/stats          controllers.ProjectController.getProjectStats(project_id)
+GET         /projects/:project_id/stats              controllers.ProjectController.getProjectStats(project_id)
 
 
 #### User Requests ###
 
 # get user profile
-GET           /users/:user_id                          controllers.UserController.getUser(user_id)
+GET         /users/:user_id                          controllers.UserController.getUser(user_id)
 
 # list User’s Activity (paginated)
-GET           /users/:user_id/activities               controllers.UserController.getUserActivities(user_id, offset:Int?=0,limit:Int?=20)
+GET         /users/:user_id/activities               controllers.UserController.getUserActivities(user_id, offset:Int?=0,limit:Int?=20)
 
 # list all projects that the user enrolled in (paginated)
-GET           /users/:user_id/enrolled_projects        controllers.UserController.getUserEnrolledProjects(user_id, offset:Int?=0,limit:Int?=20)
+GET         /users/:user_id/enrolled_projects        controllers.UserController.getUserEnrolledProjects(user_id, offset:Int?=0,limit:Int?=20)
 
 # list projects created by a specific user (paginated)
 GET           /users/:user_id/created_projects         controllers.UserController.getUserCreatedProjects(user_id, offset:Int?=0,limit:Int?=20)
