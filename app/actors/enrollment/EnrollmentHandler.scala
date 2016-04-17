@@ -19,14 +19,26 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
   override def receive = {
     case Enroll(userID, projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${Enroll(userID, projectID)}")
-      executeQuery(DBUtilities.User.addProjectToEnrolledProjects(userID, projectID))
 
+      executeQuery(DBUtilities.User.addProjectToEnrolledProjects(userID, projectID))
 
     case QueryResult(jsonObject) =>
       if (jsonObject.containsKey("projectId")) {
       val response = constructResponse(jsonObject)
       response match {
         case Some(Response(jsonResult)) =>
+          // apply side effects
+
+          // get project id as String
+          val projectID = Json.parse(jsonResult.toString()).as[JsObject].value("project_id").as[String]
+          executeQuery(DBUtilities.Project.add1ToProjectEnrollmentsCount(projectID))
+          // get index of :: in project id
+          val p = projectID.indexOf("::")
+          // get value of ::$num from project id
+          val projectNum = projectID.substring(p)
+          // generate stats id
+          val statsID = "stats" + projectNum
+          executeQuery(DBUtilities.Stats.add1ToStatsEnrollmentsCount(statsID))
           out ! Response(jsonResult)
 
         case None =>
