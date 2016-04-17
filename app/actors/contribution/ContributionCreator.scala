@@ -22,11 +22,7 @@ class ContributionCreator(out: ActorRef) extends AbstractDBHandler(out) {
 
       val contributionObj = toJsonObject(Json.toJson(contribution))
 
-      val trimmedUserID = Helper.trimUserID(contributor.id)
-      val trimmedProjectID = Helper.trimProjectID(contribution.project_id)
-
-      executeQuery(DBUtilities.Contribution.createContribution(trimmedProjectID, trimmedUserID, contributionObj))
-
+      executeQuery(DBUtilities.Contribution.createContribution(contribution.project_id, contributor.id, contributionObj))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : Terminate ")
