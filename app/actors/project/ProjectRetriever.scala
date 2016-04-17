@@ -1,7 +1,7 @@
 package actors.project
 
 import akka.actor.{Actor, Props}
-import messages.ProjectManagerMessages.{GetProjectDetails, GetProjectStats, ListProjects, SearchProjects}
+import messages.ProjectManagerMessages._
 import play.api.Logger
 
 class ProjectRetriever extends Actor {
@@ -11,6 +11,12 @@ class ProjectRetriever extends Actor {
 
       val projectDetailsRetriever = context.actorOf(ProjectDetailsRetriever.props(sender()))
       projectDetailsRetriever forward GetProjectDetails(projectID)
+
+    case GetProjectDetailsWithTemplateBody(projectID) =>
+      Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetailsWithTemplateBody(projectID)} ")
+
+      val projectDetailsWithTemplateBodyRetriever = context.actorOf(ProjectDetailsWithTemplateBodyRetriever.props(sender()))
+      projectDetailsWithTemplateBodyRetriever forward GetProjectDetailsWithTemplateBody(projectID)
 
     case ListProjects(filter, offset, limit) =>
       Logger.info(s"actor ${self.path} - received msg : ${ListProjects(filter, offset, limit)} ")

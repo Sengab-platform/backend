@@ -1,13 +1,13 @@
 package messages
 
-import models.enrollment.Enrollment
+import models.Enrollment
 
 object EnrollmentManagerMessages {
 
   trait EnrollmentMessage
 
-  case class Enroll(enrollment: Enrollment) extends EnrollmentMessage
+  case class Enroll(userID: String, projectID: Enrollment) extends EnrollmentMessage
 
-  case class Withdraw(withdraw: Enrollment) extends EnrollmentMessage
+  case class Withdraw(userID: String, projectID: Enrollment) extends EnrollmentMessage
 
 }

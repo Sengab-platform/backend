@@ -23,6 +23,10 @@ class ProjectManager extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetails(projectID)} ")
       projectRetriever forward GetProjectDetails(projectID)
 
+    case GetProjectDetailsWithTemplateBody(projectID) =>
+      Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetailsWithTemplateBody(projectID)} ")
+      projectRetriever forward GetProjectDetailsWithTemplateBody(projectID)
+
     case GetProjectResults(projectID, offset, limit) => ???
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectResults(projectID, offset, limit)} ")
       projectRetriever forward GetProjectResults(projectID, offset, limit)
@@ -32,9 +36,9 @@ class ProjectManager extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectStats(projectID)} ")
       projectRetriever forward GetProjectStats(projectID)
 
-    case SearchProjects(keyword,offset,limit) =>
-      Logger.info(s"actor ${self.path} - received msg : ${SearchProjects(keyword,offset,limit)} ")
-      projectRetriever forward SearchProjects(keyword,offset,limit)
+    case SearchProjects(keyword, offset, limit) =>
+      Logger.info(s"actor ${self.path} - received msg : ${SearchProjects(keyword, offset, limit)} ")
+      projectRetriever forward SearchProjects(keyword, offset, limit)
 
   }
 }
