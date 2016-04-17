@@ -22,7 +22,7 @@ import rx.Observable;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static DBUtilities.DBConfig.EMPTY_JSON_DOC;
+import static DBUtilities.DBConfig.EMPTY_JSON_OBJECT;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
 import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayAppend;
@@ -31,8 +31,8 @@ import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.array
  * Created by rashwan on 3/29/16.
  */
 public class Activity {
-    private static AsyncBucket mBucket;
     private static final Logger.ALogger logger = Logger.of (Activity.class.getSimpleName ());
+    private static AsyncBucket mBucket;
 
     /**
      * Create and save a user's activities . can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -98,14 +98,14 @@ public class Activity {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s, General DB exception.",activityObject.toString (),activityId)));
             }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
     /**
      * Get activities of a user using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param activityId the id of the activities document to get.
      * @param offset an index to determine where how much result to omit from the beginning.
      * @param limit the maximum number of document returned.
-     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
+     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_OBJECT .
      */
     public static Observable<JsonObject> getActivityWithId(String activityId,int offset,int limit){
         try {
@@ -131,7 +131,7 @@ public class Activity {
 
             return Observable.error (new CouchbaseException (String.format ("DB: failed to get activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset)));
         })
-        .defaultIfEmpty (JsonObject.create ().put ("id",EMPTY_JSON_DOC));
+                .defaultIfEmpty(JsonObject.create().put("id", EMPTY_JSON_OBJECT));
 
     }
 

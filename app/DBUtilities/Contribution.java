@@ -32,8 +32,8 @@ import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.array
  * Created by rashwan on 3/29/16.
  */
 public class Contribution {
-    private static AsyncBucket mBucket;
     private static final Logger.ALogger logger = Logger.of (Contribution.class.getSimpleName ());
+    private static AsyncBucket mBucket;
 
     /**
      * Create and save a user's contribution of a project. can error with {@link CouchbaseException} and {@link BucketClosedException}.
@@ -87,7 +87,7 @@ public class Contribution {
                             .onErrorResumeNext (throwable -> {
                                 logger.info (String.format ("DB: Failed to add contribution with id: %s and contents: %s", contributionId, contributionJsonObject.toString ()));
                                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add contribution with id: %s and contents: %s, General DB exception.", contributionId, contributionJsonObject.toString ())));
-                            }).defaultIfEmpty (JsonObject.create ().put ("id", DBConfig.EMPTY_JSON_DOC));
+                            }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
 
                 }
             });
@@ -96,7 +96,7 @@ public class Contribution {
     /**
      * Get a contribution of a project using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param contributionId the id of the contribution to get.
-     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
+     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_OBJECT .
      */
     public static Observable<JsonObject> getContributionWithId(String contributionId){
         try {
@@ -113,7 +113,7 @@ public class Contribution {
             .onErrorResumeNext (throwable -> {
                 return Observable.error (new CouchbaseException ("Failed to get contribution, General DB exception"));
             })
-            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC))
+                .defaultIfEmpty(JsonDocument.create(DBConfig.EMPTY_JSON_OBJECT))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
