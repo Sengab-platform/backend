@@ -32,12 +32,8 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
           // get project id as String
           val projectID = Json.parse(jsonResult.toString()).as[JsObject].value("project_id").as[String]
           executeQuery(DBUtilities.Project.add1ToProjectEnrollmentsCount(projectID))
-          // get index of :: in project id
-          val begin = projectID.indexOf("::")
-          // get value of ::$UUID	 from project id
-          val projectUUID = projectID.substring(begin)
-          // generate stats id
-          val statsID = "stats" + projectUUID
+          // get statsID
+          val statsID = "stats::" + trimEntityID(projectID)
           executeQuery(DBUtilities.Stats.add1ToStatsEnrollmentsCount(statsID))
           out ! Response(jsonResult)
 
