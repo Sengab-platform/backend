@@ -45,4 +45,11 @@ object GeneralErrors {
             ErrorsCodes.GENERAL_SERVER_ERROR_CODE, devMsg, class_name)
         ).toJson))
 
+  case class ALREADYEXISTS(msg: String, devMsg: String, class_name: String) extends
+    Error(
+      Results.Conflict(
+        ErrorMsg(
+          msg, DevMsg(
+            ErrorsCodes.GENERAL_SERVER_ERROR_CODE, devMsg, class_name)
+        ).toJson))
 }

@@ -7,7 +7,7 @@ import com.couchbase.client.java.document.json.JsonObject
 import helpers.Helper._
 import messages.EnrollmentManagerMessages.Enroll
 import models.Response
-import models.errors.GeneralErrors.CouldNotParseJSON
+import models.errors.GeneralErrors.{ALREADYEXISTS, CouldNotParseJSON}
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsString, Json}
 
@@ -19,14 +19,26 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
   override def receive = {
     case Enroll(userID, projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${Enroll(userID, projectID)}")
+
       executeQuery(DBUtilities.User.addProjectToEnrolledProjects(userID, projectID))
 
-
     case QueryResult(jsonObject) =>
-      if (jsonObject.containsKey("project")) {
+      if (jsonObject.containsKey("projectId")) {
       val response = constructResponse(jsonObject)
       response match {
         case Some(Response(jsonResult)) =>
+          // apply side effects
+
+          // get project id as String
+          val projectID = Json.parse(jsonResult.toString()).as[JsObject].value("project_id").as[String]
+          executeQuery(DBUtilities.Project.add1ToProjectEnrollmentsCount(projectID))
+          // get index of :: in project id
+          val begin = projectID.indexOf("::")
+          // get value of ::$UUID	 from project id
+          val projectUUID = projectID.substring(begin)
+          // generate stats id
+          val statsID = "stats" + projectUUID
+          executeQuery(DBUtilities.Stats.add1ToStatsEnrollmentsCount(statsID))
           out ! Response(jsonResult)
 
         case None =>
@@ -35,7 +47,7 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
       }
       }
       else {
-        out ! "ERROR: USER ALREADY ENROLLED"
+        out ! ALREADYEXISTS("You are already enrolled to this project", "User's already enrolled to this project", this.getClass.toString)
       }
   }
 
@@ -43,10 +55,10 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
     try {
       val parsedJson = Json.parse(jsonObject.toString)
       //add project url
-      val url = addField(parsedJson.as[JsObject], "url", helpers.Helper.ProjectPath + (parsedJson \ "project").as[String])
+      val url = addField(parsedJson.as[JsObject], "url", helpers.Helper.ProjectPath + (parsedJson \ "projectId").as[String])
 
       val project = JsObject(Seq(
-        "project_id" -> JsString((parsedJson \ "project").as[String]),
+        "project_id" -> JsString((parsedJson \ "projectId").as[String]),
         "url" -> JsString((url \ "url").as[String])))
 
       Some(Response(project))

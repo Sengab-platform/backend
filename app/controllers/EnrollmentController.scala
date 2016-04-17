@@ -38,10 +38,6 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
             case Response(json) =>
               Created(json)
 
-            //already enrolled
-            case err: String =>
-              Forbidden(err)
-
             // failed to enroll
             case err: Error =>
               err.result
