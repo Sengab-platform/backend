@@ -56,6 +56,9 @@ public class DBConfig {
         return Observable.just (projectObject.put ("id",projectId).put ("category",userCategoryObject));
     }
 
+    static String stripIdFromPrefix (String id){
+        return id.replaceAll ("[^\\d]","");
+    }
      static String getIdFromJson(JsonObject object){
         return object.getString (ID_JSON_KEY);
     }

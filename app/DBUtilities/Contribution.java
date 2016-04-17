@@ -49,13 +49,13 @@ public class Contribution {
             return Observable.error (e);
         }
 
-        String contributionId = "contribution::" + projectId + "::" + userId;
+        String contributionId = "contribution::" + DBConfig.stripIdFromPrefix (projectId) + "::" + DBConfig.stripIdFromPrefix (userId);
 
         logger.info (String.format ("DB: Adding contribution with ID: $1", contributionId));
 
         return mBucket.query (N1qlQuery.simple (select (Expression.x ("meta(aUser).id")).from (Expression.x (DBConfig.BUCKET_NAME + " aUser"))
-            .useKeys (Expression.s ("user::" + userId))
-            .where (arrayContains (Expression.x ("enrolled_projects"), Expression.s ("project::" + projectId)))))
+            .useKeys (Expression.s (userId))
+            .where (arrayContains (Expression.x ("enrolled_projects"), Expression.s (projectId)))))
             .flatMap (result -> result.rows ().isEmpty ())
             .flatMap (isEmpty -> {
                 if (isEmpty) {
