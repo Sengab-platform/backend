@@ -37,7 +37,7 @@ object GeneralErrors {
         ).toJson))
 
 
-  case class FORBIDDEN(msg: String, devMsg: String, class_name: String) extends
+  case class Forbidden(msg: String, devMsg: String, class_name: String) extends
     Error(
       Results.Forbidden(
         ErrorMsg(
@@ -45,7 +45,7 @@ object GeneralErrors {
             ErrorsCodes.GENERAL_SERVER_ERROR_CODE, devMsg, class_name)
         ).toJson))
 
-  case class ALREADYEXISTS(msg: String, devMsg: String, class_name: String) extends
+  case class AlreadyExists(msg: String, devMsg: String, class_name: String) extends
     Error(
       Results.Conflict(
         ErrorMsg(

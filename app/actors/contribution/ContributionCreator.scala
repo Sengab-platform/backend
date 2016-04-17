@@ -9,7 +9,7 @@ import helpers.Helper
 import messages.ContributionManagerMessages.CreateContribution
 import models.Response
 import models.errors.Error
-import models.errors.GeneralErrors.{CouldNotParseJSON, FORBIDDEN}
+import models.errors.GeneralErrors.{CouldNotParseJSON, Forbidden}
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsString, JsValue, Json}
 
@@ -37,7 +37,7 @@ class ContributionCreator(out: ActorRef) extends AbstractDBHandler(out) {
     case QueryResult(doc) if doc.get("id") == DBUtilities.DBConfig.NOT_ENROLLED =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)}")
 
-      out ! FORBIDDEN("can't submit contribution, enroll to the project first",
+      out ! Forbidden("can't submit contribution, enroll to the project first",
         "User is not enrolled in this project", this.getClass.toString)
 
     // if the user is enrolled to the project

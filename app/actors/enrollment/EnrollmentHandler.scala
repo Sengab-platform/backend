@@ -7,7 +7,7 @@ import com.couchbase.client.java.document.json.JsonObject
 import helpers.Helper._
 import messages.EnrollmentManagerMessages.Enroll
 import models.Response
-import models.errors.GeneralErrors.{ALREADYEXISTS, CouldNotParseJSON}
+import models.errors.GeneralErrors.{AlreadyExists, CouldNotParseJSON}
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsString, Json}
 
@@ -47,7 +47,7 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
       }
       }
       else {
-        out ! ALREADYEXISTS("You are already enrolled to this project", "User's already enrolled to this project", this.getClass.toString)
+        out ! AlreadyExists("You are already enrolled to this project", "User's already enrolled to this project", this.getClass.toString)
       }
   }
 
