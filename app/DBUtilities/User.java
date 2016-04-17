@@ -32,7 +32,6 @@ import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.*;
  * Created by rashwan on 3/28/16.
  */
 public class User {
-    private static final Logger.ALogger logger = Logger.of (User.class.getSimpleName ());
     private static AsyncBucket mBucket;
 
     /**
@@ -101,7 +100,7 @@ public class User {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info (String.format ("DB: Bulk getting enrolled projects for user with id: %s with offset: %s and limit: %s", userId,offset,limit));
+        Logger.info (String.format ("DB: Bulk getting enrolled projects for user with id: %s with offset: %s and limit: %s", userId,offset,limit));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id,project, category"))
             .from (Expression.x (DBConfig.BUCKET_NAME + " aUser")).useKeys (Expression.s (userId))
@@ -116,7 +115,7 @@ public class User {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                logger.info (String.format ("DB: Failed to Bulk get enrolled projects for user with id: %s with offset: %s and limit: %s",userId,limit,offset));
+                Logger.info (String.format ("DB: Failed to Bulk get enrolled projects for user with id: %s with offset: %s and limit: %s",userId,limit,offset));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get enrolled projects for user with id: %s with offset: %s and limit: %s, general DB exception.",userId,offset,limit)));
             })
@@ -137,7 +136,7 @@ public class User {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info (String.format ("DB: Bulk getting created projects for user with id: %s with offset: %s and limit: %s", userId,offset,limit));
+        Logger.info (String.format ("DB: Bulk getting created projects for user with id: %s with offset: %s and limit: %s", userId,offset,limit));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -151,7 +150,7 @@ public class User {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                logger.info (String.format ("DB: Failed to Bulk get created projects for user with id: %s with offset: %s and limit: %s",userId,limit,offset));
+                Logger.info (String.format ("DB: Failed to Bulk get created projects for user with id: %s with offset: %s and limit: %s",userId,limit,offset));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get created projects for user with id: %s with offset: %s and limit: %s, general DB exception.",userId,offset,limit)));
             })
@@ -173,7 +172,7 @@ public class User {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info (String.format ("DB: Partial updating user with ID: %s", userId));
+        Logger.info (String.format ("DB: Partial updating user with ID: %s", userId));
 
 
         return mBucket.query (N1qlQuery.simple (update(DBConfig.BUCKET_NAME).useKeys (Expression.s (userId))
@@ -186,17 +185,17 @@ public class User {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof DocumentDoesNotExistException){
-                    logger.info (String.format ("DB: Failed to partial update user with ID: %s, no user exists with this id.",userId));
+                    Logger.info (String.format ("DB: Failed to partial update user with ID: %s, no user exists with this id.",userId));
 
                     return Observable.error (new DocumentDoesNotExistException (String.format ("DB: Failed to partial update user with ID: %s, no user exists with this id.",userId)));
 
                 }else if (throwable instanceof CASMismatchException){
                     //// TODO: 4/1/16 needs more accurate handling in the future.
-                    logger.info (String.format ("DB: Failed to partial update user with ID: %s, CAS value is changed.",userId));
+                    Logger.info (String.format ("DB: Failed to partial update user with ID: %s, CAS value is changed.",userId));
 
                     return Observable.error (new CASMismatchException (String.format ("DB: Failed to partial update user with ID: %s, CAS value is changed.",userId)));
                 } else {
-                    logger.info (String.format ("DB: Failed to partial update user with ID: %s, General DB exception.",userId));
+                    Logger.info (String.format ("DB: Failed to partial update user with ID: %s, General DB exception.",userId));
 
                     return Observable.error (new CouchbaseException (String.format ("Failed to partial update user with ID: %s , General DB exception.",userId)));
                 }
@@ -215,7 +214,7 @@ public class User {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Adding 1 to contributions count of user with id: %s",userId));
+        Logger.info (String.format ("DB: Adding 1 to contributions count of user with id: %s",userId));
 
         return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " aUser")).useKeys (Expression.s (userId))
         .set ("stats.contributions",Expression.x ("stats.contributions + " + 1 ))
@@ -228,11 +227,11 @@ public class User {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to add 1 to contributions count of user with id: %s",userId));
+                Logger.info (String.format ("DB: Failed to add 1 to contributions count of user with id: %s",userId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of user with id: %s, General DB exception.",userId)));
             } else {
-                logger.info (String.format ("DB: Failed to add 1 to contributions count of user with id: %s",userId));
+                Logger.info (String.format ("DB: Failed to add 1 to contributions count of user with id: %s",userId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of user with id: %s, General DB exception.",userId)));
             }
@@ -252,7 +251,7 @@ public class User {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Adding project with ID: %s to enrolled projects for user with id: %s",projectId,userId));
+        Logger.info (String.format ("DB: Adding project with ID: %s to enrolled projects for user with id: %s",projectId,userId));
 
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(aUser).id")).from (Expression.x (DBConfig.BUCKET_NAME + " aUser"))
@@ -261,7 +260,7 @@ public class User {
             .flatMap (result -> result.rows ().isEmpty ())
             .flatMap (isEmpty -> {
                 if (!isEmpty){
-                    logger.info (String.format ("DB: User with ID: %s is already enrolled in project with ID: %s",userId,projectId));
+                    Logger.info (String.format ("DB: User with ID: %s is already enrolled in project with ID: %s",userId,projectId));
 
                     return Observable.just (JsonObject.create ().put ("id",DBConfig.ALREADY_ENROLLED));
                 }else {
@@ -278,11 +277,11 @@ public class User {
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof CASMismatchException){
                     //// TODO: 4/1/16 needs more accurate handling in the future.
-                    logger.info (String.format ("DB: Failed to add project with ID: %s to enrolled projects for user with id: %s",projectId,userId));
+                    Logger.info (String.format ("DB: Failed to add project with ID: %s to enrolled projects for user with id: %s",projectId,userId));
 
                     return Observable.error (new CASMismatchException (String.format ("DB: Failed to add project with ID: %s to enrolled projects for user with id: %s, General DB exception.",projectId,userId)));
                 } else {
-                    logger.info (String.format ("DB: Failed to add project with ID: %s to enrolled projects for user with id: %s",projectId,userId));
+                    Logger.info (String.format ("DB: Failed to add project with ID: %s to enrolled projects for user with id: %s",projectId,userId));
 
                     return Observable.error (new CouchbaseException (String.format ("DB: Failed to add project with ID: %s to enrolled projects for user with id: %s, General DB exception.",projectId,userId)));
                 }
@@ -303,7 +302,7 @@ public class User {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Removing project with ID: %s to enrolled projects for user with id: %s",userId,projectId));
+        Logger.info (String.format ("DB: Removing project with ID: %s to enrolled projects for user with id: %s",userId,projectId));
 
         return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " aUser"))
         .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
@@ -318,11 +317,11 @@ public class User {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to remove project with ID: %s to enrolled projects for user with id: %s",userId,projectId));
+                Logger.info (String.format ("DB: Failed to remove project with ID: %s to enrolled projects for user with id: %s",userId,projectId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to remove project with ID: %s to enrolled projects for user with id: %s, General DB exception.",userId,projectId)));
             } else {
-                logger.info (String.format ("DB: Failed to remove project with ID: %s to enrolled projects for user with id: %s",userId,projectId));
+                Logger.info (String.format ("DB: Failed to remove project with ID: %s to enrolled projects for user with id: %s",userId,projectId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove project with ID: %s to enrolled projects for user with id: %s, General DB exception.",userId,projectId)));
             }

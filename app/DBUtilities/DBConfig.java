@@ -19,7 +19,6 @@ public class DBConfig {
     public static final String NOT_ENROLLED = "not_enrolled";
     public static final String BUCKET_NAME = "default";
     private static final String ID_JSON_KEY = "id";
-    private static final Logger.ALogger logger = Logger.of (DBConfig.class.getSimpleName ());
     public static AsyncBucket bucket;
     private static Cluster cluster;
 
@@ -28,21 +27,21 @@ public class DBConfig {
      * @return DBConfig.OPEN_BUCKET_OK . if it succeeds and DBConfig.OPEN_BUCKET_ERROR} if it fails.
      */
     public static int initDB(){
-        logger.info ("DB: Trying to initialize DB");
+        Logger.info ("DB: Trying to initialize DB");
         if (bucket != null && !bucket.isClosed ()){
-            logger.info ("DB: DB already initialized");
+            Logger.info ("DB: DB already initialized");
             return OPEN_BUCKET_OK;
         }
         try{
             cluster = CouchbaseCluster.create();
             bucket = cluster.openBucket().async();
-            logger.info ("DB: DB initialized");
+            Logger.info ("DB: DB initialized");
             return OPEN_BUCKET_OK;
         }catch (CouchbaseException e){
-            logger.info ("DB: DB to initialize");
+            Logger.info ("DB: DB to initialize");
             return OPEN_BUCKET_ERROR;
         } catch (Exception e) {
-            logger.info ("DB: DB failed to initialize");
+            Logger.info ("DB: DB failed to initialize");
             return OPEN_BUCKET_ERROR;
         }
     }

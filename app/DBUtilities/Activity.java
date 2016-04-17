@@ -31,7 +31,6 @@ import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.array
  * Created by rashwan on 3/29/16.
  */
 public class Activity {
-    private static final Logger.ALogger logger = Logger.of (Activity.class.getSimpleName ());
     private static AsyncBucket mBucket;
 
     /**
@@ -90,11 +89,11 @@ public class Activity {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s",activityObject,activityId));
+                Logger.info (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s",activityObject,activityId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s, General DB exception.",activityObject.toString (),activityId)));
             } else {
-                logger.info (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s",activityObject,activityId));
+                Logger.info (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s",activityObject,activityId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s, General DB exception.",activityObject.toString (),activityId)));
             }
@@ -113,10 +112,9 @@ public class Activity {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info (String.format ("DB: Getting activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset));
+        Logger.info (String.format ("DB: Getting activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset));
 
         int endIndex = offset + limit ;
-        logger.info (endIndex + "");
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("activities[" + offset + ":array_min([(array_length(activities))," + endIndex + "])]")
             .as ("activities")).from (DBConfig.BUCKET_NAME)
@@ -127,7 +125,7 @@ public class Activity {
         .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
         .onErrorResumeNext (throwable -> {
-            logger.info (String.format ("DB: failed to get activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset));
+            Logger.info (String.format ("DB: failed to get activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset));
 
             return Observable.error (new CouchbaseException (String.format ("DB: failed to get activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset)));
         })

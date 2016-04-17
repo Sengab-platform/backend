@@ -29,7 +29,6 @@ import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
 
 public class Project {
-    private static final Logger.ALogger logger = Logger.of(Project.class.getSimpleName());
     private static AsyncBucket mBucket;
     private static String ownerIdKey = "id";
     private static String ownerImageKey = "image";
@@ -57,7 +56,7 @@ public class Project {
         String resultsId = "result::" + projectUUID;
         String statsID = "stats::" + projectUUID;
 
-        logger.info (String.format ("DB: Creating project with ID: %s" ,projectId));
+        Logger.info (String.format ("DB: Creating project with ID: %s" ,projectId));
 
         return User.getUserWithId (userId).flatMap (userJsonObject -> {
 
@@ -81,7 +80,7 @@ public class Project {
                    String newStatsId = "stats::" + newProjectUUID;
                    String newResultsId = "results::" + newProjectUUID;
 
-                   logger.info (String.format ("DB: Another project with same id exists, creating a project with another ID: %s", projectId));
+                   Logger.info (String.format ("DB: Another project with same id exists, creating a project with another ID: %s", projectId));
 
                    projectJsonObject.put (statsKey,newStatsId).put (resultsKey,newResultsId);
                    JsonDocument newProjectDocument = JsonDocument.create (newProjectId,projectJsonObject);
@@ -89,7 +88,7 @@ public class Project {
                    return mBucket.insert (newProjectDocument);
                }
 
-               logger.info (String.format ("DB: Failed to insert project with ID: %s , General DB exception",projectId));
+               Logger.info (String.format ("DB: Failed to insert project with ID: %s , General DB exception",projectId));
                return Observable.error (new CouchbaseException (String.format ("Failed to insert project with ID: %s , General DB exception",projectId)));
            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
 
@@ -106,8 +105,10 @@ public class Project {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
+        Logger.ALogger we = Logger.of ("ase");
+        we.info ("DB: Getting project with ID");
 
-        logger.info (String.format ("DB: Getting project with ID: %s", projectId));
+        Logger.info (String.format ("DB: Getting project with ID: %s", projectId));
 
         return mBucket.query (N1qlQuery.simple (select("*").from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -120,7 +121,7 @@ public class Project {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
 
-                logger.info (String.format ("DB: Failed to Get project with ID: %s, General DB exception",projectId));
+                Logger.info (String.format ("DB: Failed to Get project with ID: %s, General DB exception",projectId));
 
                 return Observable.error (new CouchbaseException (String.format ("Failed to get project with ID: %s, General DB exception",projectId)));
             }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
@@ -141,7 +142,7 @@ public class Project {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: bulk getting projects sorted by: %s and with limit: %s and offset: %s",sortBy,limit,offset));
+        Logger.info (String.format ("DB: bulk getting projects sorted by: %s and with limit: %s and offset: %s",sortBy,limit,offset));
 
         return bucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -154,7 +155,7 @@ public class Project {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                      .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                logger.info (String.format ("DB: failed to bulk get projects sorted by: %s and with limit: %s and offset: %s",sortBy,limit,offset));
+                Logger.info (String.format ("DB: failed to bulk get projects sorted by: %s and with limit: %s and offset: %s",sortBy,limit,offset));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects sorted by: %s and with limit: %s and offset: %s",sortBy,limit,offset)));
             })
@@ -175,7 +176,7 @@ public class Project {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: bulk getting featured projects with limit: %s and offset: %s",limit,offset));
+        Logger.info (String.format ("DB: bulk getting featured projects with limit: %s and offset: %s",limit,offset));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
                 .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -188,7 +189,7 @@ public class Project {
                 .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                         .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
                 .onErrorResumeNext (throwable -> {
-                    logger.info (String.format ("DB: failed to bulk get featured projects with limit: %s and offset: %s",limit,offset));
+                    Logger.info (String.format ("DB: failed to bulk get featured projects with limit: %s and offset: %s",limit,offset));
 
                     return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get featured projects with limit: %s and offset: %s",limit,offset)));
                 })
@@ -209,7 +210,7 @@ public class Project {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Bulk getting projects with category_id: %s ,limit: %s and offset: %s",categoryId,limit,offset));
+        Logger.info (String.format ("DB: Bulk getting projects with category_id: %s ,limit: %s and offset: %s",categoryId,limit,offset));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -222,7 +223,7 @@ public class Project {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                logger.info (String.format ("DB: failed to bulk get projects with category_id: %s ,limit: %s and offset: %s",categoryId,limit,offset));
+                Logger.info (String.format ("DB: failed to bulk get projects with category_id: %s ,limit: %s and offset: %s",categoryId,limit,offset));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects with category_id: %s ,limit: %s and offset: %s",categoryId,limit,offset)));
             })
@@ -244,7 +245,7 @@ public class Project {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info (String.format ("DB: Searching for projects with name containing: %s with limit: %s and offset: %s",searchText,limit,offset));
+        Logger.info (String.format ("DB: Searching for projects with name containing: %s with limit: %s and offset: %s",searchText,limit,offset));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
@@ -256,7 +257,7 @@ public class Project {
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                logger.info (String.format ("DB: failed to search for projects with name containing: %s with limit: %s and offset: %s",searchText,limit,offset));
+                Logger.info (String.format ("DB: failed to search for projects with name containing: %s with limit: %s and offset: %s",searchText,limit,offset));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: failed to search for projects with name containing: %s with limit: %s and offset: %s",searchText,limit,offset)));
             })
@@ -271,7 +272,7 @@ public class Project {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Getting project name for project with ID: %s",projectId));
+        Logger.info (String.format ("DB: Getting project name for project with ID: %s",projectId));
 
         return mBucket.query (N1qlQuery.simple (select (Expression.x ("name")).from (DBConfig.BUCKET_NAME)
         .useKeys (Expression.s (projectId)))).timeout (1000,TimeUnit.MILLISECONDS)
@@ -282,7 +283,7 @@ public class Project {
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
         .onErrorResumeNext (throwable -> {
 
-            logger.info (String.format ("DB: Failed to Get project name for project with ID: %s, General DB exception",projectId));
+            Logger.info (String.format ("DB: Failed to Get project name for project with ID: %s, General DB exception",projectId));
 
             return Observable.error (new CouchbaseException (String.format ("Failed to get project name for project  with ID: %s, General DB exception",projectId)));
         }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
@@ -301,7 +302,7 @@ public class Project {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Adding 1 to contributions count of project with id: %s",projectId));
+        Logger.info (String.format ("DB: Adding 1 to contributions count of project with id: %s",projectId));
 
         return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " project")).useKeys (Expression.s (projectId))
         .set ("contributions_count",Expression.x ("contributions_count + " + 1 ))
@@ -314,11 +315,11 @@ public class Project {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to add 1 to contributions count of project with id: %s",projectId));
+                Logger.info (String.format ("DB: Failed to add 1 to contributions count of project with id: %s",projectId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of project with id: %s, General DB exception.",projectId)));
             } else {
-                logger.info (String.format ("DB: Failed to add 1 to contributions count of project with id: %s",projectId));
+                Logger.info (String.format ("DB: Failed to add 1 to contributions count of project with id: %s",projectId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of project with id: %s, General DB exception.",projectId)));
             }
@@ -337,7 +338,7 @@ public class Project {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Adding 1 to contributions count of project with id: %s",projectId));
+        Logger.info (String.format ("DB: Adding 1 to contributions count of project with id: %s",projectId));
 
         return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " project")).useKeys (Expression.s (projectId))
         .set ("enrollments_count",Expression.x ("enrollments_count + " + 1 ))
@@ -350,11 +351,11 @@ public class Project {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to add 1 to enrollments count of project with id: %s",projectId));
+                Logger.info (String.format ("DB: Failed to add 1 to enrollments count of project with id: %s",projectId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to enrollments count of project with id: %s, General DB exception.",projectId)));
             } else {
-                logger.info (String.format ("DB: Failed to add 1 to enrollments count of project with id: %s",projectId));
+                Logger.info (String.format ("DB: Failed to add 1 to enrollments count of project with id: %s",projectId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to enrollments count of project with id: %s, General DB exception.",projectId)));
             }
@@ -373,7 +374,7 @@ public class Project {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Removing 1 from contributions count of project with id: %s",projectId));
+        Logger.info (String.format ("DB: Removing 1 from contributions count of project with id: %s",projectId));
 
         return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " project")).useKeys (Expression.s (projectId))
         .set ("enrollments_count",Expression.x ("enrollments_count - " + 1 ))
@@ -386,11 +387,11 @@ public class Project {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to remove 1 from enrollments count of project with id: %s",projectId));
+                Logger.info (String.format ("DB: Failed to remove 1 from enrollments count of project with id: %s",projectId));
 
                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to remove 1 from enrollments count of project with id: %s, General DB exception.",projectId)));
             } else {
-                logger.info (String.format ("DB: Failed to remove 1 from enrollments count of project with id: %s",projectId));
+                Logger.info (String.format ("DB: Failed to remove 1 from enrollments count of project with id: %s",projectId));
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove 1 from enrollments count of project with id: %s, General DB exception.",projectId)));
             }
