@@ -307,10 +307,10 @@ public class User {
 
         logger.info (String.format ("DB: Removing project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
 
-        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
+        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " aUser"))
         .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
                 arrayRemove (Expression.x ("enrolled_projects"),Expression.s (projectId)))
-        .returning (Expression.x ("meta(project).id"))))
+        .returning (Expression.x ("meta(aUser).id," + Expression.s (projectId) + "as projectId"))))
         .timeout (1000,TimeUnit.MILLISECONDS)
         .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
         .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)

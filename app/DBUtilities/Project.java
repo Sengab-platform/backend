@@ -261,7 +261,7 @@ public class Project {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: failed to search for projects with name containing: $1 with limit: $2 and offset: $3",searchText,limit,offset)));
             })
-            .defaultIfEmpty (JsonObject.create ());
+            .defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
 
     }
 
