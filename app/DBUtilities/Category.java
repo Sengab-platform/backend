@@ -30,8 +30,8 @@ import static com.couchbase.client.java.query.Select.select;
  */
 public class Category {
 
-    private static AsyncBucket mBucket;
     private static final Logger.ALogger logger = Logger.of (Category.class.getSimpleName ());
+    private static AsyncBucket mBucket;
 
     /**
      * Create and save a category. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -66,7 +66,7 @@ public class Category {
     /**
      * Get a category using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param categoryId the id of the category to get.
-     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
+     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_OBJECT .
      */
     public static Observable<JsonObject> getCategoryWithId(String categoryId){
         try {
@@ -83,7 +83,7 @@ public class Category {
                 .onErrorResumeNext (throwable -> {
                     return Observable.error (new CouchbaseException ("Failed to get category, General DB exception"));
                 })
-                .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+                .defaultIfEmpty(JsonDocument.create(DBConfig.EMPTY_JSON_OBJECT, JsonObject.create()))
                 .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 

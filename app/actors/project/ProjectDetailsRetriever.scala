@@ -38,7 +38,7 @@ class ProjectDetailsRetriever(out: ActorRef) extends AbstractDBHandler(out) {
     case QueryResult(jsonObj) =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(jsonObj)} ")
 
-      if (jsonObj.get("id") != DBUtilities.DBConfig.EMPTY_JSON_DOC) {
+      if (jsonObj.get("id") != DBUtilities.DBConfig.EMPTY_JSON_OBJECT) {
         val response = constructResponse(jsonObj)
         response match {
           case Some(Response(jsonResult)) =>

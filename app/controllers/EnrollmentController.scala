@@ -8,9 +8,9 @@ import akka.pattern.ask
 import akka.util.Timeout
 import auth.services.AuthEnvironment
 import messages.EnrollmentManagerMessages.{Enroll, Withdraw}
+import models.Response
 import models.errors.Error
 import models.errors.GeneralErrors.{AskTimeoutError, BadJSONError}
-import models.{Enrollment, Response}
 import play.api.mvc.{Action, BodyParsers}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,27 +27,31 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
   //  enroll in a project
   def enrollInProject() = Action.async(BodyParsers.parse.json) {
     request => {
-      val projectID = request.body.asOpt[Enrollment]
+      val projectID = (request.body \ "project_id").asOpt[String]
       //val userID = request.user.main.userId
 
       projectID match {
-      // got enrollment keys/values
+        // got ProjectID
         case Some(projectID) =>
           receptionist ? Enroll(s"user::117521628211683444029", projectID) map {
 
             case Response(json) =>
               Created(json)
 
-          // failed to enroll
-          case err: Error =>
-            err.result
+            //already enrolled
+            case err: String =>
+              Forbidden(err)
+
+            // failed to enroll
+            case err: Error =>
+              err.result
 
         } recover {
           // timeout exception
           case e: TimeoutException =>
             AskTimeoutError("Enroll to project process failed", "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
         }
-      // could't parse Json and get enrollment keys/values
+        // could't parse Json and get projectID
       case None =>
         Future(BadJSONError("Enroll to project process failed", "wrong JSON", this.getClass.toString).result)
       }
@@ -58,11 +62,11 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
   //  withdraw from project
   def WithdrawFromProject() = Action.async(BodyParsers.parse.json) {
     request => {
-      val projectID = request.body.asOpt[Enrollment]
+      val projectID = (request.body \ "project_id").asOpt[String]
       //val userID = request.user.main.userId
 
       projectID match {
-        // got enrollment keys/values
+        // got projectID
         case Some(projectID) =>
           receptionist ? Withdraw(s"user::117521628211683444029", projectID) map {
 
@@ -78,7 +82,7 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
             case e: TimeoutException =>
               AskTimeoutError("Withdraw from project process failed", "Ask Timeout Exception on Actor Receptionist", this.getClass.toString).result
           }
-        // could't parse Json and get enrollment keys/values
+        // could't parse Json and get projectID
         case None =>
           Future(BadJSONError("Withdraw from project process failed", "wrong JSON", this.getClass.toString).result)
       }

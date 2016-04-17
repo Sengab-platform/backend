@@ -28,8 +28,8 @@ import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.array
  * Created by rashwan on 3/29/16.
  */
 public class Result {
-    private static AsyncBucket mBucket;
     private static final Logger.ALogger logger = Logger.of (Result.class.getSimpleName ());
+    private static AsyncBucket mBucket;
 
     /**
      * Create and save a project's results. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -64,7 +64,7 @@ public class Result {
     /**
      * Get results for a project using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param resultId the id of the results document to get.
-     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
+     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_OBJECT .
      */
     public static Observable<JsonObject> getResultWithId(String resultId){
         try {
@@ -85,7 +85,7 @@ public class Result {
                 logger.info (String.format ("DB: Failed to get a result document with ID: %s",resultId));
                 return Observable.error (new CouchbaseException (String.format ("Failed to get result with ID: %s, General DB exception",resultId)));
             })
-            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+                .defaultIfEmpty(JsonDocument.create(DBConfig.EMPTY_JSON_OBJECT, JsonObject.create()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
@@ -156,7 +156,7 @@ public class Result {
 
                     return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of result with id: %s, General DB exception.",resultId)));
                 }
-            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+            }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -196,7 +196,7 @@ public class Result {
 
                     return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new result with answer: %s and contents: %s to activity with id: %s, General DB exception.",answer,locationObject.toString (),resultId)));
                 }
-            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+            }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -234,7 +234,7 @@ public class Result {
 
                     return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new result with contents: %s to activity with id: %s, General DB exception.",resultObject.toString (),resultId)));
                 }
-            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+            }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
     /**
      * Delete results of a project using its id. can error with {@link CouchbaseException}, {@link DocumentDoesNotExistException} and {@link BucketClosedException} .

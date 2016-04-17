@@ -27,8 +27,8 @@ import static com.couchbase.client.java.query.Update.update;
  * Created by rashwan on 3/29/16.
  */
 public class Stats {
-    private static AsyncBucket mBucket;
     private static final Logger.ALogger logger = Logger.of (Stats.class.getSimpleName ());
+    private static AsyncBucket mBucket;
 
     /**
      * Create and save a project's stats. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -62,7 +62,7 @@ public class Stats {
     /**
      * Get stats for a project using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param statsId the id of the stats document to get.
-     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
+     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_OBJECT .
      */
     public static Observable<JsonObject> getStatsWithId(String statsId){
         try {
@@ -79,7 +79,7 @@ public class Stats {
             .onErrorResumeNext (throwable -> {
                 return Observable.error (new CouchbaseException ("Failed to get stats, General DB exception"));
             })
-            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+                .defaultIfEmpty(JsonDocument.create(DBConfig.EMPTY_JSON_OBJECT, JsonObject.create()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
@@ -116,7 +116,7 @@ public class Stats {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of stats with id: %s, General DB exception.",statsId)));
             }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -152,7 +152,7 @@ public class Stats {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to enrollments count of stats with id: %s, General DB exception.",statsId)));
             }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -188,7 +188,7 @@ public class Stats {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: %s, General DB exception.",statsId)));
             }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**

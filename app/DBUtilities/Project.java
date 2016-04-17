@@ -23,12 +23,13 @@ import rx.Observable;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static DBUtilities.DBConfig.EMPTY_JSON_DOC;
+import static DBUtilities.DBConfig.EMPTY_JSON_OBJECT;
 import static DBUtilities.DBConfig.bucket;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
 
 public class Project {
+    private static final Logger.ALogger logger = Logger.of(Project.class.getSimpleName());
     private static AsyncBucket mBucket;
     private static String ownerIdKey = "id";
     private static String ownerImageKey = "image";
@@ -39,8 +40,6 @@ public class Project {
     private static String ownerKey = "owner";
     private static String resultsKey = "results";
     private static String statsKey = "stats";
-    private static final Logger.ALogger logger = Logger.of (Project.class.getSimpleName ());
-
 
     /**
      * Create and save a project. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -124,7 +123,7 @@ public class Project {
                 logger.info (String.format ("DB: Failed to Get project with ID: %s, General DB exception",projectId));
 
                 return Observable.error (new CouchbaseException (String.format ("Failed to get project with ID: %s, General DB exception",projectId)));
-            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+            }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -159,7 +158,7 @@ public class Project {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects sorted by: %s and with limit: %s and offset: %s",sortBy,limit,offset)));
             })
-            .defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+                .defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -193,7 +192,7 @@ public class Project {
 
                     return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get featured projects with limit: %s and offset: %s",limit,offset)));
                 })
-                .defaultIfEmpty (JsonObject.create ().put ("id",EMPTY_JSON_DOC));
+                .defaultIfEmpty(JsonObject.create().put("id", EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -227,7 +226,7 @@ public class Project {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get projects with category_id: %s ,limit: %s and offset: %s",categoryId,limit,offset)));
             })
-            .defaultIfEmpty (JsonObject.create ().put ("id",EMPTY_JSON_DOC));
+                .defaultIfEmpty(JsonObject.create().put("id", EMPTY_JSON_OBJECT));
 
     }
 
@@ -261,7 +260,7 @@ public class Project {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: failed to search for projects with name containing: %s with limit: %s and offset: %s",searchText,limit,offset)));
             })
-            .defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+                .defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
 
     }
 
@@ -286,7 +285,7 @@ public class Project {
             logger.info (String.format ("DB: Failed to Get project name for project with ID: %s, General DB exception",projectId));
 
             return Observable.error (new CouchbaseException (String.format ("Failed to get project name for project  with ID: %s, General DB exception",projectId)));
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
 
     }
 
@@ -323,7 +322,7 @@ public class Project {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of project with id: %s, General DB exception.",projectId)));
             }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -359,7 +358,7 @@ public class Project {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to enrollments count of project with id: %s, General DB exception.",projectId)));
             }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -395,7 +394,7 @@ public class Project {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove 1 from enrollments count of project with id: %s, General DB exception.",projectId)));
             }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**

@@ -32,7 +32,7 @@ class UserProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
     case ItemResult(jsonObject) =>
       // received new item , aggregate it to the final result Array
       Logger.info(s"actor ${self.path} - received msg : ${ItemResult(jsonObject)}")
-      if (jsonObject.getString("id") != DBUtilities.DBConfig.EMPTY_JSON_DOC) {
+      if (jsonObject.getString("id") != DBUtilities.DBConfig.EMPTY_JSON_OBJECT) {
         appendFinalResult(jsonObject)
       } else {
         unhandled(jsonObject)

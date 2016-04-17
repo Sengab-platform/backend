@@ -26,16 +26,14 @@ import java.util.concurrent.TimeUnit;
 import static DBUtilities.DBConfig.bucket;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
-import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayContains;
-import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayPut;
-import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayRemove;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.*;
 
 /**
  * Created by rashwan on 3/28/16.
  */
 public class User {
-    private static AsyncBucket mBucket;
     private static final Logger.ALogger logger = Logger.of (User.class.getSimpleName ());
+    private static AsyncBucket mBucket;
 
     /**
      * Create and save a user. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
@@ -68,7 +66,7 @@ public class User {
     /**
      * Get a user using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param userId the id of the user to get.
-     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_DOC .
+     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_OBJECT .
      */
     public static Observable<JsonObject> getUserWithId(String userId){
         try {
@@ -86,7 +84,7 @@ public class User {
             .onErrorResumeNext (throwable -> {
                 return Observable.error (new CouchbaseException ("Failed to get user, General DB exception"));
             })
-            .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
+                .defaultIfEmpty(JsonDocument.create(DBConfig.EMPTY_JSON_OBJECT, JsonObject.create()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
 
@@ -122,7 +120,7 @@ public class User {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get enrolled projects for user with id: %s with offset: %s and limit: %s, general DB exception.",userId,offset,limit)));
             })
-            .defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+                .defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -157,7 +155,7 @@ public class User {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to Bulk get created projects for user with id: %s with offset: %s and limit: %s, general DB exception.",userId,offset,limit)));
             })
-            .defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+                .defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -238,7 +236,7 @@ public class User {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of user with id: %s, General DB exception.",userId)));
             }
-      }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
@@ -288,7 +286,7 @@ public class User {
 
                     return Observable.error (new CouchbaseException (String.format ("DB: Failed to add project with ID: %s to enrolled projects for user with id: %s, General DB exception.",projectId,userId)));
                 }
-            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+            }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
 
     }
 
@@ -328,7 +326,7 @@ public class User {
 
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove project with ID: %s to enrolled projects for user with id: %s, General DB exception.",userId,projectId)));
             }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
 
     }
     /**
