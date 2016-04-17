@@ -7,16 +7,24 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.handler.timeout.TimeoutException;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
-import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.util.retry.RetryBuilder;
 import play.Logger;
 import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.query.Insert.insertInto;
+import static com.couchbase.client.java.query.Update.update;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayAppend;
+
 
 /**
  * Created by rashwan on 3/29/16.
@@ -26,9 +34,11 @@ public class Contribution {
     private static final Logger.ALogger logger = Logger.of (Contribution.class.getSimpleName ());
 
     /**
-     * Create and save a user's contribution of a project. can error with {@link CouchbaseException},{@link DocumentAlreadyExistsException} and {@link BucketClosedException}.
-     * @param contributionJsonObject The Json object to be the value of the document , it also has an Id field to use as the document key.
-     * @return an observable of the created Json document.
+     * Create and save a user's contribution of a project. can error with {@link CouchbaseException} and {@link BucketClosedException}.
+     * @param projectId The ID of the project that the user contributed to.
+     * @param userId The ID of the contributing user.
+     * @param contributionJsonObject The Json object containing the contribution content.
+     * @return An observable of Json object containing the contribution id and the added contribution object.
      */
     public static Observable<JsonObject> createContribution(String projectId,String userId,JsonObject contributionJsonObject){
         try {
@@ -38,26 +48,31 @@ public class Contribution {
         }
 
         String contributionId = "contribution::" + projectId + "::" + userId;
-        JsonDocument contributionDocument = JsonDocument.create (contributionId,contributionJsonObject);
 
         logger.info (String.format ("DB: Adding contribution with ID: $1",contributionId));
-        return mBucket.insert (contributionDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
+        return mBucket.exists (contributionId).flatMap (exist -> {
+            if (!exist){
+                logger.info (String.format ("Contribution document with ID : $1 dosen't exist, Creating a new document and adding the contribution to it.",contributionId));
+                JsonObject contributions = JsonObject.create ().put ("contributions", JsonArray.create ().add (contributionJsonObject));
+                return mBucket.query (N1qlQuery.simple (insertInto (DBConfig.BUCKET_NAME)
+                    .values (contributionId,contributions)
+                    .returning ("contributions[-1] as contribution," + Expression.s (contributionId).as ("id"))));
+            }else {
+                logger.info (String.format ("Contribution document with ID : $1 already exists, Appending the contribution to the contributions array.",contributionId));
+                return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " contribution"))
+                    .useKeys (Expression.s (contributionId)).set (Expression.x ("contributions"),
+                        arrayAppend(Expression.x ("contributions"),Expression.x (contributionJsonObject)))
+                    .returning (Expression.x ("contributions[-1] as contribution,meta(contribution).id"))));
+            }})
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                     .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                if (throwable instanceof DocumentAlreadyExistsException) {
-                    logger.info (String.format ("DB: Failed to add contribution with ID: $1",contributionId));
-
-                    return Observable.error (new DocumentAlreadyExistsException (String.format ("Failed to create contribution with ID: $1 , ID already exists",contributionId)));
-                } else {
-                    logger.info (String.format ("DB: Failed to add contribution with ID: $1",contributionId));
-
-                    return Observable.error (new CouchbaseException (String.format ("Failed to create contribution with ID: $1 , General DB exception ",contributionId)));
-                }
-            }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
-
+                    logger.info (String.format ("DB: Failed to add contribution with id: $1 and contents: $2",contributionId,contributionJsonObject.toString ()));
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add contribution with id: $1 and contents: $2, General DB exception.",contributionId,contributionJsonObject.toString ())));
+            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
 
     /**
