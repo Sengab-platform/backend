@@ -32,7 +32,6 @@ import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.array
  * Created by rashwan on 3/29/16.
  */
 public class Contribution {
-    private static final Logger.ALogger logger = Logger.of (Contribution.class.getSimpleName ());
     private static AsyncBucket mBucket;
 
     /**
@@ -51,7 +50,7 @@ public class Contribution {
 
         String contributionId = "contribution::" + DBConfig.stripIdFromPrefix (projectId) + "::" + DBConfig.stripIdFromPrefix (userId);
 
-        logger.info (String.format ("DB: Adding contribution with ID: %s", contributionId));
+        Logger.info (String.format ("DB: Adding contribution with ID: %s", contributionId));
 
         return mBucket.query (N1qlQuery.simple (select (Expression.x ("meta(aUser).id")).from (Expression.x (DBConfig.BUCKET_NAME + " aUser"))
             .useKeys (Expression.s (userId))
@@ -59,20 +58,20 @@ public class Contribution {
             .flatMap (result -> result.rows ().isEmpty ())
             .flatMap (isEmpty -> {
                 if (isEmpty) {
-                    logger.info (String.format ("DB: User with ID: %s is not enrolled in project with ID: %s", userId, projectId));
+                    Logger.info (String.format ("DB: User with ID: %s is not enrolled in project with ID: %s", userId, projectId));
 
                     return Observable.just (JsonObject.create ().put ("id", DBConfig.NOT_ENROLLED));
                 } else {
 
                     return mBucket.exists (contributionId).flatMap (exist -> {
                         if (!exist) {
-                            logger.info (String.format ("Contribution document with ID : %s dosen't exist, Creating a new document and adding the contribution to it.", contributionId));
+                            Logger.info (String.format ("Contribution document with ID : %s dosen't exist, Creating a new document and adding the contribution to it.", contributionId));
                             JsonObject contributions = JsonObject.create ().put ("contributions", JsonArray.create ().add (contributionJsonObject));
                             return mBucket.query (N1qlQuery.simple (insertInto (DBConfig.BUCKET_NAME)
                                     .values (contributionId, contributions)
                                     .returning ("contributions[-1] as contribution," + Expression.s (contributionId).as ("id"))));
                         } else {
-                            logger.info (String.format ("Contribution document with ID : %s already exists, Appending the contribution to the contributions array.", contributionId));
+                            Logger.info (String.format ("Contribution document with ID : %s already exists, Appending the contribution to the contributions array.", contributionId));
                             return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " contribution"))
                                     .useKeys (Expression.s (contributionId)).set (Expression.x ("contributions"),
                                             arrayAppend (Expression.x ("contributions"), Expression.x (contributionJsonObject)))
@@ -85,7 +84,7 @@ public class Contribution {
                             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                                     .delay (Delay.fixed (500, TimeUnit.MILLISECONDS)).once ().build ())
                             .onErrorResumeNext (throwable -> {
-                                logger.info (String.format ("DB: Failed to add contribution with id: %s and contents: %s", contributionId, contributionJsonObject.toString ()));
+                                Logger.info (String.format ("DB: Failed to add contribution with id: %s and contents: %s", contributionId, contributionJsonObject.toString ()));
                                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add contribution with id: %s and contents: %s, General DB exception.", contributionId, contributionJsonObject.toString ())));
                             }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
 

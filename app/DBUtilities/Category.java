@@ -30,7 +30,6 @@ import static com.couchbase.client.java.query.Select.select;
  */
 public class Category {
 
-    private static final Logger.ALogger logger = Logger.of (Category.class.getSimpleName ());
     private static AsyncBucket mBucket;
 
     /**
@@ -100,7 +99,7 @@ public class Category {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Bulk getting categories with limit: %s and offset: %s",limit,offset));
+        Logger.info (String.format ("DB: Bulk getting categories with limit: %s and offset: %s",limit,offset));
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(category).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " category"))
         .where (Expression.x ("meta(category).id").like (Expression.s ("%category%")))
@@ -114,7 +113,7 @@ public class Category {
         .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
             .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
         .onErrorResumeNext (throwable -> {
-            logger.info (String.format ("DB: failed to bulk get categories with limit: %s and offset: %s",limit,offset));
+            Logger.info (String.format ("DB: failed to bulk get categories with limit: %s and offset: %s",limit,offset));
 
             return Observable.error (new CouchbaseException (String.format ("DB: failed to bulk get categories with limit: %s and offset: %s",limit,offset)));
         });
