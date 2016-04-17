@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static DBUtilities.DBConfig.bucket;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayContains;
 import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayPut;
 import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayRemove;
 
@@ -253,30 +254,41 @@ public class User {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Adding project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
+        logger.info (String.format ("DB: Adding project with ID: $1 to enrolled projects for user with id: $2",projectId,userId));
 
-        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
-        .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
-                arrayPut (Expression.x ("enrolled_projects"),Expression.s (projectId)))
-        .returning (Expression.x ("enrolled_projects[-1] as project,meta(project).id"))))
-        .timeout (1000,TimeUnit.MILLISECONDS)
-        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
-        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-        .onErrorResumeNext (throwable -> {
-            if (throwable instanceof CASMismatchException){
-                //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
 
-                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
-            } else {
-                logger.info (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2",userId,projectId));
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(aUser).id")).from (Expression.x (DBConfig.BUCKET_NAME + " aUser"))
+            .useKeys (Expression.s (userId))
+            .where (arrayContains (Expression.x ("enrolled_projects"),Expression.s (projectId)))))
+            .flatMap (result -> result.rows ().isEmpty ())
+            .flatMap (isEmpty -> {
+                if (!isEmpty){
+                    logger.info (String.format ("DB: User with ID: $1 is already enrolled in project with ID: $2",userId,projectId));
 
-                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",userId,projectId)));
-            }
-        }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+                    return Observable.just (JsonObject.create ().put ("id",DBConfig.ALREADY_ENROLLED));
+                }else {
+                    return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
+                    .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
+                            arrayPut (Expression.x ("enrolled_projects"),Expression.s (projectId)))
+                    .returning (Expression.x ("enrolled_projects[-1] as project,meta(project).id"))))
+                    .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()));
+                }})
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof CASMismatchException){
+                    //// TODO: 4/1/16 needs more accurate handling in the future.
+                    logger.info (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2",projectId,userId));
+
+                    return Observable.error (new CASMismatchException (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",projectId,userId)));
+                } else {
+                    logger.info (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2",projectId,userId));
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add project with ID: $1 to enrolled projects for user with id: $2, General DB exception.",projectId,userId)));
+                }
+            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
 
     }
 

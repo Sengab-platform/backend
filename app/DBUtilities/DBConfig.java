@@ -15,6 +15,7 @@ public class DBConfig {
     public static final int OPEN_BUCKET_OK = 0;
     public static final int OPEN_BUCKET_ERROR = -1;
     public static final String EMPTY_JSON_DOC = "empty_doc";
+    public static final String ALREADY_ENROLLED = "already_enrolled";
     public static final String BUCKET_NAME = "default";
     private static final String ID_JSON_KEY = "id";
     private static final Logger.ALogger logger = Logger.of (DBConfig.class.getSimpleName ());
