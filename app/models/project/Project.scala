@@ -7,9 +7,9 @@ object Project {
 
   case class NewProject(name: String,
                         goal: Int,
-                        image:String,
+                        image: String,
                         template_id: Int,
-                        templateBody: TemplateBody,
+                        template_body: TemplateBody,
                         created_at: String,
                         brief_description: String,
                         detailed_description: String,
@@ -34,6 +34,26 @@ object Project {
                               results: String,
                               stats: String
                             )
+
+  case class DetailedProjectWithTemplateBody(
+                                              id: String,
+                                              name: String,
+                                              owner: EmbeddedOwner,
+                                              url: String,
+                                              goal: Int,
+                                              image: String,
+                                              template_id: Int,
+                                              template_body: TemplateBody,
+                                              created_at: String,
+                                              brief_description: String,
+                                              detailed_description: String,
+                                              enrollments_count: Option[Int],
+                                              contributions_count: Option[Int],
+                                              is_featured: Boolean,
+                                              category: EmbeddedCategory,
+                                              results: String,
+                                              stats: String
+                                            )
 
   case class EmbeddedProject(
                               id: String,
@@ -60,7 +80,12 @@ object Project {
     implicit val detailedProjectProjectF = Json.format[DetailedProject]
   }
 
+  object DetailedProjectWithTemplateBody {
+    implicit val detailedProjectProjectF = Json.format[DetailedProjectWithTemplateBody]
+  }
+
   object EmbeddedProject {
     implicit val EmbeddedProjectF = Json.format[EmbeddedProject]
   }
+
 }

@@ -1,16 +1,15 @@
 package messages
 
-import models.Contribution
+import models.Contributor
+import models.contribution.Contribution
 
 
 object ContributionManagerMessages {
 
   trait ContributionMessage
 
-  case class SubmitContribution(contribution: Contribution, userID: String) extends ContributionMessage
+  case class ValidateContribution(contribution: Contribution, contributor: Contributor) extends ContributionMessage
 
-  case class ValidateContribution(contribution: Contribution, userID: String) extends ContributionMessage
-
-  case class CreateContribution(contribution: Contribution, userID: String) extends ContributionMessage
+  case class CreateContribution(contribution: Contribution, contributor: Contributor) extends ContributionMessage
 
 }

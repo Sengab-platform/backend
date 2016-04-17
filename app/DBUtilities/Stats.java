@@ -95,7 +95,7 @@ public class Stats {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Adding 1 to contributions count of project with id: $1",statsId));
+        logger.info (String.format ("DB: Adding 1 to contributions count of project with id: %s",statsId));
 
         return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " stats")).useKeys (Expression.s (statsId))
         .set ("contributions_count",Expression.x ("contributions_count + " + 1 ))
@@ -108,13 +108,13 @@ public class Stats {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to add 1 to contributions count of stats with id: $1",statsId));
+                logger.info (String.format ("DB: Failed to add 1 to contributions count of stats with id: %s",statsId));
 
-                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of stats with id: $1, General DB exception.",statsId)));
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of stats with id: %s, General DB exception.",statsId)));
             } else {
-                logger.info (String.format ("DB: Failed to add 1 to contributions count of stats with id: $1",statsId));
+                logger.info (String.format ("DB: Failed to add 1 to contributions count of stats with id: %s",statsId));
 
-                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of stats with id: $1, General DB exception.",statsId)));
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of stats with id: %s, General DB exception.",statsId)));
             }
         }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
@@ -131,7 +131,7 @@ public class Stats {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Adding 1 to contributions count of stats with id: $1",statsId));
+        logger.info (String.format ("DB: Adding 1 to contributions count of stats with id: %s",statsId));
 
         return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " stats")).useKeys (Expression.s (statsId))
         .set ("enrollments_count",Expression.x ("enrollments_count + " + 1 ))
@@ -144,13 +144,13 @@ public class Stats {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to add 1 to enrollments count of stats with id: $1",statsId));
+                logger.info (String.format ("DB: Failed to add 1 to enrollments count of stats with id: %s",statsId));
 
-                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to enrollments count of stats with id: $1, General DB exception.",statsId)));
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to enrollments count of stats with id: %s, General DB exception.",statsId)));
             } else {
-                logger.info (String.format ("DB: Failed to add 1 to enrollments count of stats with id: $1",statsId));
+                logger.info (String.format ("DB: Failed to add 1 to enrollments count of stats with id: %s",statsId));
 
-                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to enrollments count of stats with id: $1, General DB exception.",statsId)));
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to enrollments count of stats with id: %s, General DB exception.",statsId)));
             }
         }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
@@ -167,7 +167,7 @@ public class Stats {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Removing 1 from contributions count of stats with id: $1",statsId));
+        logger.info (String.format ("DB: Removing 1 from contributions count of stats with id: %s",statsId));
 
         return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " stats")).useKeys (Expression.s (statsId))
         .set ("enrollments_count",Expression.x ("enrollments_count - " + 1 ))
@@ -180,13 +180,13 @@ public class Stats {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: $1",statsId));
+                logger.info (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: %s",statsId));
 
-                return Observable.error (new CASMismatchException (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: $1, General DB exception.",statsId)));
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: %s, General DB exception.",statsId)));
             } else {
-                logger.info (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: $1",statsId));
+                logger.info (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: %s",statsId));
 
-                return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: $1, General DB exception.",statsId)));
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: %s, General DB exception.",statsId)));
             }
         }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }

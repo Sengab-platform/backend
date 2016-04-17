@@ -15,6 +15,8 @@ public class DBConfig {
     public static final int OPEN_BUCKET_OK = 0;
     public static final int OPEN_BUCKET_ERROR = -1;
     public static final String EMPTY_JSON_DOC = "empty_doc";
+    public static final String ALREADY_ENROLLED = "already_enrolled";
+    public static final String NOT_ENROLLED = "not_enrolled";
     public static final String BUCKET_NAME = "default";
     private static final String ID_JSON_KEY = "id";
     private static final Logger.ALogger logger = Logger.of (DBConfig.class.getSimpleName ());
@@ -54,6 +56,9 @@ public class DBConfig {
         return Observable.just (projectObject.put ("id",projectId).put ("category",userCategoryObject));
     }
 
+    static String stripIdFromPrefix (String id){
+        return id.replaceAll ("[^\\d]","");
+    }
      static String getIdFromJson(JsonObject object){
         return object.getString (ID_JSON_KEY);
     }

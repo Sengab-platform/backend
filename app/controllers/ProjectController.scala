@@ -46,18 +46,32 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   }
 
   //  get specific project
-  def getProjectDetails(projectId: String) = Action.async {
-    receptionist ? GetProjectDetails(projectId) map {
-      case Response(json) =>
-        Ok(json)
-      case error: Error =>
-        error.result
-    } recover {
-      case e: TimeoutException =>
-        AskTimeoutError("Failed to get project details",
-          "Ask Timeout Exception on Actor Receptionist",
-          this.getClass.toString).result
-
+  def getProjectDetails(projectId: String, format: String) = Action.async {
+    if (format.equals("with_template_body")) {
+      receptionist ? GetProjectDetailsWithTemplateBody(projectId) map {
+        case Response(json) =>
+          Ok(json)
+        case error: Error =>
+          error.result
+      } recover {
+        case e: TimeoutException =>
+          AskTimeoutError("Failed to get project details with template body",
+            "Ask Timeout Exception on Actor Receptionist",
+            this.getClass.toString).result
+      }
+    }
+    else {
+      receptionist ? GetProjectDetails(projectId) map {
+        case Response(json) =>
+          Ok(json)
+        case error: Error =>
+          error.result
+      } recover {
+        case e: TimeoutException =>
+          AskTimeoutError("Failed to get project details",
+            "Ask Timeout Exception on Actor Receptionist",
+            this.getClass.toString).result
+      }
     }
   }
 

@@ -12,11 +12,17 @@ import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
 import com.couchbase.client.java.error.DocumentDoesNotExistException;
 import com.couchbase.client.java.error.TemporaryFailureException;
+import com.couchbase.client.java.query.AsyncN1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.util.retry.RetryBuilder;
 import play.Logger;
 import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
+
+import static com.couchbase.client.java.query.Update.update;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayAppend;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -36,7 +42,7 @@ public class Result {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info (String.format ("DB: Adding a result document with ID: $1 ,to the DB ",resultId));
+        logger.info (String.format ("DB: Adding a result document with ID: %s ,to the DB ",resultId));
         JsonDocument resultDocument = JsonDocument.create (resultId,resultObject);
 
         return mBucket.insert (resultDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
@@ -46,11 +52,11 @@ public class Result {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof DocumentAlreadyExistsException) {
-                    logger.info (String.format ("DB: Failed to add a result document with ID: $1 ,to the DB ",resultId));
+                    logger.info (String.format ("DB: Failed to add a result document with ID: %s ,to the DB ",resultId));
 
-                    return Observable.error (new DocumentAlreadyExistsException (String.format ("Failed to create result document with ID: $1 , ID already exists",resultId)));
+                    return Observable.error (new DocumentAlreadyExistsException (String.format ("Failed to create result document with ID: %s , ID already exists",resultId)));
                 } else {
-                    return Observable.error (new CouchbaseException (String.format ("Failed to create result document with ID: $1 , General DB exception ",resultId)));
+                    return Observable.error (new CouchbaseException (String.format ("Failed to create result document with ID: %s , General DB exception ",resultId)));
                 }
             }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
     }
@@ -67,7 +73,7 @@ public class Result {
             return Observable.error(e);
         }
 
-        logger.info (String.format ("DB: Getting a result document with ID: $1",resultId));
+        logger.info (String.format ("DB: Getting a result document with ID: %s",resultId));
 
         return mBucket.get (resultId).timeout (500,TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
@@ -76,8 +82,8 @@ public class Result {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
 
-                logger.info (String.format ("DB: Failed to get a result document with ID: $1",resultId));
-                return Observable.error (new CouchbaseException (String.format ("Failed to get result with ID: $1, General DB exception",resultId)));
+                logger.info (String.format ("DB: Failed to get a result document with ID: %s",resultId));
+                return Observable.error (new CouchbaseException (String.format ("Failed to get result with ID: %s, General DB exception",resultId)));
             })
             .defaultIfEmpty (JsonDocument.create (DBConfig.EMPTY_JSON_DOC,JsonObject.create ()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
@@ -99,24 +105,137 @@ public class Result {
         JsonDocument resultDocument = JsonDocument.create (resultId,DBConfig.removeIdFromJson (resultJsonObject));
 
         return mBucket.replace (resultDocument).timeout (500,TimeUnit.MILLISECONDS)
-                .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-                .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                        .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-                .onErrorResumeNext (throwable -> {
-                    if (throwable instanceof DocumentDoesNotExistException){
-                        return Observable.error (new DocumentDoesNotExistException ("Failed to update result, ID dosen't exist in DB"));
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof DocumentDoesNotExistException){
+                    return Observable.error (new DocumentDoesNotExistException ("Failed to update result, ID dosen't exist in DB"));
 
-                    }else if (throwable instanceof CASMismatchException){
-                        //// TODO: 3/28/16 needs more accurate handling in the future.
-                        return Observable.error (new CASMismatchException ("Failed to update result, CAS value is changed"));
-                    }
-                    else {
-                        return Observable.error (new CouchbaseException ("Failed to update result, General DB exception "));
-                    }
-                });
+                }else if (throwable instanceof CASMismatchException){
+                    //// TODO: 3/28/16 needs more accurate handling in the future.
+                    return Observable.error (new CASMismatchException ("Failed to update result, CAS value is changed"));
+                }
+                else {
+                    return Observable.error (new CouchbaseException ("Failed to update result, General DB exception "));
+                }
+            });
     }
 
+    /**
+     * Adds 1 to the contributions count of the result with the provided ID.
+     * @param resultId The ID of the result to update.
+     * @return An observable of Json object containing the result id and the new contributions count.
+     */
+    public static Observable<JsonObject> add1ToResultsContributionCount(String resultId){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info (String.format ("DB: Adding 1 to contributions count of result with id: %s",resultId));
+
+        return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " result")).useKeys (Expression.s (resultId))
+            .set ("contributions_count",Expression.x ("contributions_count + " + 1 ))
+            .returning (Expression.x ("contributions_count, meta(result).id"))))
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof CASMismatchException){
+                    //// TODO: 4/1/16 needs more accurate handling in the future.
+                    logger.info (String.format ("DB: Failed to add 1 to contributions count of result with id: %s",resultId));
+
+                    return Observable.error (new CASMismatchException (String.format ("DB: Failed to add 1 to contributions count of result with id: %s, General DB exception.",resultId)));
+                } else {
+                    logger.info (String.format ("DB: Failed to add 1 to contributions count of result with id: %s",resultId));
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of result with id: %s, General DB exception.",resultId)));
+                }
+            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
+    /**
+     * Adds a result in the results document for projects that use Template 1.
+     * @param resultId The Id of the result document to add the result to.
+     * @param answer The user's answer to the question in the template (yes or no).
+     * @param locationObject A Json object containing coordinates for the user's location.
+     * @return An observable of Json object containing the result id and the added location object.
+     */
+    public static Observable<JsonObject> addResult(String resultId, String answer,JsonObject locationObject){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info (String.format ("DB: Adding a new result with answer: %s and contents: %s to activity with id: %s",answer,locationObject.toString (),resultId));
+
+        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " result"))
+            .useKeys (Expression.s (resultId)).set (Expression.x ("results." + answer),
+                    arrayAppend(Expression.x ("results." + answer),Expression.x (locationObject)))
+            .returning (Expression.x ("results." + answer + "[-1] as location,meta(result).id")))).timeout (1000,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+            .filter (result -> result.containsKey ("location"))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof CASMismatchException){
+                    //// TODO: 4/1/16 needs more accurate handling in the future.
+                    logger.info (String.format ("DB: Failed to add a new result with answer: %s and contents: %s to activity with id: %s",answer,locationObject.toString (),resultId));
+
+                    return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new result with answer: %s and contents: %s to activity with id: %s, General DB exception.",answer,locationObject.toString (),resultId)));
+                } else {
+                    logger.info (String.format ("DB: Failed to add a new result with answer: %s and contents: %s to activity with id: %s",answer,locationObject.toString (),resultId));
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new result with answer: %s and contents: %s to activity with id: %s, General DB exception.",answer,locationObject.toString (),resultId)));
+                }
+            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
+    /**
+     * Adds a result in the results document for projects that use Template 2, 3, 4.
+     * @param resultId The Id of the result document to add the result to.
+     * @param resultObject A Json object containing the result content.
+     * @return An observable of Json object containing the result id and the added result object.
+     */
+    public static Observable<JsonObject> addResult(String resultId,JsonObject resultObject){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info (String.format ("DB: Adding a new result with contents: %s to activity with id: %s",resultObject.toString (),resultId));
+
+        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " result"))
+            .useKeys (Expression.s (resultId)).set (Expression.x ("results"),
+                    arrayAppend(Expression.x ("results"),Expression.x (resultObject)))
+            .returning (Expression.x ("results[-1] as result,meta(result).id")))).timeout (1000,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof CASMismatchException){
+                    //// TODO: 4/1/16 needs more accurate handling in the future.
+                    logger.info (String.format ("DB: Failed to add a new result with contents: %s to activity with id: %s",resultObject.toString (),resultId));
+
+                    return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new result with contents: %s to activity with id: %s, General DB exception.",resultObject.toString (),resultId)));
+                } else {
+                    logger.info (String.format ("DB: Failed to add a new result with contents: %s to activity with id: %s",resultObject.toString (),resultId));
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new result with contents: %s to activity with id: %s, General DB exception.",resultObject.toString (),resultId)));
+                }
+            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
     /**
      * Delete results of a project using its id. can error with {@link CouchbaseException}, {@link DocumentDoesNotExistException} and {@link BucketClosedException} .
      * @param resultId The id of the results document to be deleted.

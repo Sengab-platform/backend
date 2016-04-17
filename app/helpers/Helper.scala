@@ -11,6 +11,7 @@ object Helper {
   val CategoryPath = "http://api.sengab.com/v1/categories/"
   val ProjectPath = "http://api.sengab.com/v1/projects/"
   val UserPath = "http://api.sengab.com/v1/users/"
+  val ContributionPath = "http://api.sengab.com/v1/contributions/"
 
   val Created = "/created_projects"
   val Contributions = "/contributions"
@@ -80,5 +81,13 @@ object Helper {
                NewValue: String): JsObject = {
     TargetObject + (NewKey -> JsString(NewValue))
   }
+
+  /**
+    * trim the word before the UUID number
+    */
+  def trimUserID(userID: String) = userID.substring(6)
+
+  def trimProjectID(projectID: String) = projectID.substring(9)
+
 }
 
