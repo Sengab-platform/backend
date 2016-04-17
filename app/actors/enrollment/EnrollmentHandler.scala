@@ -4,11 +4,12 @@ import actors.AbstractDBHandler
 import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
+import helpers.Helper._
 import messages.EnrollmentManagerMessages.Enroll
 import models.Response
 import models.errors.GeneralErrors.CouldNotParseJSON
 import play.api.Logger
-import play.api.libs.json._
+import play.api.libs.json.{JsObject, JsString, Json}
 
 
 class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
@@ -18,12 +19,11 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
   override def receive = {
     case Enroll(userID, projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${Enroll(userID, projectID)}")
-      val DBProjectID = projectID.projectID
-
-      executeQuery(DBUtilities.User.addProjectToEnrolledProjects(userID, DBProjectID))
+      executeQuery(DBUtilities.User.addProjectToEnrolledProjects(userID, projectID))
 
 
     case QueryResult(jsonObject) =>
+      if (jsonObject.containsKey("project")) {
       val response = constructResponse(jsonObject)
       response match {
         case Some(Response(jsonResult)) =>
@@ -33,12 +33,24 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
           out ! CouldNotParseJSON("failed to enroll user",
             "couldn't parse json retrieved from the db ", this.getClass.toString)
       }
+      }
+      else {
+        out ! "ERROR: USER ALREADY ENROLLED"
+      }
   }
 
   override def constructResponse(jsonObject: JsonObject): Option[Response] = {
     try {
       val parsedJson = Json.parse(jsonObject.toString)
-      Some(Response(parsedJson))
+      //add project url
+      val url = addField(parsedJson.as[JsObject], "url", helpers.Helper.ProjectPath + (parsedJson \ "project").as[String])
+
+      val project = JsObject(Seq(
+        "project_id" -> JsString((parsedJson \ "project").as[String]),
+        "url" -> JsString((url \ "url").as[String])))
+
+      Some(Response(project))
+
     } catch {
       case _: Exception => None
     }
