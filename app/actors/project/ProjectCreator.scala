@@ -86,9 +86,11 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
 
       val jsResponse = JsObject(Seq(
         "id" -> JsString((parsedJson \ "id").as[String]),
+        "url" -> JsString(Helper.ProjectPath + (parsedJson \ "id").as[String]),
         "name" -> JsString((parsedJson \ "name").as[String]),
-        "created_at" -> JsString((parsedJson \ "created_at").as[String]),
-        "url" -> JsString(Helper.ProjectPath + (parsedJson \ "id").as[String])))
+        "image" -> JsString((parsedJson \ "image").as[String]),
+        "created_at" -> JsString((parsedJson \ "created_at").as[String])
+      ))
 
       Some(Response(jsResponse))
     } catch {
