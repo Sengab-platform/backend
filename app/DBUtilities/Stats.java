@@ -40,7 +40,7 @@ public class Stats {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-
+        Logger.info (String.format ("DB: creating stats document with ID: %s",statsId));
         JsonDocument statsDocument = JsonDocument.create (statsId,statsObject);
 
         return mBucket.insert (statsDocument).single ().timeout (500, TimeUnit.MILLISECONDS)
@@ -50,9 +50,13 @@ public class Stats {
                     .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
                 if (throwable instanceof DocumentAlreadyExistsException) {
-                    return Observable.error (new DocumentAlreadyExistsException ("Failed to create stats, ID already exists"));
+                    Logger.info (String.format ("DB: Failed to create stats document with ID: %s",statsId));
+
+                    return Observable.error (new DocumentAlreadyExistsException (String.format ("DB: Failed to create stats document with ID: %s, ID already exists",statsId)));
                 } else {
-                    return Observable.error (new CouchbaseException ("Failed to create stats, General DB exception "));
+                    Logger.info (String.format ("DB: Failed to create stats document with ID: %s",statsId));
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to create stats document with ID: %s, General DB exception ",statsId)));
                 }
             }).flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
 
@@ -70,13 +74,17 @@ public class Stats {
             return Observable.error(e);
         }
 
+        Logger.info (String.format ("DB: Getting stats document with ID: %s",statsId));
+
         return mBucket.get (statsId).timeout (500,TimeUnit.MILLISECONDS)
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                 .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
             .onErrorResumeNext (throwable -> {
-                return Observable.error (new CouchbaseException ("Failed to get stats, General DB exception"));
+                Logger.info (String.format ("DB: Failed to get stats document with ID: %s",statsId));
+
+                return Observable.error (new CouchbaseException (String.format ("Failed to get stats document with ID: %s, General DB exception")));
             })
                 .defaultIfEmpty(JsonDocument.create(DBConfig.EMPTY_JSON_OBJECT, JsonObject.create()))
             .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
