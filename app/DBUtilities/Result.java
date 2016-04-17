@@ -198,6 +198,44 @@ public class Result {
                 }
             }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
+
+    /**
+     * Adds a result in the results document for projects that use Template 2, 3, 4.
+     * @param resultId The Id of the result document to add the result to.
+     * @param resultObject A Json object containing the result content.
+     * @return An observable of Json object containing the result id and the added result object.
+     */
+    public static Observable<JsonObject> addResultForTemplate234(String resultId,JsonObject resultObject){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info (String.format ("DB: Adding a new result with contents: $1 to activity with id: $2",resultObject.toString (),resultId));
+
+        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " result"))
+            .useKeys (Expression.s (resultId)).set (Expression.x ("results"),
+                    arrayAppend(Expression.x ("results"),Expression.x (resultObject)))
+            .returning (Expression.x ("results[-1] as result,meta(result).id")))).timeout (1000,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof CASMismatchException){
+                    //// TODO: 4/1/16 needs more accurate handling in the future.
+                    logger.info (String.format ("DB: Failed to add a new result with contents: $1 to activity with id: $2",resultObject.toString (),resultId));
+
+                    return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new result with contents: $1 to activity with id: $2, General DB exception.",resultObject.toString (),resultId)));
+                } else {
+                    logger.info (String.format ("DB: Failed to add a new result with contents: $1 to activity with id: $2",resultObject.toString (),resultId));
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new result with contents: $1 to activity with id: $2, General DB exception.",resultObject.toString (),resultId)));
+                }
+            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
     /**
      * Delete results of a project using its id. can error with {@link CouchbaseException}, {@link DocumentDoesNotExistException} and {@link BucketClosedException} .
      * @param resultId The id of the results document to be deleted.
