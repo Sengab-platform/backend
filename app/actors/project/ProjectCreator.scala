@@ -4,7 +4,7 @@ import actors.AbstractDBActor.Terminate
 import actors.AbstractDBHandler
 import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
-import com.couchbase.client.java.document.json.JsonObject
+import com.couchbase.client.java.document.json.{JsonArray, JsonObject}
 import helpers.Helper
 import messages.ProjectManagerMessages.CreateProject
 import models.Response
@@ -31,6 +31,8 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
         +("enrollments_count" -> JsNumber(0)).
         +("entity_type" -> JsString("project"))
 
+
+
       // construct Json Object to be inserted into DB
       val projectObj = toJsonObject(completedProject)
       executeQuery(DBUtilities.Project.createProject(userID, projectObj))
@@ -49,14 +51,25 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
 
 
     // got a json object , construct proper response from it and send the response to out
-    case QueryResult(doc) =>
-      Logger.info(s"actor ${self.path} - received msg : ${QueryResult(doc)}")
+    case QueryResult(jsonObject) =>
+      Logger.info(s"actor ${self.path} - received msg : ${QueryResult(jsonObject)}")
 
-      val response = constructResponse(doc)
+      val response = constructResponse(jsonObject)
 
       response match {
-        case Some(response) =>
-          out ! response
+        case Some(Response(jsonResult)) =>
+
+          // TODO try better solution
+          // project created successfully , execute side effects now
+
+          val createdProjectID = jsonObject.getString("id")
+          val trimmedProjectID = Helper.trimProjectID(createdProjectID)
+          executeSideEffectsQueries(
+            DBUtilities.Stats.createStats("stats::" + trimmedProjectID, generateInitialStats()),
+            DBUtilities.Result.createResult("result::" + trimmedProjectID, generateInitialResult(jsonObject)))
+
+          // send response to out
+          out ! Response(jsonResult)
 
         case None =>
           out ! CouldNotParseJSON("project created successfully, but error has happened",
@@ -80,6 +93,58 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
       Some(Response(jsResponse))
     } catch {
       case _: Exception => None
+    }
+  }
+
+  def generateInitialStats(): JsonObject = {
+    JsonObject.create()
+      .put("entity_type", "stats")
+      .put("enrollments_count", 0)
+      .put("contributions_count", 0)
+      .put("contributors_gender",
+        JsonObject.create()
+          .put("male", 0)
+          .put("female", 0))
+  }
+
+  def generateInitialResult(jsonObject: JsonObject): JsonObject = {
+
+    val tempID: Int = jsonObject.getInt("template_id")
+
+    tempID match {
+      case 1 =>
+        JsonObject.create()
+          .put("contributions_count", 0)
+          .put("results", JsonObject.create().put("yes", JsonArray.create()).put("no", JsonArray.create()))
+
+      case 2 =>
+        JsonObject.create()
+          .put("contributions_count", 0)
+          .put("results", JsonArray.create())
+
+      case 3 =>
+
+        val questions = jsonObject.getObject("template_body").getArray("questions")
+        val questionsCount = jsonObject.getObject("template_body").getInt("questions_count")
+
+        val resultsArray: JsonArray = JsonArray.create()
+
+        for (i <- 0 until questionsCount) {
+          resultsArray.add(JsonObject.create().put("id", questions.getObject(i).get("id"))
+            .put("title", questions.getObject(i).get("title"))
+            .put("yes_count", 0)
+            .put("no_count", 0))
+        }
+
+        JsonObject.create()
+          .put("contributions_count", 0)
+          .put("results", resultsArray)
+
+
+      case 4 =>
+        JsonObject.create()
+          .put("contributions_count", 0)
+          .put("results", JsonArray.create())
     }
   }
 }
