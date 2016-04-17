@@ -24,6 +24,16 @@ class WithdrawHandler(out: ActorRef) extends AbstractDBHandler(out) {
       val response = constructResponse(jsonObject)
       response match {
         case Some(Response(jsonResult)) =>
+          // get project id as String
+          val projectID = Json.parse(jsonResult.toString()).as[JsObject].value("project_id").as[String]
+          executeQuery(DBUtilities.Project.remove1FromProjectEnrollmentsCount(projectID))
+          // get index of "::" substring in project id
+          val p = projectID.indexOf("::")
+          // get value of ::$num from project id
+          val projectNum = projectID.substring(p)
+          // generate stats id
+          val statsID = "stats" + projectNum
+          executeQuery(DBUtilities.Stats.remove1FromStatsEnrollmentsCount(statsID))
           out ! Response(jsonResult)
 
         case None =>
