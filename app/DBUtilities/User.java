@@ -270,7 +270,7 @@ public class User {
                     return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
                     .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
                             arrayPut (Expression.x ("enrolled_projects"),Expression.s (projectId)))
-                    .returning (Expression.x ("enrolled_projects[-1] as project,meta(project).id"))))
+                    .returning (Expression.x ("enrolled_projects[-1] as projectId,meta(project).id"))))
                     .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()));
                 }})
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
