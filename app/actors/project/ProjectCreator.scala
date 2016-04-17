@@ -65,8 +65,8 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
           val createdProjectID = jsonObject.getString("id")
           val trimmedProjectID = Helper.trimEntityID(createdProjectID)
           executeSideEffectsQueries(
-            DBUtilities.Stats.createStats("stats::" + trimmedProjectID, generateInitialStats()),
-            DBUtilities.Result.createResult("result::" + trimmedProjectID, generateInitialResult(jsonObject)))
+            DBUtilities.Stats.createStats(Helper.StatsIDPrefix + trimmedProjectID, generateInitialStats()),
+            DBUtilities.Result.createResult(Helper.ResultIDPrefix + trimmedProjectID, generateInitialResult(jsonObject)))
 
           // send response to out
           out ! Response(jsonResult)
@@ -104,7 +104,8 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
       .put("contributors_gender",
         JsonObject.create()
           .put("male", 0)
-          .put("female", 0))
+          .put("female", 0)
+          .put("unknown", 0))
   }
 
   def generateInitialResult(jsonObject: JsonObject): JsonObject = {
