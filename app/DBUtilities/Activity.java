@@ -90,13 +90,13 @@ public class Activity {
         .onErrorResumeNext (throwable -> {
             if (throwable instanceof CASMismatchException){
                 //// TODO: 4/1/16 needs more accurate handling in the future.
-                logger.info (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2",activityObject,activityId));
+                logger.info (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s",activityObject,activityId));
 
-                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2, General DB exception.",activityObject.toString (),activityId)));
+                return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s, General DB exception.",activityObject.toString (),activityId)));
             } else {
-                logger.info (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2",activityObject,activityId));
+                logger.info (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s",activityObject,activityId));
 
-                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new activity with contents: $1 to activity with id: $2, General DB exception.",activityObject.toString (),activityId)));
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new activity with contents: %s to activity with id: %s, General DB exception.",activityObject.toString (),activityId)));
             }
         }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
@@ -113,7 +113,7 @@ public class Activity {
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
-        logger.info (String.format ("DB: Getting activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset));
+        logger.info (String.format ("DB: Getting activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset));
 
         int endIndex = offset + limit ;
         logger.info (endIndex + "");
@@ -127,9 +127,9 @@ public class Activity {
         .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
                 .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
         .onErrorResumeNext (throwable -> {
-            logger.info (String.format ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset));
+            logger.info (String.format ("DB: failed to get activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset));
 
-            return Observable.error (new CouchbaseException (String.format ("DB: failed to get activity with id: $1 ,limit: $2 and offset: $3",activityId,limit,offset)));
+            return Observable.error (new CouchbaseException (String.format ("DB: failed to get activity with id: %s ,limit: %s and offset: %s",activityId,limit,offset)));
         })
         .defaultIfEmpty (JsonObject.create ().put ("id",EMPTY_JSON_DOC));
 
