@@ -22,8 +22,10 @@ import rx.Observable;
 import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.java.query.Insert.insertInto;
+import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
 import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayAppend;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayContains;
 
 
 /**
@@ -40,39 +42,55 @@ public class Contribution {
      * @param contributionJsonObject The Json object containing the contribution content.
      * @return An observable of Json object containing the contribution id and the added contribution object.
      */
-    public static Observable<JsonObject> createContribution(String projectId,String userId,JsonObject contributionJsonObject){
+    public static Observable<JsonObject> createContribution(String projectId,String userId,JsonObject contributionJsonObject) {
         try {
-            checkDBStatus();
+            checkDBStatus ();
         } catch (BucketClosedException e) {
-            return Observable.error(e);
+            return Observable.error (e);
         }
 
         String contributionId = "contribution::" + projectId + "::" + userId;
 
-        logger.info (String.format ("DB: Adding contribution with ID: $1",contributionId));
-        return mBucket.exists (contributionId).flatMap (exist -> {
-            if (!exist){
-                logger.info (String.format ("Contribution document with ID : $1 dosen't exist, Creating a new document and adding the contribution to it.",contributionId));
-                JsonObject contributions = JsonObject.create ().put ("contributions", JsonArray.create ().add (contributionJsonObject));
-                return mBucket.query (N1qlQuery.simple (insertInto (DBConfig.BUCKET_NAME)
-                    .values (contributionId,contributions)
-                    .returning ("contributions[-1] as contribution," + Expression.s (contributionId).as ("id"))));
-            }else {
-                logger.info (String.format ("Contribution document with ID : $1 already exists, Appending the contribution to the contributions array.",contributionId));
-                return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " contribution"))
-                    .useKeys (Expression.s (contributionId)).set (Expression.x ("contributions"),
-                        arrayAppend(Expression.x ("contributions"),Expression.x (contributionJsonObject)))
-                    .returning (Expression.x ("contributions[-1] as contribution,meta(contribution).id"))));
-            }})
-            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
-            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-            .onErrorResumeNext (throwable -> {
-                    logger.info (String.format ("DB: Failed to add contribution with id: $1 and contents: $2",contributionId,contributionJsonObject.toString ()));
-                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add contribution with id: $1 and contents: $2, General DB exception.",contributionId,contributionJsonObject.toString ())));
-            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+        logger.info (String.format ("DB: Adding contribution with ID: $1", contributionId));
+
+        return mBucket.query (N1qlQuery.simple (select (Expression.x ("meta(aUser).id")).from (Expression.x (DBConfig.BUCKET_NAME + " aUser"))
+            .useKeys (Expression.s ("user::" + userId))
+            .where (arrayContains (Expression.x ("enrolled_projects"), Expression.s ("project::" + projectId)))))
+            .flatMap (result -> result.rows ().isEmpty ())
+            .flatMap (isEmpty -> {
+                if (isEmpty) {
+                    logger.info (String.format ("DB: User with ID: $1 is not enrolled in project with ID: $2", userId, projectId));
+
+                    return Observable.just (JsonObject.create ().put ("id", DBConfig.NOT_ENROLLED));
+                } else {
+
+                    return mBucket.exists (contributionId).flatMap (exist -> {
+                        if (!exist) {
+                            logger.info (String.format ("Contribution document with ID : $1 dosen't exist, Creating a new document and adding the contribution to it.", contributionId));
+                            JsonObject contributions = JsonObject.create ().put ("contributions", JsonArray.create ().add (contributionJsonObject));
+                            return mBucket.query (N1qlQuery.simple (insertInto (DBConfig.BUCKET_NAME)
+                                    .values (contributionId, contributions)
+                                    .returning ("contributions[-1] as contribution," + Expression.s (contributionId).as ("id"))));
+                        } else {
+                            logger.info (String.format ("Contribution document with ID : $1 already exists, Appending the contribution to the contributions array.", contributionId));
+                            return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " contribution"))
+                                    .useKeys (Expression.s (contributionId)).set (Expression.x ("contributions"),
+                                            arrayAppend (Expression.x ("contributions"), Expression.x (contributionJsonObject)))
+                                    .returning (Expression.x ("contributions[-1] as contribution,meta(contribution).id"))));
+                        }
+                    })
+                            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+                            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+                            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                                    .delay (Delay.fixed (500, TimeUnit.MILLISECONDS)).once ().build ())
+                            .onErrorResumeNext (throwable -> {
+                                logger.info (String.format ("DB: Failed to add contribution with id: $1 and contents: $2", contributionId, contributionJsonObject.toString ()));
+                                return Observable.error (new CouchbaseException (String.format ("DB: Failed to add contribution with id: $1 and contents: $2, General DB exception.", contributionId, contributionJsonObject.toString ())));
+                            }).defaultIfEmpty (JsonObject.create ().put ("id", DBConfig.EMPTY_JSON_DOC));
+
+                }
+            });
     }
 
     /**
