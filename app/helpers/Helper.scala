@@ -85,9 +85,7 @@ object Helper {
   /**
     * trim the word before the UUID number
     */
-  def trimUserID(userID: String) = userID.substring(6)
-
-  def trimProjectID(projectID: String) = projectID.substring(9)
+  def trimEntityID(EntityID: String) = EntityID.substring(EntityID.indexOf("::") + 2)
 
 }
 

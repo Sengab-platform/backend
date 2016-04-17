@@ -63,7 +63,7 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
           // project created successfully , execute side effects now
 
           val createdProjectID = jsonObject.getString("id")
-          val trimmedProjectID = Helper.trimProjectID(createdProjectID)
+          val trimmedProjectID = Helper.trimEntityID(createdProjectID)
           executeSideEffectsQueries(
             DBUtilities.Stats.createStats("stats::" + trimmedProjectID, generateInitialStats()),
             DBUtilities.Result.createResult("result::" + trimmedProjectID, generateInitialResult(jsonObject)))
