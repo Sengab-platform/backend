@@ -36,4 +36,13 @@ object GeneralErrors {
             ErrorsCodes.GENERAL_SERVER_ERROR_CODE, devMsg, class_name)
         ).toJson))
 
+
+  case class FORBIDDEN(msg: String, devMsg: String, class_name: String) extends
+    Error(
+      Results.Forbidden(
+        ErrorMsg(
+          msg, DevMsg(
+            ErrorsCodes.GENERAL_SERVER_ERROR_CODE, devMsg, class_name)
+        ).toJson))
+
 }
