@@ -22,6 +22,7 @@ import rx.Observable;
 import java.util.concurrent.TimeUnit;
 
 import static com.couchbase.client.java.query.Update.update;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayAppend;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -154,6 +155,46 @@ public class Result {
                     logger.info (String.format ("DB: Failed to add 1 to contributions count of result with id: $1",resultId));
 
                     return Observable.error (new CouchbaseException (String.format ("DB: Failed to add 1 to contributions count of result with id: $1, General DB exception.",resultId)));
+                }
+            }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
+    }
+
+    /**
+     * Adds a result in the results document for projects that use Template 1.
+     * @param resultId The Id of the result document to add the result to.
+     * @param answer The user's answer to the question in the template (yes or no).
+     * @param locationObject A Json object containing coordinates for the user's location.
+     * @return An observable of Json object containing the result id and the added location object.
+     */
+    public static Observable<JsonObject> addResultForTemplate1(String resultId, String answer,JsonObject locationObject){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        logger.info (String.format ("DB: Adding a new result with answer: $1 and contents: $2 to activity with id: $3",answer,locationObject.toString (),resultId));
+
+        return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " result"))
+            .useKeys (Expression.s (resultId)).set (Expression.x ("results." + answer),
+                    arrayAppend(Expression.x ("results." + answer),Expression.x (locationObject)))
+            .returning (Expression.x ("results." + answer + "[-1] as location,meta(result).id")))).timeout (1000,TimeUnit.MILLISECONDS)
+            .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+            .filter (result -> result.containsKey ("location"))
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                if (throwable instanceof CASMismatchException){
+                    //// TODO: 4/1/16 needs more accurate handling in the future.
+                    logger.info (String.format ("DB: Failed to add a new result with answer: $1 and contents: $2 to activity with id: $3",answer,locationObject.toString (),resultId));
+
+                    return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new result with answer: $1 and contents: $2 to activity with id: $3, General DB exception.",answer,locationObject.toString (),resultId)));
+                } else {
+                    logger.info (String.format ("DB: Failed to add a new result with answer: $1 and contents: $2 to activity with id: $3",answer,locationObject.toString (),resultId));
+
+                    return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new result with answer: $1 and contents: $2 to activity with id: $3, General DB exception.",answer,locationObject.toString (),resultId)));
                 }
             }).defaultIfEmpty (JsonObject.create ().put ("id",DBConfig.EMPTY_JSON_DOC));
     }
