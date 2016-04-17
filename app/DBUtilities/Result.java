@@ -166,7 +166,7 @@ public class Result {
      * @param locationObject A Json object containing coordinates for the user's location.
      * @return An observable of Json object containing the result id and the added location object.
      */
-    public static Observable<JsonObject> addResultForTemplate1(String resultId, String answer,JsonObject locationObject){
+    public static Observable<JsonObject> addResult(String resultId, String answer,JsonObject locationObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
@@ -205,7 +205,7 @@ public class Result {
      * @param resultObject A Json object containing the result content.
      * @return An observable of Json object containing the result id and the added result object.
      */
-    public static Observable<JsonObject> addResultForTemplate234(String resultId,JsonObject resultObject){
+    public static Observable<JsonObject> addResult(String resultId,JsonObject resultObject){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
