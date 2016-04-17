@@ -23,7 +23,7 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
 
 
     case QueryResult(jsonObject) =>
-      if (jsonObject.containsKey("project")) {
+      if (jsonObject.containsKey("projectId")) {
       val response = constructResponse(jsonObject)
       response match {
         case Some(Response(jsonResult)) =>
@@ -43,10 +43,10 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
     try {
       val parsedJson = Json.parse(jsonObject.toString)
       //add project url
-      val url = addField(parsedJson.as[JsObject], "url", helpers.Helper.ProjectPath + (parsedJson \ "project").as[String])
+      val url = addField(parsedJson.as[JsObject], "url", helpers.Helper.ProjectPath + (parsedJson \ "projectId").as[String])
 
       val project = JsObject(Seq(
-        "project_id" -> JsString((parsedJson \ "project").as[String]),
+        "project_id" -> JsString((parsedJson \ "projectId").as[String]),
         "url" -> JsString((url \ "url").as[String])))
 
       Some(Response(project))
