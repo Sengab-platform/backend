@@ -63,10 +63,10 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
           // project created successfully , execute side effects now
 
           val createdProjectID = jsonObject.getString("id")
-          val trimmedProjectID = Helper.trimProjectID(createdProjectID)
+          val trimmedProjectID = Helper.trimEntityID(createdProjectID)
           executeSideEffectsQueries(
-            DBUtilities.Stats.createStats("stats::" + trimmedProjectID, generateInitialStats()),
-            DBUtilities.Result.createResult("result::" + trimmedProjectID, generateInitialResult(jsonObject)))
+            DBUtilities.Stats.createStats(Helper.StatsIDPrefix + trimmedProjectID, generateInitialStats()),
+            DBUtilities.Result.createResult(Helper.ResultIDPrefix + trimmedProjectID, generateInitialResult(jsonObject)))
 
           // send response to out
           out ! Response(jsonResult)
@@ -86,9 +86,11 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
 
       val jsResponse = JsObject(Seq(
         "id" -> JsString((parsedJson \ "id").as[String]),
+        "url" -> JsString(Helper.ProjectPath + (parsedJson \ "id").as[String]),
         "name" -> JsString((parsedJson \ "name").as[String]),
-        "created_at" -> JsString((parsedJson \ "created_at").as[String]),
-        "url" -> JsString(Helper.ProjectPath + (parsedJson \ "id").as[String])))
+        "image" -> JsString((parsedJson \ "image").as[String]),
+        "created_at" -> JsString((parsedJson \ "created_at").as[String])
+      ))
 
       Some(Response(jsResponse))
     } catch {
@@ -104,7 +106,8 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
       .put("contributors_gender",
         JsonObject.create()
           .put("male", 0)
-          .put("female", 0))
+          .put("female", 0)
+          .put("unknown", 0))
   }
 
   def generateInitialResult(jsonObject: JsonObject): JsonObject = {

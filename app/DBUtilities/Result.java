@@ -21,8 +21,9 @@ import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
-import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayAppend;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.*;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -63,29 +64,63 @@ public class Result {
     /**
      * Get results for a project using its id. can error with {@link CouchbaseException} and {@link BucketClosedException}.
      * @param resultId the id of the results document to get.
-     * @return an observable of the json document if it was found , if it wasn't found it returns an empty json document with id DBConfig.EMPTY_JSON_OBJECT .
+     * @param offset an index to determine where how much result to omit from the beginning.
+     * @param limit the maximum number of results returned.
+     * @return an observable of the json object containing the contents of the results document.
      */
-    public static Observable<JsonObject> getResultWithId(String resultId){
+    public static Observable<JsonObject> getResultWithId(String resultId,int offset,int limit){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {
             return Observable.error(e);
         }
 
-        Logger.info (String.format ("DB: Getting a result document with ID: %s",resultId));
+        Logger.info (String.format ("DB: Getting a result document with ID: %s ,offset: %s and limit: %s",resultId,offset,limit));
 
-        return mBucket.get (resultId).timeout (500,TimeUnit.MILLISECONDS)
-            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
-                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
-            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
-                    .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
-            .onErrorResumeNext (throwable -> {
+        String projectId = "project::" + DBConfig.stripIdFromPrefix (resultId);
+        Logger.info (String.format ("DB: Getting template ID for project with ID : %s",projectId));
 
-                Logger.info (String.format ("DB: Failed to get a result document with ID: %s",resultId));
-                return Observable.error (new CouchbaseException (String.format ("Failed to get result with ID: %s, General DB exception",resultId)));
+        int endIndex = offset + limit ;
+
+        return mBucket.query (N1qlQuery.simple (select(Expression.x ("template_id")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+        .useKeys (Expression.s (projectId)))).flatMap (AsyncN1qlQueryResult::rows)
+        .flatMap (row -> Observable.just (row.value ())).flatMap (object -> {
+            Logger.info (String.format ("DB: Getting results for project with template ID: %s"),object.getInt ("template_id"));
+            if (object.getInt ("template_id") == 1){
+
+                Logger.info (String.format ("DB: Getting results for project with template ID: %s"),object.getInt ("template_id"));
+
+                return mBucket.query (N1qlQuery.simple (select ("contributions_count, " +
+                    Expression.x ("results.yes[" + offset + ":array_min([(array_length(results.yes))," + endIndex + "])]")
+                    .as ("yes") + ", "
+                    + Expression.x ("results.no[" + offset + ":array_min([(array_length(results.no))," + endIndex + "])]")
+                    .as ("no"))
+                .from (Expression.x (DBConfig.BUCKET_NAME)).useKeys (Expression.s (resultId))))
+                .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+                .filter (object1 -> object1.getInt ("contributions_count")!=0);
+
+            }else if (object.getInt ("template_id") == 2 || object.getInt ("template_id") == 3 || object.getInt ("template_id") == 4){
+
+                return mBucket.query (N1qlQuery.simple (select ("contributions_count, " + Expression.x ("results[" + offset
+                    + ":array_min([(array_length(results))," + endIndex + "])]")
+                    .as ("results")).from (DBConfig.BUCKET_NAME).useKeys (Expression.s (resultId))))
+                    .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+                    .filter (object1 -> object1.getInt ("contributions_count")!=0);
+
+            }
+                return Observable.just (JsonObject.create ().put ("id",DBConfig.WRONG_TEMPLATE_NUMBER));
             })
-                .defaultIfEmpty(JsonDocument.create(DBConfig.EMPTY_JSON_OBJECT, JsonObject.create()))
-            .flatMap (jsonDocument -> Observable.just (jsonDocument.content ().put ("id",jsonDocument.id ())));
+
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+
+            Logger.info (String.format ("DB: Failed to Get a result document with ID: %s ,offset: %s and limit: %s",resultId,offset,limit));
+            return Observable.error (new CouchbaseException (String.format ("DB: Failed to Get a result document with ID: %s ,offset: %s and limit: %s, General DB exception",resultId,offset,limit)));
+        })
+        .defaultIfEmpty(JsonObject.create().put ("id",DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**

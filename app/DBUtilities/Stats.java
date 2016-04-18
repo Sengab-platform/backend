@@ -21,7 +21,9 @@ import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayLength;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -196,6 +198,52 @@ public class Stats {
                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to remove 1 from enrollments count of stats with id: %s, General DB exception.",statsId)));
             }
         }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
+    }
+
+    /**
+     * Update the gender stats for a project when a user contributes to it.
+     * @param statsId The ID of the stats document to be updated.
+     * @param userId  The ID of the user making the contribution.
+     * @param userGender The gender of the contributing user.
+     * @return An Observable of Json object containing the stats ID and new gender count.
+     */
+    public static Observable<JsonObject> updateContributorsGender(String statsId,String userId, String userGender){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info (String.format ("DB: Updating gender stats with ID: %s and gender: %s",statsId,userGender));
+
+        String contributionId = "contribution::" + DBConfig.stripIdFromPrefix (statsId) + "::" + DBConfig.stripIdFromPrefix (userId);
+
+        Logger.info (String.format ("DB: Constructed the contribution ID: %s",contributionId));
+
+        return mBucket.query (N1qlQuery.simple (select(arrayLength(Expression.x ("contributions")).as (Expression.x ("length")))
+        .from (Expression.x (DBConfig.BUCKET_NAME) + " contribution").useKeys (Expression.s (contributionId))))
+        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> {
+            if (row.value ().getInt ("length") == 1){
+                Logger.info (String.format ("DB: First contribution for user with ID: %s ,updating the gender stats.",userId));
+
+                return mBucket.query (N1qlQuery.simple (update (Expression.x (DBConfig.BUCKET_NAME + " stats"))
+                .useKeys (Expression.s (statsId))
+                .set (Expression.x ("contributors_gender." + userGender),Expression.x ("contributors_gender." + userGender + " +1"))
+                .returning (Expression.x ("meta(stats).id, contributors_gender." + userGender))))
+                .flatMap (AsyncN1qlQueryResult::rows).flatMap (statsRow -> Observable.just (statsRow.value ()))
+                .filter (object -> object.containsKey (userGender));
+            }else {
+                Logger.info (String.format ("DB: Not the first contribution for user with ID: %s ,not updating the gender stats.",userId));
+                return Observable.just (JsonObject.create ().put ("id", DBConfig.ALREADY_CONTRIBUTED));
+            }})
+            .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+                    .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+            .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+                    .delay (Delay.fixed (500, TimeUnit.MILLISECONDS)).once ().build ())
+            .onErrorResumeNext (throwable -> {
+                Logger.info (String.format ("DB: Failed to update gender stats with id: %s and gender: %s", statsId, userGender));
+                return Observable.error (new CouchbaseException (String.format ("DB: Failed to update gender stats with id: %s and gender: %s, General DB exception.", statsId, userGender)));
+            }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
     /**
