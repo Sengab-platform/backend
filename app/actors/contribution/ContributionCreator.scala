@@ -48,8 +48,8 @@ class ContributionCreator(out: ActorRef) extends AbstractDBHandler(out) {
       val response = constructResponse(doc)
 
       response match {
-        case Some(response) =>
-          out ! response
+        case Some(Response(jsResponse)) =>
+          out ! Response(jsResponse)
 
         case None =>
           out ! CouldNotParseJSON("project created successfully, but error has happened",
