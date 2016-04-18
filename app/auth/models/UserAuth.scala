@@ -4,6 +4,7 @@ import com.couchbase.client.java.document.json.JsonObject
 import helpers.Helper
 import models.{About, NewUser, UserStats}
 import org.joda.time.DateTime
+import play.api.Logger
 import play.api.libs.json.Json
 import securesocial.core._
 
@@ -25,21 +26,28 @@ case class UserAuth(main: BasicProfile, gender: Option[String] = None, bio: Opti
     val created_at = dateTime.toString
 
     if (isSignUp) {
-      val user = NewUser(
-        userID, first_name = first_name, last_name = last_name, gender = gender, image = image,
-        about = about, stats = stats, created_at = created_at,
-        contributions = Helper.UserPath + userID + Helper.Contributions,
-        projects = Helper.UserPath + userID + Helper.Created, enrolled_projects = List())
+      try {
+        val user = NewUser(
+          userID, first_name = first_name, last_name = last_name, gender = gender, image = image,
+          about = about, stats = stats, created_at = created_at,
+          contributions = Helper.UserPath + userID + Helper.Contributions,
+          projects = Helper.UserPath + userID + Helper.Created, enrolled_projects = List())
 
-      DBUtilities.User.createUser(
-        JsonObject.fromJson(
-          Json.stringify(
-            Json.toJson(
-              user
+        DBUtilities.User.createUser(
+          JsonObject.fromJson(
+            Json.stringify(
+              Json.toJson(
+                user
+              )
             )
           )
-        )
-      ).subscribe()
+        ).subscribe()
+
+        val ActivitiesObject = JsonObject.fromJson("{\"activities\":[]}")
+        DBUtilities.Activity.createActivity(Helper.ActivityIDPrefix + main.userId, ActivitiesObject).subscribe()
+      } catch {
+        case _: Exception => Logger.error("Error in signing up")
+      }
     } else {
       val aboutObj = JsonObject.fromJson(Json.stringify(Json.toJson(about)))
       DBUtilities.User.updateSigningInUser(userID, first_name.get, last_name.get, image.get, aboutObj)
