@@ -20,11 +20,9 @@ libraryDependencies += "io.reactivex" %% "rxscala" % "0.26.0"
 libraryDependencies += "ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
 
 // test
-libraryDependencies += "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4"
+libraryDependencies += "com.typesafe.akka" % "akka-testkit_2.11" % "2.3.13"
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
-libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.4.4"
-
-
+libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.3.13"
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 resolvers += Resolver.sonatypeRepo("snapshots")
