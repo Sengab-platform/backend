@@ -11,16 +11,20 @@ object Helper {
   val CategoryPath = "http://api.sengab.com/v1/categories/"
   val ProjectPath = "http://api.sengab.com/v1/projects/"
   val UserPath = "http://api.sengab.com/v1/users/"
-  val ContributionPath = "http://api.sengab.com/v1/contributions/"
+  val ContributionsPath = "http://api.sengab.com/v1/contributions/"
 
-  val Created = "/created_projects"
-  val Contributions = "/contributions"
+  val CreatedPostfixPath = "/created_projects"
+  val ContributionsPostfixPath = "/contributions"
 
   // IDs
   val UserIDPrefix = "user::"
   val ActivityIDPrefix = "activity::"
   val StatsIDPrefix = "stats::"
   val ResultIDPrefix = "result::"
+
+  val PopularKeyword = "popular"
+  val EnrolledKeyword = "enrolled"
+  val CreatedKeyword = "created"
 
   /**
     * Transforms a JsArray using the provided Reads; cumulating errors.

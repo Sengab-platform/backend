@@ -32,8 +32,8 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandler(out) {
       if (doc.getString("id") != DBUtilities.DBConfig.EMPTY_JSON_OBJECT) {
         val response = constructResponse(doc)
         response match {
-          case Some(response) =>
-            out ! response
+          case Some(res) =>
+            out ! res
 
           case None =>
             self ! CouldNotParseJSON("failed to get user info",
@@ -50,8 +50,8 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandler(out) {
     try {
       val parsedJson = Json.parse(jsonObject.toString).as[JsObject]
       val id = jsonObject.getString("id")
-      //val fullResponse = parsedJson + ("id" -> JsString(id)) + ("url" -> JsString(Helper.UserPath + id))
-      val fullResponse = Helper.addField(parsedJson, "id", id) ++ Helper.addField(parsedJson, "url", Helper.UserPath + id)
+      val fullResponse = Helper.addField(parsedJson, "id", id) ++
+        Helper.addField(parsedJson, "url", Helper.UserPath + id)
       val user = Json.toJson(fullResponse.as[UserInfo])
       Some(Response(Json.toJson(user)))
     } catch {
@@ -59,7 +59,6 @@ class InfoRetriever(out: ActorRef) extends AbstractDBHandler(out) {
         Logger.info(e.getMessage)
         None
     }
-
   }
 
 }

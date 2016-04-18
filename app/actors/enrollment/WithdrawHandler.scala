@@ -4,6 +4,7 @@ import actors.AbstractDBHandler
 import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
+import helpers.Helper
 import helpers.Helper._
 import messages.EnrollmentManagerMessages.Withdraw
 import models.Response
@@ -25,10 +26,10 @@ class WithdrawHandler(out: ActorRef) extends AbstractDBHandler(out) {
       response match {
         case Some(Response(jsonResult)) =>
           // get project id as String
-          val projectID = Json.parse(jsonResult.toString()).as[JsObject].value("project_id").as[String]
+          val projectID = (jsonResult \ "project_id").as[String]
           executeQuery(DBUtilities.Project.remove1FromProjectEnrollmentsCount(projectID))
           // get statsID
-          val statsID = "stats::" + trimEntityID(projectID)
+          val statsID = Helper.StatsIDPrefix + trimEntityID(projectID)
           executeQuery(DBUtilities.Stats.remove1FromStatsEnrollmentsCount(statsID))
           out ! Response(jsonResult)
 

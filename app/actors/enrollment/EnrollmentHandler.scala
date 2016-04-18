@@ -4,6 +4,7 @@ import actors.AbstractDBHandler
 import actors.AbstractDBHandler.QueryResult
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonObject
+import helpers.Helper
 import helpers.Helper._
 import messages.EnrollmentManagerMessages.Enroll
 import models.Response
@@ -24,23 +25,23 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
 
     case QueryResult(jsonObject) =>
       if (jsonObject.containsKey("projectId")) {
-      val response = constructResponse(jsonObject)
-      response match {
-        case Some(Response(jsonResult)) =>
-          // apply side effects
+        val response = constructResponse(jsonObject)
+        response match {
+          case Some(Response(jsonResult)) =>
+            // apply side effects
 
-          // get project id as String
-          val projectID = Json.parse(jsonResult.toString()).as[JsObject].value("project_id").as[String]
-          executeQuery(DBUtilities.Project.add1ToProjectEnrollmentsCount(projectID))
-          // get statsID
-          val statsID = "stats::" + trimEntityID(projectID)
-          executeQuery(DBUtilities.Stats.add1ToStatsEnrollmentsCount(statsID))
-          out ! Response(jsonResult)
+            // get project id as String
+            val projectID = (jsonResult \ "project_id").as[String]
+            executeQuery(DBUtilities.Project.add1ToProjectEnrollmentsCount(projectID))
+            // get statsID
+            val statsID = Helper.StatsIDPrefix + trimEntityID(projectID)
+            executeQuery(DBUtilities.Stats.add1ToStatsEnrollmentsCount(statsID))
+            out ! Response(jsonResult)
 
-        case None =>
-          out ! CouldNotParseJSON("failed to enroll user",
-            "couldn't parse json retrieved from the db ", this.getClass.toString)
-      }
+          case None =>
+            out ! CouldNotParseJSON("failed to enroll user",
+              "couldn't parse json retrieved from the db ", this.getClass.toString)
+        }
       }
       else {
         out ! AlreadyExists("You are already enrolled to this project", "User's already enrolled to this project", this.getClass.toString)

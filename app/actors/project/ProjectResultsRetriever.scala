@@ -49,7 +49,6 @@ class ProjectResultsRetriever(out: ActorRef) extends AbstractDBHandler(out) {
         out ! NotFoundError("no such project", "received empty Json Object from DB", this.getClass.toString)
       }
 
-
   }
 
   /**

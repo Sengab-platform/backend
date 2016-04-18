@@ -5,6 +5,7 @@ import actors.AbstractBulkDBHandler.{BulkResult, ItemResult}
 import actors.AbstractDBActor.Terminate
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonArray
+import helpers.Helper
 import helpers.Helper._
 import messages.UserManagerMessages.ListProjectsOfUser
 import models.Response
@@ -21,10 +22,12 @@ class UserProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
     case ListProjectsOfUser(userID, sort, offset, limit) =>
       Logger.info(s"actor ${self.path} - received msg : ${ListProjectsOfUser(userID, sort, offset, limit)} ")
       sort match {
-        case "enrolled" =>
+        case Helper.EnrolledKeyword =>
           executeQuery(DBUtilities.User.getEnrolledProjectsForUser(userID, offset, limit))
-        case "created" =>
+
+        case Helper.CreatedKeyword =>
           executeQuery(DBUtilities.User.getProjectsCreatedByUser(userID, offset, limit))
+
         case _ =>
           Logger.info("ERROR: Only created and enrolled projects supported.")
       }

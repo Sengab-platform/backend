@@ -68,7 +68,7 @@ class ContributionCreator(out: ActorRef) extends AbstractDBHandler(out) {
 
       val jsResponse = JsObject(Seq(
         "id" -> JsString((parsedJson \ "id").as[String]),
-        "url" -> JsString(Helper.ContributionPath + (parsedJson \ "id").as[String])))
+        "url" -> JsString(Helper.ContributionsPath + (parsedJson \ "id").as[String])))
 
       Some(Response(jsResponse))
     } catch {

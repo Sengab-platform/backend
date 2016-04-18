@@ -33,8 +33,8 @@ class ActivityRetriever(out: ActorRef) extends AbstractDBHandler(out) {
       if (doc.getString("id") != DBUtilities.DBConfig.EMPTY_JSON_OBJECT) {
         val response = constructResponse(doc)
         response match {
-          case Some(response) =>
-            out ! response
+          case Some(res) =>
+            out ! res
 
           case None =>
             self ! CouldNotParseJSON("failed to get user activity",
