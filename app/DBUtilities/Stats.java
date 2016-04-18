@@ -207,7 +207,7 @@ public class Stats {
      * @param userGender The gender of the contributing user.
      * @return An Observable of Json object containing the stats ID and new gender count.
      */
-    public static Observable<JsonObject> updateContibutorsGender(String statsId,String userId, String userGender){
+    public static Observable<JsonObject> updateContributorsGender(String statsId,String userId, String userGender){
         try {
             checkDBStatus();
         } catch (BucketClosedException e) {

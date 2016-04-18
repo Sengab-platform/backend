@@ -18,6 +18,7 @@ public class DBConfig {
     public static final String ALREADY_ENROLLED = "already_enrolled";
     public static final String NOT_ENROLLED = "not_enrolled";
     public static final String ALREADY_CONTRIBUTED = "already_contributed";
+    public static final String WRONG_TEMPLATE_NUMBER = "wrong_template_number";
     public static final String BUCKET_NAME = "default";
     private static final String ID_JSON_KEY = "id";
     public static AsyncBucket bucket;
