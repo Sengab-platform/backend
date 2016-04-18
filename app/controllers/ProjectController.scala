@@ -86,8 +86,8 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
 
       project match {
         //got Project Item
-        case Some(project) =>
-          receptionist ? CreateProject(project, s"user::117521628211683444029") map {
+        case Some(p) =>
+          receptionist ? CreateProject(p, s"user::117521628211683444029") map {
             // project created successfully
             case Response(json) =>
               Created(json)
