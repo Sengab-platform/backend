@@ -36,6 +36,11 @@ class ProjectRetriever extends Actor {
       val projectStatsRetriever = context.actorOf(ProjectStatsRetriever.props(sender()))
       projectStatsRetriever forward GetProjectStats(projectID)
 
+    case GetProjectResults(projectID, offset, limit) =>
+      Logger.info(s"actor ${self.path} - received msg : ${GetProjectResults(projectID, offset, limit)} ")
+
+      val projectResultsRetriever = context.actorOf(ProjectResultsRetriever.props(sender()))
+      projectResultsRetriever forward GetProjectResults(projectID, offset, limit)
   }
 }
 
