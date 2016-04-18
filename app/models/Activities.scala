@@ -1,54 +1,27 @@
 package models
 
-import helpers.Helper
+import models.project.Project.ActivityProject
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 import scala.language.postfixOps
 
-case class Project(
-                    id: String,
-                    name: String,
-                    url: String
-                  )
-
-object Project {
-
-  lazy val rec2db = coreReads
-  lazy val db2resp = (
-    (__ \ "url").json.copyFrom((__ \ "id").json.pick) and
-      coreReads reduce
-    ) andThen genField
-  implicit val f = Json.format[Project]
-  private val coreReads = (
-    (__ \ "id").json.pickBranch and
-      (__ \ "name").json.pickBranch
-    ) reduce
-
-  private val genField = (__ \ "url").json.update(
-    of[JsString].map { jsStr =>
-      JsString(Helper.ProjectPath + jsStr.value.trim)
-    }
-  )
-
-}
-
 case class Activities(
                        id: Int,
                        activity_type: String,
                        created_at: String,
-                       project: Project
+                       project: ActivityProject
                      )
 
 object Activities {
 
   lazy val req2db = (
-    (__ \ "project").json.pickBranch(Project.rec2db) and
+    (__ \ "project").json.pickBranch(ActivityProject.rec2db) and
       coreReads
     ) reduce
   lazy val dp2resp = (
-    (__ \ "project").json.pickBranch(Project.db2resp) and
+    (__ \ "project").json.pickBranch(ActivityProject.db2resp) and
       coreReads
     ) reduce
   implicit val dbFmt = Json.format[Activities]

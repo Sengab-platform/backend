@@ -1,7 +1,8 @@
 package models.project
 
 import models.{EmbeddedCategory, EmbeddedOwner}
-import play.api.libs.json.Json
+
+import scala.language.postfixOps
 
 object Project {
 
@@ -71,6 +72,39 @@ object Project {
                               category: EmbeddedCategory
                             )
 
+  import helpers.Helper
+  import play.api.libs.functional.syntax._
+  import play.api.libs.json.Reads._
+  import play.api.libs.json._
+
+  import scala.language.postfixOps
+
+  case class ActivityProject(
+                              id: String,
+                              name: String,
+                              url: String
+                            )
+
+  object ActivityProject {
+
+    lazy val rec2db = coreReads
+    lazy val db2resp = (
+      (__ \ "url").json.copyFrom((__ \ "id").json.pick) and
+        coreReads reduce
+      ) andThen genField
+    implicit val f = Json.format[ActivityProject]
+    private val coreReads = (
+      (__ \ "id").json.pickBranch and
+        (__ \ "name").json.pickBranch
+      ) reduce
+
+    private val genField = (__ \ "url").json.update(
+      of[JsString].map { jsStr =>
+        JsString(Helper.ProjectPath + jsStr.value.trim)
+      }
+    )
+
+  }
   object NewProject {
     implicit val newProjectProjectF = Json.format[NewProject]
   }
