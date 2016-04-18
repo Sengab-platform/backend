@@ -143,7 +143,20 @@ class ProjectController @Inject()(@Named("receptionist") receptionist: ActorRef)
   }
 
   // list results of a project (paginated)
-  def getProjectResults(projectId: String, offset: Int, limit: Int) = TODO
+  def getProjectResults(projectId: String, offset: Int, limit: Int) = Action.async {
+    receptionist ? GetProjectResults(projectId, offset, limit) map {
+      case Response(json) =>
+        Ok(json)
+      case error: Error =>
+        error.result
+    } recover {
+      case e: TimeoutException =>
+        AskTimeoutError("Failed to get project results",
+          "Ask Timeout Exception on Actor Receptionist",
+          this.getClass.toString).result
+
+    }
+  }
 
 
   //  Individuals Requests

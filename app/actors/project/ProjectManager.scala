@@ -27,10 +27,9 @@ class ProjectManager extends Actor {
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectDetailsWithTemplateBody(projectID)} ")
       projectRetriever forward GetProjectDetailsWithTemplateBody(projectID)
 
-    case GetProjectResults(projectID, offset, limit) => ???
+    case GetProjectResults(projectID, offset, limit) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectResults(projectID, offset, limit)} ")
       projectRetriever forward GetProjectResults(projectID, offset, limit)
-
 
     case GetProjectStats(projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectStats(projectID)} ")
