@@ -13,7 +13,6 @@ object Project {
                         created_at: String,
                         brief_description: String,
                         detailed_description: String,
-                        is_featured: Boolean,
                         category_id: String)
 
   case class DetailedProject(
@@ -29,7 +28,6 @@ object Project {
                               detailed_description: String,
                               enrollments_count: Option[Int],
                               contributions_count: Option[Int],
-                              is_featured: Boolean,
                               category: EmbeddedCategory,
                               results: String,
                               stats: String
@@ -49,7 +47,6 @@ object Project {
                                               detailed_description: String,
                                               enrollments_count: Option[Int],
                                               contributions_count: Option[Int],
-                                              is_featured: Boolean,
                                               category: EmbeddedCategory,
                                               results: String,
                                               stats: String
@@ -67,7 +64,6 @@ object Project {
                               brief_description: String,
                               enrollments_count: Option[Int],
                               contributions_count: Option[Int],
-                              is_featured: Boolean,
                               category: EmbeddedCategory
                             )
 

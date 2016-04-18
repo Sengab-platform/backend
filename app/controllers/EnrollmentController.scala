@@ -32,8 +32,8 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
 
       projectID match {
         // got ProjectID
-        case Some(projectID) =>
-          receptionist ? Enroll(s"user::117521628211683444029", projectID) map {
+        case Some(pID) =>
+          receptionist ? Enroll(s"user::117521628211683444029", pID) map {
 
             case Response(json) =>
               Created(json)
@@ -63,8 +63,8 @@ class EnrollmentController @Inject()(@Named("receptionist") receptionist: ActorR
 
       projectID match {
         // got projectID
-        case Some(projectID) =>
-          receptionist ? Withdraw(s"user::117521628211683444029", projectID) map {
+        case Some(pID) =>
+          receptionist ? Withdraw(s"user::117521628211683444029", pID) map {
 
             case Response(json) =>
               Created(json)

@@ -33,8 +33,8 @@ class ContributionController @Inject()(@Named("receptionist") receptionist: Acto
       val contribution = request.body.asOpt[Contribution]
 
       contribution match {
-        case Some(contribution) =>
-          receptionist ? CreateContribution(contribution, contributor) map {
+        case Some(c) =>
+          receptionist ? CreateContribution(c, contributor) map {
 
             case Response(json) =>
               Ok(json)
