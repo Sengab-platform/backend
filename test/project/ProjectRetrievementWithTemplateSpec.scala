@@ -10,7 +10,7 @@ class ProjectRetrievementWithTemplateSpec extends AbstractSpec {
 
   // valid project with template body
   "Receptionist Actor" should "Return Project Details with Template Body Successfully" in {
-    receptionist ! GetProjectDetailsWithTemplateBody("project::01758af6-9a5b-4a88-8b40-77c98cdf87d7")
+    receptionist ! GetProjectDetailsWithTemplateBody("project::1")
     val response = expectMsgType[Response]
     assert(response.jsonResult.validate[DetailedProjectWithTemplateBody].isSuccess)
   }
