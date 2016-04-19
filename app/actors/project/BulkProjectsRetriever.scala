@@ -5,7 +5,6 @@ import actors.AbstractBulkDBHandler.{BulkResult, ItemResult}
 import actors.AbstractDBActor.Terminate
 import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.JsonArray
-import helpers.Helper
 import helpers.Helper._
 import messages.ProjectManagerMessages.ListProjects
 import models.Response
@@ -18,11 +17,24 @@ class BulkProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
 
   override val ErrorMsg: String = "Failed to retrieve projects"
 
+  private val contributionsCountField = "contributions_count"
+  private val createdAtField = "created_at"
 
   def receive = {
     case ListProjects(filter, offset, limit) =>
       Logger.info(s"actor ${self.path} - received msg : ${ListProjects(filter, offset, limit)}")
-      executeQuery(DBUtilities.Project.bulkGetProjects(Helper.PopularKeyword, offset, limit))
+
+      filter match {
+        case FeaturedKeyword =>
+          executeQuery(DBUtilities.Project.getFeaturedProjets(offset, limit))
+
+        case PopularKeyword =>
+          executeQuery(DBUtilities.Project.bulkGetProjects(contributionsCountField, offset, limit))
+
+        case LatestKeyword =>
+          executeQuery(DBUtilities.Project.bulkGetProjects(createdAtField, offset, limit))
+
+      }
 
     case ItemResult(jsonObject) =>
       // received new item , aggregate it to the final result Array

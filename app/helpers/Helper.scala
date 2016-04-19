@@ -22,7 +22,11 @@ object Helper {
   val StatsIDPrefix = "stats::"
   val ResultIDPrefix = "result::"
 
+  // expected filter keywords on list projects
   val PopularKeyword = "popular"
+  val FeaturedKeyword = "featured"
+  val LatestKeyword = "latest"
+
   val EnrolledKeyword = "enrolled"
   val CreatedKeyword = "created"
 
