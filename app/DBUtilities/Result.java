@@ -7,6 +7,7 @@ import com.couchbase.client.core.time.Delay;
 import com.couchbase.client.deps.io.netty.handler.timeout.TimeoutException;
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.client.java.error.DocumentAlreadyExistsException;
@@ -21,9 +22,11 @@ import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.couchbase.client.java.document.json.JsonArray.from;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
 import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.*;
+import static javafx.scene.input.KeyCode.J;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -85,19 +88,16 @@ public class Result {
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("template_id")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
         .useKeys (Expression.s (projectId)))).flatMap (AsyncN1qlQueryResult::rows)
         .flatMap (row -> Observable.just (row.value ())).flatMap (object -> {
-            Logger.info (String.format ("DB: Getting results for project with template ID: %s"),object.getInt ("template_id"));
+            Logger.info (String.format ("DB: Getting results for project with template ID: %s",object.getInt ("template_id")));
             if (object.getInt ("template_id") == 1){
 
-                Logger.info (String.format ("DB: Getting results for project with template ID: %s"),object.getInt ("template_id"));
-
                 return mBucket.query (N1qlQuery.simple (select ("contributions_count, " +
-                    Expression.x ("results.yes[" + offset + ":array_min([(array_length(results.yes))," + endIndex + "])]")
-                    .as ("yes") + ", "
-                    + Expression.x ("results.no[" + offset + ":array_min([(array_length(results.no))," + endIndex + "])]")
-                    .as ("no"))
-                .from (Expression.x (DBConfig.BUCKET_NAME)).useKeys (Expression.s (resultId))))
-                .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
-                .filter (object1 -> object1.getInt ("contributions_count")!=0);
+                        Expression.x ("{") + Expression.s ("yes") + Expression.x (":results.yes[" + offset + ":array_min([(array_length(results.yes))," + endIndex + "])], ")
+                        + Expression.s ("no") + Expression.x (":results.no[" + offset + ":array_min([(array_length(results.no))," + endIndex + "])]}")
+                        + Expression.x (" as results"))
+                        .from (Expression.x (DBConfig.BUCKET_NAME)).useKeys (Expression.s (resultId))))
+                        .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()))
+                        .filter (object1 -> object1.getInt ("contributions_count")!=0);
 
             }else if (object.getInt ("template_id") == 2 || object.getInt ("template_id") == 3 || object.getInt ("template_id") == 4){
 
@@ -232,6 +232,8 @@ public class Result {
                 }
             }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
+
+   
 
     /**
      * Adds a result in the results document for projects that use Template 2, 3, 4.
