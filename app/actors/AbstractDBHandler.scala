@@ -19,8 +19,8 @@ abstract class AbstractDBHandler(out: ActorRef) extends AbstractDBActor[JsonObje
     * called when the db query get data back as JsonObject
     */
   override def onNext(): (JsonObject) => Unit = {
-    doc: JsonObject => {
-      self ! QueryResult(doc)
+    jsonObject: JsonObject => {
+      self ! QueryResult(jsonObject)
     }
   }
 
@@ -28,7 +28,7 @@ abstract class AbstractDBHandler(out: ActorRef) extends AbstractDBActor[JsonObje
   /**
     * called when the db query completes and all Json Objects retrieved
     */
-  override def onComplete: () => Unit = { () => {
+  override def onComplete(): () => Unit = { () => {
     self ! Terminate
   }
   }
