@@ -94,7 +94,7 @@ object Helper {
   /**
     * trim the word before the UUID number
     */
-  def trimEntityID(EntityID: String) = EntityID.substring(EntityID.indexOf("::") + 2)
+  def trimEntityID(entityID: String) = entityID.substring(entityID.indexOf("::") + 2)
 
 }
 
