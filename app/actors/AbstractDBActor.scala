@@ -27,10 +27,10 @@ abstract class AbstractDBActor[T](out: ActorRef) extends Actor {
     * @param observable got from the DB queries methods
     */
   def executeQuery(observable: rx.Observable[JsonObject]): Unit = {
-    toScalaObservable(observable).subscribe(onNext(), onError(), onComplete)
+    toScalaObservable(observable).subscribe(onNext(), onError(), onComplete())
   }
 
-  def onComplete: () => Unit
+  def onComplete(): () => Unit
 
 
   /**
