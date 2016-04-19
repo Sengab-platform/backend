@@ -8,7 +8,7 @@ import com.couchbase.client.java.document.json.JsonArray
 import helpers.Helper._
 import messages.CategoryManagerMessages.RetrieveCategoryProjects
 import models.Response
-import models.errors.GeneralErrors.CouldNotParseJSON
+import models.errors.GeneralErrors.{CouldNotParseJSON, NotFoundError}
 import models.project.Project.EmbeddedProject
 import play.api.Logger
 import play.api.libs.json._
@@ -33,14 +33,19 @@ class CategoryProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out
       }
 
     case BulkResult(jsArray) =>
-      val response = constructResponse(jsArray)
-      response match {
-        case Some(Response(jsonResult)) =>
-          out ! Response(jsonResult)
+      if (jsArray.isEmpty) {
+        out ! NotFoundError("Couldn't find projects",
+          "Constructed json array is empty", this.getClass.toString)
+      } else {
+        val response = constructResponse(jsArray)
+        response match {
+          case Some(Response(jsonResult)) =>
+            out ! Response(jsonResult)
 
-        case None =>
-          out ! CouldNotParseJSON("failed to get categories",
-            "couldn't parse json retrieved from the db ", this.getClass.toString)
+          case None =>
+            out ! CouldNotParseJSON("failed to get projects",
+              "couldn't parse json retrieved from the db ", this.getClass.toString)
+        }
       }
 
     // self terminate
