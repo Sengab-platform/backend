@@ -21,7 +21,6 @@ class ProjectCreationSpec extends AbstractSpec {
       "detailed one",
       "category::5")
     receptionist ! CreateProject(newProject, "user::117521628211683444029")
-    val response = expectMsgType[Response]
-    //    assert(response.jsonResult \ "")
+    expectMsgType[Response]
   }
 }
