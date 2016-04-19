@@ -19,7 +19,7 @@ class UserActivitiesRetrievementSpec extends AbstractSpec {
   }
 
   // If the user does not exist
-  it should "Get empty document" in {
+  it should "Return NOT FOUND error" in {
     receptionist ! ListUserActivity("invalid-id", 0, 20)
     expectMsgType[NotFoundError]
   }

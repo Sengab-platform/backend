@@ -13,7 +13,7 @@ class UserInfoRetrievementSpec extends AbstractSpec {
     assert(response.jsonResult.validate[UserInfo].isSuccess)
   }
 
-  it should "can not get user info for a not existing user" in {
+  it should "Return NOT FOUND error" in {
     receptionist ! GetUserProfile("invalid-id")
     expectMsgType[NotFoundError]
   }
