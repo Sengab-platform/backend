@@ -29,7 +29,7 @@ class UserProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
           executeQuery(DBUtilities.User.getProjectsCreatedByUser(userID, offset, limit))
 
         case _ =>
-          Logger.info("ERROR: Only created and enrolled projects supported.")
+          Logger.error("ERROR: Only created and enrolled projects supported.")
       }
 
     case ItemResult(jsonObject) =>
