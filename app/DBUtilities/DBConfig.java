@@ -58,7 +58,9 @@ public class DBConfig {
     }
 
     static String stripIdFromPrefix (String id){
+//        return id.replaceAll ("[^\\d-]","");
         return id.split("::")[1];
+
     }
      static String getIdFromJson(JsonObject object){
         return object.getString (ID_JSON_KEY);
