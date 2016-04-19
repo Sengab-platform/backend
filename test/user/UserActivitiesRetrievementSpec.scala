@@ -1,4 +1,4 @@
-package project
+package user
 
 import core.AbstractSpec
 import messages.UserManagerMessages.ListUserActivity
