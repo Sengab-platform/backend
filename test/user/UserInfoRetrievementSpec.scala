@@ -14,7 +14,7 @@ class UserInfoRetrievementSpec extends AbstractSpec {
   }
 
   it should "can not get user info for a not existing user" in {
-    receptionist ! GetUserProfile("117521628211683444029")
+    receptionist ! GetUserProfile("invalid-id")
     expectMsgType[NotFoundError]
   }
 }
