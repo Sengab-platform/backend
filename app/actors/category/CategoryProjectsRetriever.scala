@@ -33,6 +33,8 @@ class CategoryProjectsRetriever(out: ActorRef) extends AbstractBulkDBHandler(out
       }
 
     case BulkResult(jsArray) =>
+      Logger.info(s"actor ${self.path} - received msg : ${BulkResult(jsArray)}")
+
       if (jsArray.isEmpty) {
         out ! NotFoundError("Couldn't find projects",
           "Constructed json array is empty", this.getClass.toString)
