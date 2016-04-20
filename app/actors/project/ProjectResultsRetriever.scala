@@ -21,7 +21,7 @@ class ProjectResultsRetriever(out: ActorRef) extends AbstractDBHandler(out) {
     case GetProjectResults(projectID, offset, limit) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectResults(projectID, offset, limit)} ")
 
-      executeQuery(DBUtilities.Result.getResultWithId(Helper.ResultIDPrefix + projectID, offset, limit))
+      executeQuery(DBUtilities.Result.getResultWithId(Helper.ResultIDPrefix + Helper.trimEntityID(projectID), offset, limit))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")

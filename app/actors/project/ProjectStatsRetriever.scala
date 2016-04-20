@@ -19,7 +19,8 @@ class ProjectStatsRetriever(out: ActorRef) extends AbstractDBHandler(out) {
 
     case GetProjectStats(projectID) =>
       Logger.info(s"actor ${self.path} - received msg : ${GetProjectStats(projectID)} ")
-      executeQuery(DBUtilities.Stats.getStatsWithId(Helper.StatsIDPrefix + projectID))
+      executeQuery(DBUtilities.Stats.getStatsWithId(Helper.StatsIDPrefix
+        + Helper.trimEntityID(projectID)))
 
     case Terminate =>
       Logger.info(s"actor ${self.path} - received msg : $Terminate ")
@@ -53,9 +54,7 @@ class ProjectStatsRetriever(out: ActorRef) extends AbstractDBHandler(out) {
       val stats = Json.parse(jsonObject.toString).as[Stats]
       Some(Response(Json.toJson(stats)))
     } catch {
-      case e: Exception =>
-        Logger.info(e.getMessage)
-        None
+      case e: Exception => None
     }
   }
 }

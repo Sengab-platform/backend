@@ -23,12 +23,4 @@ class UserActivitiesRetrievementSpec extends AbstractSpec {
     receptionist ! ListUserActivity("invalid-id", 0, 20)
     expectMsgType[NotFoundError]
   }
-
-  // If the user does not have activities
-  it should "Get empty json array" in {
-    receptionist ! ListUserActivity("117521628211683444029", 0, 20)
-    val response = expectMsgType[Response]
-    // the response will be an empty json array
-    assert(response.jsonResult.toString == "[]")
-  }
 }
