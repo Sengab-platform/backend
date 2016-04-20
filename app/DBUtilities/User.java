@@ -253,23 +253,33 @@ public class User {
 
         Logger.info (String.format ("DB: Adding project with ID: %s to enrolled projects for user with id: %s",projectId,userId));
 
-
-        return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(aUser).id")).from (Expression.x (DBConfig.BUCKET_NAME + " aUser"))
-            .useKeys (Expression.s (userId))
-            .where (arrayContains (Expression.x ("enrolled_projects"),Expression.s (projectId)))))
-            .flatMap (result -> result.rows ().isEmpty ())
-            .flatMap (isEmpty -> {
-                if (!isEmpty){
-                    Logger.info (String.format ("DB: User with ID: %s is already enrolled in project with ID: %s",userId,projectId));
-
-                    return Observable.just (JsonObject.create ().put ("id",DBConfig.ALREADY_ENROLLED));
+        return mBucket.query (N1qlQuery.simple (select (Expression.x ("meta(project).id")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
+            .useKeys (Expression.s (userId)))).flatMap (result1 -> result1.rows().isEmpty ())
+            .flatMap (isEmpty1 -> {
+                if (isEmpty1){
+                    Logger.info (String.format ("DB: No such project with ID: %s",projectId));
+                    return Observable.just (JsonObject.create ().put ("id",DBConfig.NO_SUCH_PROJECT));
                 }else {
-                    return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
-                    .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
-                            arrayPut (Expression.x ("enrolled_projects"),Expression.s (projectId)))
-                    .returning (Expression.x ("enrolled_projects[-1] as projectId,meta(project).id"))))
-                    .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()));
-                }})
+                    Logger.info (String.format ("DB: Found project with ID: %s",projectId));
+
+                    return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(aUser).id")).from (Expression.x (DBConfig.BUCKET_NAME + " aUser"))
+                        .useKeys (Expression.s (userId))
+                        .where (arrayContains (Expression.x ("enrolled_projects"),Expression.s (projectId)))))
+                        .flatMap (result2 -> result2.rows ().isEmpty ())
+                        .flatMap (isEmpty2 -> {
+                            if (!isEmpty2){
+                                Logger.info (String.format ("DB: User with ID: %s is already enrolled in project with ID: %s",userId,projectId));
+
+                                return Observable.just (JsonObject.create ().put ("id",DBConfig.ALREADY_ENROLLED));
+                            }else {
+                                return mBucket.query (N1qlQuery.simple (update(Expression.x (DBConfig.BUCKET_NAME + " project"))
+                                    .useKeys (Expression.s (userId)).set (Expression.x ("enrolled_projects"),
+                                            arrayPut (Expression.x ("enrolled_projects"),Expression.s (projectId)))
+                                    .returning (Expression.x ("enrolled_projects[-1] as projectId,meta(project).id"))))
+                                    .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()));
+                            }});
+                }
+            })
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
                     .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
             .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
@@ -286,7 +296,6 @@ public class User {
                     return Observable.error (new CouchbaseException (String.format ("DB: Failed to add project with ID: %s to enrolled projects for user with id: %s, General DB exception.",projectId,userId)));
                 }
             }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
-
     }
 
     /**
