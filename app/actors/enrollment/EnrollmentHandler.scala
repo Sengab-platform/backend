@@ -25,34 +25,33 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
 
     case QueryResult(jsonObject) =>
       Logger.info(s"actor ${self.path} - received msg : ${QueryResult(jsonObject)} ")
-      if (jsonObject.getString("id") != DBUtilities.DBConfig.EMPTY_JSON_OBJECT) {
 
-        if (jsonObject.containsKey("projectId")) {
-          val response = constructResponse(jsonObject)
-          response match {
-            case Some(Response(jsonResult)) =>
-              // apply side effects
+      if (jsonObject.containsKey("projectId")) {
+        val response = constructResponse(jsonObject)
+        response match {
+          case Some(Response(jsonResult)) =>
+            // apply side effects
 
-              // get project id as String
-              val projectID = (jsonResult \ "project_id").as[String]
-              executeQuery(DBUtilities.Project.add1ToProjectEnrollmentsCount(projectID))
-              // get statsID
-              val statsID = Helper.StatsIDPrefix + trimEntityID(projectID)
-              executeQuery(DBUtilities.Stats.add1ToStatsEnrollmentsCount(statsID))
-              out ! Response(jsonResult)
+            // get project id as String
+            val projectID = (jsonResult \ "project_id").as[String]
+            executeQuery(DBUtilities.Project.add1ToProjectEnrollmentsCount(projectID))
+            // get statsID
+            val statsID = Helper.StatsIDPrefix + trimEntityID(projectID)
+            executeQuery(DBUtilities.Stats.add1ToStatsEnrollmentsCount(statsID))
+            out ! Response(jsonResult)
 
-            case None =>
-              out ! CouldNotParseJSON("failed to enroll user",
-                "couldn't parse json retrieved from the db ", this.getClass.toString)
-          }
-        }
-        else if (jsonObject.getString("id") == DBUtilities.DBConfig.ALREADY_ENROLLED) {
-          out ! AlreadyExists("You are already enrolled to this project", "User's already enrolled to this project", this.getClass.toString)
-        } else if (jsonObject.getString("id") == DBUtilities.DBConfig.NO_SUCH_PROJECT) {
-          out ! NotFoundError("No such project", s"No such project with this ID", this.getClass.toString)
+          case None =>
+            out ! CouldNotParseJSON("failed to enroll user",
+              "couldn't parse json retrieved from the db ", this.getClass.toString)
         }
       }
+      else if (jsonObject.getString("id") == DBUtilities.DBConfig.ALREADY_ENROLLED) {
+        out ! AlreadyExists("You are already enrolled to this project", "User's already enrolled to this project", this.getClass.toString)
+      } else if (jsonObject.getString("id") == DBUtilities.DBConfig.NO_SUCH_PROJECT) {
+        out ! NotFoundError("No such project", s"No such project with this ID", this.getClass.toString)
+      }
   }
+
 
   override def constructResponse(jsonObject: JsonObject): Option[Response] = {
     try {
