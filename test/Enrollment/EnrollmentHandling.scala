@@ -3,7 +3,7 @@ package Enrollment
 import core.AbstractSpec
 import messages.EnrollmentManagerMessages.Enroll
 import models.Response
-import models.errors.GeneralErrors.AlreadyExists
+import models.errors.GeneralErrors.{AlreadyExists, NotFoundError}
 
 class EnrollmentHandling extends AbstractSpec {
 
@@ -17,6 +17,8 @@ class EnrollmentHandling extends AbstractSpec {
     expectMsgType[AlreadyExists]
   }
 
-  //todo add not found project test case (not implemented yet in DB)
-
+  it should "Return NOT FOUND error" in {
+    receptionist ! Enroll("user::117521628211683444029", "project::1a1a")
+    expectMsgType[NotFoundError]
+  }
 }
