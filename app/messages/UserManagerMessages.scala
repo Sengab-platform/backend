@@ -6,8 +6,8 @@ object UserManagerMessages {
 
   case class GetUserProfile(userID: String) extends UserMessage
 
-  case class ListUserActivity(userID: String, offset: Integer, limit: Integer) extends UserMessage
+  case class ListUserActivity(userID: String, offset: Int, limit: Int) extends UserMessage
 
-  case class ListProjectsOfUser(userID: String, sort: String, offset: Integer, limit: Integer) extends UserMessage
+  case class ListProjectsOfUser(userID: String, sort: String, offset: Int, limit: Int) extends UserMessage
 
 }
