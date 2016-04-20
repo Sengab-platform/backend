@@ -35,7 +35,7 @@ class CategoriesRetriever(out: ActorRef) extends AbstractBulkDBHandler(out) {
 
     case BulkResult(jsArray) =>
       if (jsArray.isEmpty) {
-        out ! NotFoundError("Couldn't find projects",
+        out ! NotFoundError("Couldn't find categories",
           "Constructed json array is empty", this.getClass.toString)
       } else {
         val response = constructResponse(jsArray)
