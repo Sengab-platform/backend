@@ -22,11 +22,10 @@ import rx.Observable;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.couchbase.client.java.document.json.JsonArray.from;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
-import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.*;
-import static javafx.scene.input.KeyCode.J;
+import static com.couchbase.client.java.query.dsl.clause.UpdateForClause.forIn;
+import static com.couchbase.client.java.query.dsl.functions.ArrayFunctions.arrayAppend;
 
 /**
  * Created by rashwan on 3/29/16.
@@ -233,10 +232,56 @@ public class Result {
             }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT));
     }
 
-   
+    /**
+     * Adds a result in the results document for projects that use Template 3.
+     * @param resultId The Id of the result document to add the result to.
+     * @param answers A Json array containing the answers for the questions .
+     * @return An observable of Json object containing the result id .
+     */
+    public static Observable<JsonObject> addResult(String resultId,JsonArray answers){
+        try {
+            checkDBStatus();
+        } catch (BucketClosedException e) {
+            return Observable.error(e);
+        }
+
+        Logger.info (String.format ("DB: Adding a new result to results document with id: %s",resultId));
+
+        return Observable.from (answers).flatMap (o -> {
+            JsonObject answerObject = ((JsonObject) o);
+            String answerCount = answerObject.getString ("ans") + "_count";
+            int questionId = answerObject.getInt ("id");
+
+            Logger.info (String.format ("DB: Adding result for answer with content: %s",answerObject.toString ()));
+
+            return mBucket.query (N1qlQuery.simple (update (DBConfig.BUCKET_NAME).useKeys (Expression.s (resultId))
+                .set (Expression.x ("result." + Expression.x (answerCount))
+                    ,Expression.x ("result." + Expression.x (answerCount) + " + 1")
+                    ,forIn("result","results").when (Expression.x ("result.id").eq (questionId)))
+                .returning (Expression.x("meta(default).id"))))
+                .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> Observable.just (row.value ()));})
+        .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
+        .delay (Delay.fixed (200, TimeUnit.MILLISECONDS)).max (3).build ())
+        .retryWhen (RetryBuilder.anyOf (TimeoutException.class)
+            .delay (Delay.fixed (500,TimeUnit.MILLISECONDS)).once ().build ())
+        .onErrorResumeNext (throwable -> {
+             if (throwable instanceof CASMismatchException){
+                 //// TODO: 4/1/16 needs more accurate handling in the future.
+                 Logger.info (String.format ("DB: Failed to add a new result to results document with id: %s",resultId));
+
+                 return Observable.error (new CASMismatchException (String.format ("DB: Failed to add a new result to results document with id: %s, General DB exception.",resultId)));
+             } else {
+                 Logger.info (String.format ("DB: Failed to add a new result to results document with id: %s",resultId));
+
+                 return Observable.error (new CouchbaseException (String.format ("DB: Failed to add a new result to results document with id: %s, General DB exception.",resultId)));
+             }
+         }).defaultIfEmpty(JsonObject.create().put("id", DBConfig.EMPTY_JSON_OBJECT)).take (1);
+
+    }
+
 
     /**
-     * Adds a result in the results document for projects that use Template 2, 3, 4.
+     * Adds a result in the results document for projects that use Template 2, 4.
      * @param resultId The Id of the result document to add the result to.
      * @param resultObject A Json object containing the result content.
      * @return An observable of Json object containing the result id and the added result object.

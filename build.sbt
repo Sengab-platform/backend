@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   specs2 % Test
 )
 
-libraryDependencies += "com.couchbase.client" % "java-client" % "2.2.5"
+libraryDependencies += "com.couchbase.client" % "java-client" % "2.2.6"
 
 libraryDependencies += "io.reactivex" %% "rxscala" % "0.26.0"
 
