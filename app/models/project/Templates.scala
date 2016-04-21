@@ -9,7 +9,7 @@ object Templates {
 
   case class TemplateTwo(image_title: String) extends TemplateBody
 
-  case class TemplateThree(questions_count: Int, questions: List[Question]) extends TemplateBody
+  case class TemplateThree(questions: List[Question]) extends TemplateBody
 
   case class Question(id: String, title: String)
 
