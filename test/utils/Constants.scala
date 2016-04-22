@@ -1,5 +1,8 @@
 package utils
 
+import models.Contributor
+import models.contribution.Contribution
+import models.contribution.ContributionDataTypes._
 import models.project.Project.NewProject
 import models.project.Templates._
 
@@ -8,9 +11,17 @@ object Constants {
   val InvalidID = "invalid-id"
 
   val ValidUserID = "user::117521628211683444029"
+  val UserIDWithNoActivity = "user::1"
+  val UserIDWithNoCreatedProjects = UserIDWithNoActivity
+  val UserIDWithNoEnrolledProjects = UserIDWithNoActivity
 
-  val ValidProjectID = "project::1"
-  val NewProjectID = "project::5"
+
+  val ProjectIDOfTemplate1 = "project::1"
+  val ProjectIDOfTemplate2 = "project::2"
+  val ProjectIDOfTemplate3 = "project::3"
+  val ProjectIDOfTemplate4 = "project::4"
+
+  val NewProjectID = "project::7"
 
   val ValidProjectTemplateOne = NewProject(
     "Project of template 1",
@@ -57,13 +68,41 @@ object Constants {
     "detailed one",
     "category::5")
 
-  val ValidSearchKeyword = "recognize"
+  val ValidSearchKeyword = "project"
   val InvalidSearchKeyword = "dummytexttoinsureitwillfail"
 
-  val ValidProjectToEnroll = "project::2"
-  val AlreadyEnrolledProject = ValidProjectID
+  val ValidProjectToEnroll = "project::5"
+  val AlreadyEnrolledProject = ProjectIDOfTemplate1
 
   val ValidCategoryID = "category::1"
   val InvalidCategoryID = "category::100"
+
+
+  val Contributor = new Contributor(ValidUserID, "male")
+  val location = new Location(33, 44)
+
+  val ContributionTemplateOne = new Contribution(
+    "project::1",
+    "2016",
+    new ContributionDataTypeOne(location, "answer")
+  )
+
+  val ContributionTemplateTwo = new Contribution(
+    "project::2",
+    "2016",
+    new ContributionDataTypeTwo("image", "caption")
+  )
+
+  val ContributionTemplateThree = new Contribution(
+    "project::3",
+    "2016",
+    new ContributionDataTypeThree(Seq(new Answer("id", "answer")))
+  )
+
+  val ContributionTemplateFour = new Contribution(
+    "project::4",
+    "2016",
+    new ContributionDataTypeFour("image", "caption", location)
+  )
 
 }
