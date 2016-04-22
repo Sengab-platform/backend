@@ -19,6 +19,12 @@ class UserActivitiesRetrievementSpec extends AbstractSpec {
     assert(response.jsonResult.validate[Seq[Activities]].isSuccess)
   }
 
+  // If the user has no activities yet
+  it should "Return NOT FOUND error as user has no activities yet" in {
+    receptionist ! ListUserActivity(Constants.UserIDWithNoActivity, 0, 20)
+    expectMsgType[NotFoundError]
+  }
+
   // If the user does not exist
   it should "Return NOT FOUND error" in {
     receptionist ! ListUserActivity(Constants.InvalidID, 0, 20)
