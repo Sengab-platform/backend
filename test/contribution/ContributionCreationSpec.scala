@@ -12,7 +12,7 @@ class ContributionCreationSpec extends AbstractSpec {
 
   "Receptionist Actor" should "Create TypeOne Contribution Successfully" in {
 
-    val contributionData = ContributionDataTypeOne(Location("4545", "454"), "yes")
+    val contributionData = ContributionDataTypeOne(Location(4545, 454), "yes")
 
     val contribution = Contribution("project::5c785b0b-a7b6-4db0-99c1-c528814fb8e0",
       "2015",
@@ -61,7 +61,7 @@ class ContributionCreationSpec extends AbstractSpec {
 
   "Receptionist Actor" should "Create TypeFour Contribution Successfully" in {
 
-    val contributionData = ContributionDataTypeFour("dsdsdssdsd", "cat", Location("4545", "87878"))
+    val contributionData = ContributionDataTypeFour("dsdsdssdsd", "cat", Location(4545, 87878))
 
     val contribution = Contribution("project::5c785b0b-a7b6-4db0-99c1-c528814fb8e0",
       "2015",
