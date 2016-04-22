@@ -17,8 +17,14 @@ class UserEnrolledProjectsSpec extends AbstractSpec {
     assert(response.jsonResult.validate[Seq[EmbeddedProject]].isSuccess)
   }
 
-  // User have not enrolled in any projects
-  it should "Return NOT FOUND error" in {
+  // User has not enrolled in any projects
+  it should "Return NOT FOUND error as user has not enrolled in any projects" in {
+    receptionist ! ListProjectsOfUser(Constants.UserIDWithNoEnrolledProjects, Helper.EnrolledKeyword, 0, 20)
+    expectMsgType[NotFoundError]
+  }
+
+  // User not found
+  it should "Return NOT FOUND error as user is not existing" in {
     receptionist ! ListProjectsOfUser(Constants.InvalidID, Helper.EnrolledKeyword, 0, 20)
     expectMsgType[NotFoundError]
   }
