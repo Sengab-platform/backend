@@ -8,18 +8,14 @@ import akka.actor.{ActorRef, Props}
 import com.couchbase.client.java.document.json.{JsonArray, JsonObject}
 import helpers.Helper
 import messages.ContributionManagerMessages.CreateContribution
-import models.contribution.ContributionDataTypes._
-import models.project.Project.ActivityProject
-import models.{Activities, Contributor, Response}
 import models.contribution.Contribution
+import models.contribution.ContributionDataTypes._
 import models.errors.Error
 import models.errors.GeneralErrors.{CouldNotParseJSON, Forbidden}
+import models.{Contributor, Response}
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsString, JsValue, Json}
-
 import rx.lang.scala.JavaConversions._
-
-import scala.util.parsing.json.JSONArray
 
 class ContributionCreator(out: ActorRef) extends AbstractDBHandler(out) {
   override val ErrorMsg: String = "Failed to add contribution"
@@ -93,7 +89,7 @@ class ContributionCreator(out: ActorRef) extends AbstractDBHandler(out) {
       .put("created_at", contribution.created_at)
       .put("project", JsonObject.create().put("project_id", projectID))
 
-    // construct proper abservable to handle adding new result
+    // construct proper observable to handle adding new result
 
     val addResult = result.contribution.data match {
       // add Result for Template Type One
