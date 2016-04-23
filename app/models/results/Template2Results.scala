@@ -5,7 +5,8 @@ import play.api.libs.json.Json
 object Template2Results {
 
   case class Result(
-                     image_url: String,
+                     //todo change it to `image_url` after integrating with storage server
+                     image: String,
                      caption: String
                    )
 

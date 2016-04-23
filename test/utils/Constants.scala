@@ -96,7 +96,7 @@ object Constants {
   val ContributionTemplateThree = new Contribution(
     "project::3",
     "2016",
-    new ContributionDataTypeThree(Seq(new Answer("id", "answer"), new Answer("id", "answer"))
+    new ContributionDataTypeThree(Seq(new Answer(1, "answer"), new Answer(2, "answer"))
     ))
 
   val ContributionTemplateFour = new Contribution(
