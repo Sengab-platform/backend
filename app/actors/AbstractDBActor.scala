@@ -7,6 +7,7 @@ import com.couchbase.client.java.document.json.JsonObject
 import models.Response
 import models.errors.DBErrors.{BucketClosedError, CouchbaseError, GeneralServerError}
 import models.errors.GeneralErrors.NotFoundError
+import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import rx.lang.scala.JavaConversions._
 
@@ -44,7 +45,9 @@ abstract class AbstractDBActor[T](out: ActorRef) extends Actor {
     * @param observables any number of observables to subscribe on
     */
   def executeSideEffectsQueries(observables: rx.Observable[JsonObject]*): Unit = {
-    observables.foreach(o => o.subscribe())
+    observables.foreach(o => toScalaObservable(o).subscribe(
+      item => {},
+      throwable => Logger.error(s"side effect error on Actor ${this.getClass.toString}" + throwable.getMessage)))
   }
 
 
@@ -80,8 +83,10 @@ abstract class AbstractDBActor[T](out: ActorRef) extends Actor {
 }
 
 object AbstractDBActor {
+
   /**
     * this message is sent to self when completing the actor job to be killed
     */
   case object Terminate
+
 }
