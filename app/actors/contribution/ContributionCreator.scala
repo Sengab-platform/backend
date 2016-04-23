@@ -105,7 +105,7 @@ class ContributionCreator(out: ActorRef) extends AbstractDBHandler(out) {
 
       // add Result for Template Type Three
       case ContributionDataTypeThree(answers) =>
-        // todo add implementation here
+        println("json result is " + Json.stringify(Json.toJson(answers)))
         DBUtilities.Result.addResult(Helper.ResultIDPrefix + trimmedProjectID, JsonArray.fromJson(Json.stringify(Json.toJson(answers))))
 
       // add Result for Template Type Four
