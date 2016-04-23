@@ -9,7 +9,7 @@ import utils.Constants
 
 class ProjectSearchSpec extends AbstractSpec {
 
-  "Receptionist Actor" should "Return Projects with `recognize` in their titles Successfully" in {
+  "Receptionist Actor" should "Return Projects with `project` in their titles Successfully" in {
     receptionist ! SearchProjects(Constants.ValidSearchKeyword, 0, 20)
     val response = expectMsgType[Response]
     assert(response.jsonResult.validate[Seq[EmbeddedProject]].isSuccess)
