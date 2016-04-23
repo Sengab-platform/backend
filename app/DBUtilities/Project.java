@@ -27,6 +27,7 @@ import static DBUtilities.DBConfig.EMPTY_JSON_OBJECT;
 import static DBUtilities.DBConfig.bucket;
 import static com.couchbase.client.java.query.Select.select;
 import static com.couchbase.client.java.query.Update.update;
+import static com.couchbase.client.java.query.dsl.functions.StringFunctions.lower;
 
 public class Project {
     private static AsyncBucket mBucket;
@@ -249,7 +250,7 @@ public class Project {
 
         return mBucket.query (N1qlQuery.simple (select(Expression.x ("meta(project).id, *")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
             .join (Expression.x (DBConfig.BUCKET_NAME + " category")).onKeys (Expression.x ("project.category_id"))
-            .where(Expression.x ("project.name").like (Expression.s ("%" + searchText + "%")))
+            .where(lower(Expression.x ("project.name")).like (lower (Expression.s ("%" + searchText + "%"))))
             .orderBy (Sort.desc (Expression.x ("project.enrollments_count"))).limit (limit).offset (offset)))
             .flatMap (AsyncN1qlQueryResult::rows).flatMap (row -> DBConfig.embedIdAndCategoryIntoProject (row.value ().getString ("id"),row))
             .retryWhen (RetryBuilder.anyOf (TemporaryFailureException.class, BackpressureException.class)
