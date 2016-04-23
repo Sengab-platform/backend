@@ -10,8 +10,26 @@ import utils.Constants
 class ProjectResultsRetrievement extends AbstractSpec {
 
   // The project has results
-  "Receptionist Actor" should "Return Project Results Successfully" in {
-    receptionist ! GetProjectResults(Constants.ValidProjectID, 0, 20)
+  "Receptionist Actor" should "Return results for template 1 projects successfully" in {
+    receptionist ! GetProjectResults(Constants.ProjectIDOfTemplate1, 0, 20)
+    val response = expectMsgType[Response]
+    assert(response.jsonResult.validate[ProjectResult].isSuccess)
+  }
+
+  it should "Return results for template 2 projects successfully" in {
+    receptionist ! GetProjectResults(Constants.ProjectIDOfTemplate2, 0, 20)
+    val response = expectMsgType[Response]
+    assert(response.jsonResult.validate[ProjectResult].isSuccess)
+  }
+
+  it should "Return results for template 3 projects successfully" in {
+    receptionist ! GetProjectResults(Constants.ProjectIDOfTemplate3, 0, 20)
+    val response = expectMsgType[Response]
+    assert(response.jsonResult.validate[ProjectResult].isSuccess)
+  }
+
+  it should "Return results for template 4 projects successfully" in {
+    receptionist ! GetProjectResults(Constants.ProjectIDOfTemplate4, 0, 20)
     val response = expectMsgType[Response]
     assert(response.jsonResult.validate[ProjectResult].isSuccess)
   }
