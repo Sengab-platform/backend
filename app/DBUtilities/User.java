@@ -254,7 +254,7 @@ public class User {
         Logger.info (String.format ("DB: Adding project with ID: %s to enrolled projects for user with id: %s",projectId,userId));
 
         return mBucket.query (N1qlQuery.simple (select (Expression.x ("meta(project).id")).from (Expression.x (DBConfig.BUCKET_NAME + " project"))
-            .useKeys (Expression.s (userId)))).flatMap (result1 -> result1.rows().isEmpty ())
+                .useKeys(Expression.s(projectId)))).flatMap(result1 -> result1.rows().isEmpty())
             .flatMap (isEmpty1 -> {
                 if (isEmpty1){
                     Logger.info (String.format ("DB: No such project with ID: %s",projectId));

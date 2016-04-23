@@ -8,8 +8,8 @@ import helpers.Helper
 import helpers.Helper._
 import messages.EnrollmentManagerMessages.Enroll
 import models.Response
-import models.errors.GeneralErrors.{AlreadyExists, CouldNotParseJSON}
-import play.api.Logger
+import models.errors.GeneralErrors.{AlreadyExists, CouldNotParseJSON, NotFoundError}
+import play.Logger
 import play.api.libs.json.{JsObject, JsString, Json}
 
 
@@ -24,6 +24,8 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
       executeQuery(DBUtilities.User.addProjectToEnrolledProjects(userID, projectID))
 
     case QueryResult(jsonObject) =>
+      Logger.info(s"actor ${self.path} - received msg : ${QueryResult(jsonObject)} ")
+
       if (jsonObject.containsKey("projectId")) {
         val response = constructResponse(jsonObject)
         response match {
@@ -43,10 +45,13 @@ class EnrollmentHandler(out: ActorRef) extends AbstractDBHandler(out) {
               "couldn't parse json retrieved from the db ", this.getClass.toString)
         }
       }
-      else {
+      else if (jsonObject.getString("id") == DBUtilities.DBConfig.ALREADY_ENROLLED) {
         out ! AlreadyExists("You are already enrolled to this project", "User's already enrolled to this project", this.getClass.toString)
+      } else if (jsonObject.getString("id") == DBUtilities.DBConfig.NO_SUCH_PROJECT) {
+        out ! NotFoundError("No such project", s"No such project with this ID", this.getClass.toString)
       }
   }
+
 
   override def constructResponse(jsonObject: JsonObject): Option[Response] = {
     try {

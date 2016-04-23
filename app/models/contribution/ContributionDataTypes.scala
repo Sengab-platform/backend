@@ -12,9 +12,9 @@ object ContributionDataTypes {
 
   case class ContributionDataTypeFour(image: String, caption: String, location: Location) extends ContributionData
 
-  case class Location(lat: String, lng: String)
+  case class Location(lat: Double, lng: Double)
 
-  case class Answer(id: String, ans: String)
+  case class Answer(id: Int, ans: String)
 
   object Location {
     implicit val formatter = Json.format[Location]

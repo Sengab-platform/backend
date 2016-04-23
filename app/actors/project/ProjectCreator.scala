@@ -128,11 +128,10 @@ class ProjectCreator(out: ActorRef) extends AbstractDBHandler(out) {
       case 3 =>
 
         val questions = jsonObject.getObject("template_body").getArray("questions")
-        val questionsCount = jsonObject.getObject("template_body").getInt("questions_count")
 
         val resultsArray: JsonArray = JsonArray.create()
 
-        for (i <- 0 until questionsCount) {
+        for (i <- 0 until questions.size) {
           resultsArray.add(JsonObject.create().put("id", questions.getObject(i).get("id"))
             .put("title", questions.getObject(i).get("title"))
             .put("yes_count", 0)
