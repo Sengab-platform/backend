@@ -23,6 +23,8 @@ libraryDependencies += "ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
 libraryDependencies += "com.typesafe.akka" % "akka-testkit_2.11" % "2.3.13"
 libraryDependencies += "org.scalatestplus" %% "play" % "1.4.0-M3" % "test"
 
+libraryDependencies += filters
+
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 resolvers += Resolver.sonatypeRepo("snapshots")
 
