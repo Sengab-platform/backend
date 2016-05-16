@@ -1,34 +1,34 @@
-# Table of Contents
-1. [Receptionist](#1-receptionist)
- 2. [Project Manager](#2-project-manager)
-     3. [Project Validator](#3-project-validator)
-     4. [Project Creator](#4-project-creator)
-     5. [Details Retriever](#5-details-retriever)
-     6. [Stats Retriever](#6-stats-retriever)
-     7. [Results Retriever](#7-results-retriever)
-  8. [User Manager](#8-user-manager)
-     9. [User Retriever](#9-user-retriever)
-     10. [Info Retriever](#10-info-retriever)
-     11. [Projects Retriever](#11-projects-retriever)
-     12. [Activity Retriever](#12-activity-retriever)
-  13. [Contribution Manager](#13-contribution-manager)
-     14. [Contribution Validator](#14-contribution-validator)
-     15. [Contribution Creator](#15-contribution-creator)
- 16. [Enrollment Manager](#16-enrollment-manager)
-     17. [Enrollment Handler](#17-enrollment-handler)
-     18. [Withdraw Manager](#18-withdraw-manager)
-  19. [Category Manager](#19-category-manager)
-     20. [Categories Retriever](#20-categories-retriever)
-     21. [Category Projects Retriever](#21-category-projects-retriever)
+#Table of Content
+- [Receptionist](#receptionist)
+ - 1. [Project Manager](#1-project-manager)
+     - [Project Validator](#1-project-validator)
+       - [Project Creator](#-project-creator)
+     - [Project Retriever](#2-project-retriever)
+       - [Details Retriever](#-details-retriever)
+       - [Stats Retriever](#-stats-retriever)
+       - [Results Retriever](#-results-retriever)
+  - 2. [User Manager](#2-user-manager)
+      - [User Retriever](#1-user-retriever)
+       - [User Projects Retriever](#-projects-retriever)
+       - [Info Retriever](#-info-retriever)
+       - [Activity Retriever](#-activity-retriever)
+  - 3. [Contribution Manager](#3-contribution-manager)
+       - [Contribution Validator](#1-contribution-validator)
+        - [Contribution Creator](#-contribution-creator)
+  - 4. [Enrollment Manager](#16-enrollment-manager)
+      - [Enrollment Handler](#1-enrollment-handler)
+      - [Withdraw Handler](#2-withdraw-handler)
+  - 5. [Category Manager](#5-category-manager)
+      - [Categories Retriever](#1-categories-retriever)
+      - [Category Projects Retriever](#2-category-projects-retriever)
 
-# Actors
 
-## 1. Receptionist
+# Receptionist
 
-### Description
-This actor is the Interface of Our Actor System and Play Action methods.
+## Description
+This actor is the Interface of our Actor System and Play Action methods.
 
-### Accept Messages
+## Accept Messages
 
 Message | Description
 ------- | -----------
@@ -38,7 +38,7 @@ msg : ContributionMessage | this is a trait which all Contribution Requests exte
 msg : EnrollmentMessage |  this is a trait which all Enrollment Requests extend
 msg : CategoryMessage | this is a trait which all Category Requests extend
 
-## 2. Project Manager
+## 1. Project Manager
 
 ### Description
 TODO
@@ -47,63 +47,96 @@ TODO
 
 Message | Description
 ------- | -----------
-CreateProject(p:Project) |
-ListProjects(filter,offset,limit) |
+CreateProject(p:Project,userID) |
+ListProjects(filter, offset,limit) |
 GetProjectDetails(projectID) |
-GetProjectResults(projectID,offset,limit) |
+GetProjectResults(projectID, offset, limit) |
 GetProjectStats(projectID) |
 SearchProjects(keyword) |
 
-## 3. Project Validator
+### 1. Project Validator
 
-### Description
+##### Description
 TODO
 
-### Accept Messages
+##### Accept Messages
 
 Message | Description
 ------- | -----------
-ValidateProject(p:Project) |
+ValidateProject(p:Project,userID) |
 
-## 4. Project Creator
+<br>
 
-### Description
+#### &bull; Project Creator
+
+##### Description
 TODO
 
-### Accept Messages
+##### Accept Messages
 
 Message | Description
 ------- | -----------
-CreateProject(p:Project) |
+CreateProject(p:Project,userID) |
 
-## 5. Details Retriever
+<br>
 
-### Description
+### 2. Project Retriever
+
+#### Description
 TODO
 
-### Accept Messages
+#### Accept Messages
 
 Message | Description
 ------- | -----------
-ListProjects(filter,offset,limit) |
+GetProjectDetails(projectID) |
+GetProjectResults(projectID, offset, limit) |
+GetProjectStats(projectID) |
+
+<br>
+
+#### &bull; Details Retriever
+
+##### Description
+TODO
+
+##### Accept Messages
+
+Message | Description
+------- | -----------
+ListProjects(filter, offset, limit) |
 GetProjectDetails(projectID) |
 SearchProjects(keyword) |
 
+<br>
 
+#### &bull; Stats Retriever
 
-## 6. Stats Retriever
-
-### Description
+##### Description
 TODO
 
-### Accept Messages
+##### Accept Messages
 
 Message | Description
 ------- | -----------
 GetProjectStats(projectID) |
 
+<br>
 
-## 7. Results Retriever
+#### &bull; Results Retriever
+
+##### Description
+TODO
+
+##### Accept Messages
+
+Message | Description
+------- | -----------
+GetProjectResults(projectID, offset, limit) |
+
+<br><hr>
+
+## 2. User Manager
 
 ### Description
 TODO
@@ -112,10 +145,66 @@ TODO
 
 Message | Description
 ------- | -----------
-GetProjectResults(projectID) |
+GetUserProfile(userID) |
+ListUserActivity(userID, offset, limit) |
+ListProjectsOfUser(userID, sort, offset, limit) | sort could be enrolled or created
+
+### 1. User Retriever
+
+#### Description
+TODO
+
+#### Accept Messages
+
+Message | Description
+------- | -----------
+GetUserProfile(userID) |
+ListUserActivity(userID, offset, limit) |
+ListProjectsOfUser(userID, sort, offset, limit) | sort could be enrolled or created
+
+<br>
+
+#### &bull; User Projects Retriever
+
+##### Description
+TODO
+
+##### Accept Messages
+
+Message | Description
+------- | -----------
+ListProjectsOfUser(userID, sort, offset, limit) | sort could be enrolled or created
+
+<br>
+
+#### &bull; Info Retriever
+
+##### Description
+TODO
+
+##### Accept Messages
+
+Message | Description
+------- | -----------
+GetUserProfile(userID) |
+
+<br>
+
+#### &bull; Activity Retriever
+
+##### Description
+TODO
+
+##### Accept Messages
+
+Message | Description
+------- | -----------
+ListUserActivity(userID, offset, limit) |
+
+<br><hr>
 
 
-## 8. User Manager
+## 3. Contribution Manager
 
 ### Description
 TODO
@@ -124,11 +213,35 @@ TODO
 
 Message | Description
 ------- | -----------
-GetUserProfile(userId) |
-ListUserActivity(userId, offset, limit) |
-ListProjectsOfUser(userId, type, offset, limit) | type could be enrolled or created
+SubmitContribution(c: contribution,userID) |
 
-## 9. User Retriever
+### 1. Contribution Validator
+
+#### Description
+TODO
+
+#### Accept Messages
+
+Message | Description
+------- | -----------
+ValidateContribution(c: contribution,userID) |
+
+<br>
+
+#### &bull; Contribution Creator
+
+##### Description
+TODO
+
+##### Accept Messages
+
+Message | Description
+------- | -----------
+CreateContribution(c: contribution,userID) |
+
+<br><hr>
+
+## 4. Enrollment Manager
 
 ### Description
 TODO
@@ -137,123 +250,36 @@ TODO
 
 Message | Description
 ------- | -----------
-GetUserProfile(userId) |
-ListUserActivity(userId, offset, limit) |
-ListProjectsOfUer(userId, type,created, offset, limit) | type could be enrolled or created
+Enroll(projectID, userID) |
+Withdraw(projectID, userID) |
 
 
-## 10. Info Retriever
+### 1. Enrollment Handler
 
-### Description
+#### Description
 TODO
 
-### Accept Messages
+#### Accept Messages
 
 Message | Description
 ------- | -----------
-GetUserProfile(userId) |
+Enroll(projectID, userID) |
 
 
+### 2. Withdraw Handler
 
-## 11. Projects Retriever
-
-### Description
+#### Description
 TODO
 
-### Accept Messages
+#### Accept Messages
 
 Message | Description
 ------- | -----------
-ListProjectsOfUer(userId, type,created, offset, limit) | type could be enrolled or created
+Withdraw(projectID, userID) |
 
+<br><hr>
 
-
-## 12. Activity Retriever
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-ListUserActivity(userId, offset, limit) |
-
-
-
-
-
-## 13. Contribution Manager
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-SubmitContribution(c: contribution) |
-
-## 14. Contribution Validator
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-ValidateContribution(c: contribution) |
-
-## 15. Contribution Creator
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-CreateContribution(c: contribution) |
-
-
-## 16. Enrollment Manager
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-Enroll(projectId, userId) |
-Withdraw(projectId, userId) |
-
-
-## 17. Enrollment Handler
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-Enroll(projectId, userId) |
-
-
-## 18. Withdraw Manager
-
-### Description
-TODO
-
-### Accept Messages
-
-Message | Description
-------- | -----------
-Withdraw(projectId, userId) |
-
-## 19. Category Manager
+## 5. Category Manager
 
 ### Description
 TODO
@@ -263,31 +289,28 @@ TODO
 Message | Description
 ------- | -----------
 RetrieveCategories(offset, limit) |
-RetrieveCategoryProjects(categoryId, offset, limit) |
+RetrieveCategoryProjects(categoryID, offset, limit) |
 
 
+### 1. Categories Retriever
 
-## 20. Categories Retriever
-
-### Description
+#### Description
 TODO
 
-### Accept Messages
+#### Accept Messages
 
 Message | Description
 ------- | -----------
 RetrieveCategories(offset, limit) |
 
 
+### 2. Category Projects Retriever
 
-
-## 21. Category Projects Retriever
-
-### Description
+#### Description
 TODO
 
-### Accept Messages
+#### Accept Messages
 
 Message | Description
 ------- | -----------
-RetrieveCategoryProjects(categoryId, offset, limit) |
+RetrieveCategoryProjects(categoryID, offset, limit) |
