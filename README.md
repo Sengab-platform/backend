@@ -1,2 +1,2 @@
 # Coming Soon
-**The Next Big Thing** Is Almost Here.
+**Sengab** is a Reactive platform collects data for crowdsourcing projects.
